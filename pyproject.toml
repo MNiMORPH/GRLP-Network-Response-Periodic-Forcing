@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GRLP_Network_Analysis"
+version = "0.0.1"
+authors = [
+  { name="Fergus McNab" },
+]
+description = "Perform GRLP network analyses for the paper McNab et al. (in prep.)."
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+  'grlp @ git+https://github.com/MNiMORPH/GRLP.git#egg=network_building'
+]
