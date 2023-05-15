@@ -1,1 +1,0 @@
-grlp@ git+https://github.com/MNiMORPH/GRLP.git#egg=network_building
