@@ -1,16 +1,24 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+# requires = ["setuptools>=61.0"]
+# build-backend = "setuptools.build_meta"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
-[project]
-name = "GRLP_Network_Analysis"
+[tool.poetry]
+# [project]
+name = "grlp_network_analysis"
 version = "0.0.1"
 authors = [
-  { name="Fergus McNab" },
+  "Fergus McNab"
 ]
 description = "Perform GRLP network analyses for the paper McNab et al. (in prep.)."
 readme = "README.md"
-requires-python = ">=3.7"
-dependencies = [
-  'grlp @ git+https://github.com/MNiMORPH/GRLP.git#egg=network_building'
-]
+# requires-python = ">=3.7"
+# dependencies = [
+#   'grlp@git+https://github.com/MNiMORPH/GRLP#egg=network_building'
+# ]
+packages = [{include = "grlp_extras.py", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+grlp = { git =  "https://github.com/MNiMORPH/GRLP.git", branch = "network_building" }
