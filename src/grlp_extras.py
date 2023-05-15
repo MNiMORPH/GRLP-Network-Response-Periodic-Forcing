@@ -150,3 +150,116 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, p, B, x0=10.e3, dx=1.e3, evolve=Tru
     lp.compute_equilibration_time()
     
     return lp
+
+def evolve_network_periodic(net, period, A_Qs, A_Q):
+    
+    # ---- Set up time domain
+    time, dt = np.linspace(0., period*4., 4000, retstep=True)
+    scale = np.sin(2. * np.pi * time / period)
+    
+    # ---- Set up arrays for output
+    z = [np.zeros(( len(time), len(seg.z) ))
+            for seg in net.list_of_LongProfile_objects]
+    Qs = [np.zeros(( len(time), len(seg.Q_s) ))
+            for seg in net.list_of_LongProfile_objects]
+    
+    # ---- Initial sediment and water supplies
+    Qs0 = net.list_of_LongProfile_objects[net.sources[0]].Q_s_0
+    Qw0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
+    for seg in net.list_of_LongProfile_objects:
+        Qw0[seg.ID] = seg.Q.copy()
+    
+    # ---- Evolve
+    for i,s in enumerate(scale):
+        for seg in net.list_of_LongProfile_objects:
+            seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
+            if seg.ID in net.sources:
+                seg.set_Qs_input_upstream(Qs0 * (1. + A_Qs*s))
+        net.evolve_threshold_width_river_network(nt=1, dt=dt)
+        for seg in net.list_of_LongProfile_objects:
+            z[seg.ID][i,:] = seg.z.copy()
+            seg.compute_Q_s()
+            Qs[seg.ID][i,:] = seg.Q_s.copy()
+    
+    return z, Qs, time, (1. + (A_Qs-A_Q)*scale)
+    
+def compute_network_z_gain(net, z, A_Qs, A_Q, S0):
+    gain = [np.zeros(len(seg.z)) for seg in net.list_of_LongProfile_objects]
+    for seg in net.list_of_LongProfile_objects:
+        amp = (
+            z[seg.ID][2000:,:].max(axis=0) - 
+            z[seg.ID][2000:,:].min(axis=0)
+            ) / 2.
+        gain[seg.ID] = (
+            amp / (
+                S0 * 
+                (net.list_of_LongProfile_objects[0].x_ext.max() - seg.x) *
+                abs(A_Qs-A_Q) ) 
+            )
+    return gain
+    
+def compute_network_Qs_gain(net, Qs, A_Qs, A_Q, Qs0):
+    gain = [np.zeros(len(seg.Q_s)) for seg in net.list_of_LongProfile_objects]
+    for seg in net.list_of_LongProfile_objects:
+        amp = (
+            Qs[seg.ID][2000:,:].max(axis=0) - 
+            Qs[seg.ID][2000:,:].min(axis=0)
+            ) / 2.
+        gain[seg.ID] = amp / ( Qs0[seg.ID] * abs(A_Qs-A_Q) )
+    return gain
+
+def find_network_lag(net, prop, time, scale, period):
+    
+    # Initial attempt
+    lag = [np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects]
+    for seg in net.list_of_LongProfile_objects:
+        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale, period=period) / period
+    
+    # Check for cycle-skipped segment
+    completed_segs = []
+    for segID in net.sources:
+        while net.list_of_LongProfile_objects[segID].downstream_segment_IDs:
+            down_segID = net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
+            if down_segID not in completed_segs:
+                if (lag[down_segID][0] - lag[segID][-1]) > 0.5:
+                    lag[down_segID] -= 1.
+                completed_segs.append(down_segID)
+            segID = down_segID
+    
+    return lag
+    
+def find_network_equilibration_time(net_gain, net_periods, lp):
+    
+    def gain_misfit(scaled_Teq, net_gain, net_periods, lp):
+        Teq = scaled_Teq * lp.equilibration_time
+        lin_gain = [
+            lp.compute_z_gain(p)[-1]
+            for p in net_periods / lp.equilibration_time * Teq
+            ]
+        misfit = np.sqrt( (1./len(net_gain)) * sum((np.array(net_gain) - lin_gain)**2.) )
+        return misfit
+    
+    fit = minimize(
+        fun=gain_misfit, 
+        x0=1.,
+        args=(net_gain,net_periods,lp,))
+        
+    return lp.equilibration_time / fit.x
+    
+def find_network_equilibration_time_Qs(net_gain, net_periods, lp):
+    
+    def gain_misfit(scaled_Teq, net_gain, net_periods, lp):
+        Teq = scaled_Teq * lp.equilibration_time
+        lin_gain = [
+            lp.compute_Qs_gain(p, A_Qs=0.2)[-1]
+            for p in net_periods / lp.equilibration_time * Teq
+            ]
+        misfit = np.sqrt( (1./len(net_gain)) * sum((np.array(net_gain) - lin_gain)**2.) )
+        return misfit
+    
+    fit = minimize(
+        fun=gain_misfit, 
+        x0=1.,
+        args=(net_gain,net_periods,lp,))
+        
+    return lp.equilibration_time / fit.x[0]
