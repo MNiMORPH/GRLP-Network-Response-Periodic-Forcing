@@ -5,7 +5,7 @@
 #SBATCH --time=2-0:0
 
 module load Python
-source grlp_venv/bin/activate
+source /home/mcnab/network/bin/activate
 srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 0 49 &
 srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 50 99 &
 srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 100 149 &
