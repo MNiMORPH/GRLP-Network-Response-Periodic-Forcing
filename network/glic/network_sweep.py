@@ -1,5 +1,5 @@
 from grlp import *
-from extras import *
+from grlp_extras import *
 from scipy.optimize import minimize
 import random
 import copy
@@ -90,7 +90,7 @@ def analyse_network(i):
 
     # ---- Output
     outdir = "/home/mcnab/output/network" + str(i) + "/"
-
+    
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
         pickle.dump(
@@ -115,7 +115,7 @@ def analyse_network(i):
             {'P': periods, 'lag_z': z_lags, 'lag_Qs': Qs_lags},
             f
         )
-
+    
     return i
 
 

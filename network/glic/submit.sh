@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --nodes=4
-#SBATCH --ntasks=4
+#SBATCH --nodes=10
+#SBATCH --ntasks=10
 #SBATCH --cpus-per-task=8
-#SBATCH --time=1-12:0
+#SBATCH --time=2-0:0
 
 module load Python
 source grlp_venv/bin/activate
@@ -10,5 +10,11 @@ srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.p
 srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 50 99 &
 srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 100 149 &
 srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 150 199 &
+srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 200 249 &
+srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 250 299 &
+srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 300 349 &
+srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 350 399 &
+srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 400 449 &
+srun --nodes=1 --ntasks=1 --cpus-per-task=8 --time=1-12:0 python network_sweep.py 450 499 &
 wait
 deactivate
