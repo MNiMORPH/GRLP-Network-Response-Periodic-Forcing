@@ -81,7 +81,7 @@ def analyse_network(i):
     hack = find_network_hack_parameters(net)
     
     # ---- Periodic
-    periods = np.logspace(-2.,2.,5) * lin_net.list_of_LongProfile_objects[0].equilibration_time
+    periods = np.logspace(-2.,2.,7) * lin_net.list_of_LongProfile_objects[0].equilibration_time
     z_gains = []
     z_lags = []
     Qs_gains = []
@@ -116,7 +116,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "./../../output/network_sweep_m20_2" + str(i) + "/"
+    outdir = "./../../output/network_sweep_v2_m20" + str(i) + "/"
     
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     print("Starting: " + datetime.now().strftime("%H:%M:%S"))
     
     import multiprocessing as mp
-    with mp.Pool(processes=2) as pool:
+    with mp.Pool(processes=10) as pool:
         results = pool.map(analyse_network, range(i,j+1))
     
     print("Finished: " + datetime.now().strftime("%H:%M:%S"))
