@@ -1,105 +1,106 @@
 from grlp import *
-from extras import *
+# from extras import *
+from grlp_extras import *
 import scipy
 import os
 import pickle
 import copy
 
-def evolve_river_periodic(lp, period, A_Qs, A_Q, n):
-    
-    # ---- Set up time domain
-    # time, dt = np.linspace(0., period*4., 4000, retstep=True)
-    dt = period / 1000
-    time = np.arange(0., period*n, dt)
-    scale = np.sin(2. * np.pi * time / period)
-    
-    # ---- Set up arrays for output
-    z = np.zeros(( len(time), len(lp.z) ))
-    Qs = np.zeros(( len(time), len(lp.Q_s) ))    
-    
-    # ---- Initial sediment and water supplies
-    Qs0 = copy.deepcopy(lp.Q_s_0)
-    Qw0 = lp.Q.copy()
-    
-    # ---- Evolve
-    for i,s in enumerate(scale):
-        lp.set_Qs_input_upstream(Qs0 * (1. + A_Qs*s))
-        lp.evolve_threshold_width_river(nt=1, dt=dt)
-        z[i,:] = lp.z.copy()
-        lp.compute_Q_s()
-        Qs[i,:] = lp.Q_s.copy()
-    
-    return z, Qs, time, (1. + (A_Qs-A_Q)*scale)
-
-
-def evolve_network_periodic(net, period, A_Qs, A_Q, n):
-    
-    # ---- Set up time domain
-    # time, dt = np.linspace(0., period*4., 4000, retstep=True)
-    dt = period / 1000
-    time = np.arange(0., period*n, dt)
-    scale = np.sin(2. * np.pi * time / period)
-    
-    # ---- Set up arrays for output
-    z = [np.zeros(( len(time), len(seg.z) ))
-            for seg in net.list_of_LongProfile_objects]
-    Qs = [np.zeros(( len(time), len(seg.Q_s) ))
-            for seg in net.list_of_LongProfile_objects]
-    
-    # ---- Initial sediment and water supplies
-    Qs0 = net.list_of_LongProfile_objects[net.sources[0]].Q_s_0
-    Qw0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
-    for seg in net.list_of_LongProfile_objects:
-        Qw0[seg.ID] = seg.Q.copy()
-    
-    # ---- Evolve
-    for i,s in enumerate(scale):
-        for seg in net.list_of_LongProfile_objects:
-            seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
-            if seg.ID in net.sources:
-                seg.set_Qs_input_upstream(Qs0 * (1. + A_Qs*s))
-        net.evolve_threshold_width_river_network(nt=1, dt=dt)
-        for seg in net.list_of_LongProfile_objects:
-            z[seg.ID][i,:] = seg.z.copy()
-            seg.compute_Q_s()
-            Qs[seg.ID][i,:] = seg.Q_s.copy()
-    
-    return z, Qs, time, (1. + (A_Qs-A_Q)*scale)
-    
-def compute_network_z_gain(net, z, A_Qs, A_Q, S0):
-    gain = [np.zeros(len(seg.z)) for seg in net.list_of_LongProfile_objects]
-    for seg in net.list_of_LongProfile_objects:
-        amp = (
-            # z[seg.ID][2000:,:].max(axis=0) - 
-            # z[seg.ID][2000:,:].min(axis=0)
-            z[seg.ID].max(axis=0) - 
-            z[seg.ID].min(axis=0)
-            ) / 2.
-        gain[seg.ID] = (
-            amp / (
-                S0 * 
-                (net.list_of_LongProfile_objects[0].x_ext.max() - seg.x) *
-                abs(A_Qs-A_Q) ) 
-            )
-    return gain
-    
-def compute_network_Qs_gain(net, Qs, A_Qs, A_Q, Qs0):
-    gain = [np.zeros(len(seg.Q_s)) for seg in net.list_of_LongProfile_objects]
-    for seg in net.list_of_LongProfile_objects:
-        amp = (
-            # Qs[seg.ID][2000:,:].max(axis=0) - 
-            # Qs[seg.ID][2000:,:].min(axis=0)
-            Qs[seg.ID].max(axis=0) - 
-            Qs[seg.ID].min(axis=0)
-            ) / 2.
-        gain[seg.ID] = amp / ( Qs0[seg.ID] * abs(A_Qs-A_Q) )
-    return gain
-
-def find_network_lag(net, prop, time, scale, period):
-    lag = [np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects]
-    for seg in net.list_of_LongProfile_objects:
-        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale) / period
-    return lag
+# def evolve_river_periodic(lp, period, A_Qs, A_Q, n):
+# 
+#     # ---- Set up time domain
+#     # time, dt = np.linspace(0., period*4., 4000, retstep=True)
+#     dt = period / 1000
+#     time = np.arange(0., period*n, dt)
+#     scale = np.sin(2. * np.pi * time / period)
+# 
+#     # ---- Set up arrays for output
+#     z = np.zeros(( len(time), len(lp.z) ))
+#     Qs = np.zeros(( len(time), len(lp.Q_s) ))    
+# 
+#     # ---- Initial sediment and water supplies
+#     Qs0 = copy.deepcopy(lp.Q_s_0)
+#     Qw0 = lp.Q.copy()
+# 
+#     # ---- Evolve
+#     for i,s in enumerate(scale):
+#         lp.set_Qs_input_upstream(Qs0 * (1. + A_Qs*s))
+#         lp.evolve_threshold_width_river(nt=1, dt=dt)
+#         z[i,:] = lp.z.copy()
+#         lp.compute_Q_s()
+#         Qs[i,:] = lp.Q_s.copy()
+# 
+#     return z, Qs, time, (1. + (A_Qs-A_Q)*scale)
+# 
+# 
+# def evolve_network_periodic(net, period, A_Qs, A_Q, n):
+# 
+#     # ---- Set up time domain
+#     # time, dt = np.linspace(0., period*4., 4000, retstep=True)
+#     dt = period / 1000
+#     time = np.arange(0., period*n, dt)
+#     scale = np.sin(2. * np.pi * time / period)
+# 
+#     # ---- Set up arrays for output
+#     z = [np.zeros(( len(time), len(seg.z) ))
+#             for seg in net.list_of_LongProfile_objects]
+#     Qs = [np.zeros(( len(time), len(seg.Q_s) ))
+#             for seg in net.list_of_LongProfile_objects]
+# 
+#     # ---- Initial sediment and water supplies
+#     Qs0 = net.list_of_LongProfile_objects[net.sources[0]].Q_s_0
+#     Qw0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
+#     for seg in net.list_of_LongProfile_objects:
+#         Qw0[seg.ID] = seg.Q.copy()
+# 
+#     # ---- Evolve
+#     for i,s in enumerate(scale):
+#         for seg in net.list_of_LongProfile_objects:
+#             seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
+#             if seg.ID in net.sources:
+#                 seg.set_Qs_input_upstream(Qs0 * (1. + A_Qs*s))
+#         net.evolve_threshold_width_river_network(nt=1, dt=dt)
+#         for seg in net.list_of_LongProfile_objects:
+#             z[seg.ID][i,:] = seg.z.copy()
+#             seg.compute_Q_s()
+#             Qs[seg.ID][i,:] = seg.Q_s.copy()
+# 
+#     return z, Qs, time, (1. + (A_Qs-A_Q)*scale)
+# 
+# def compute_network_z_gain(net, z, A_Qs, A_Q, S0):
+#     gain = [np.zeros(len(seg.z)) for seg in net.list_of_LongProfile_objects]
+#     for seg in net.list_of_LongProfile_objects:
+#         amp = (
+#             # z[seg.ID][2000:,:].max(axis=0) - 
+#             # z[seg.ID][2000:,:].min(axis=0)
+#             z[seg.ID].max(axis=0) - 
+#             z[seg.ID].min(axis=0)
+#             ) / 2.
+#         gain[seg.ID] = (
+#             amp / (
+#                 S0 * 
+#                 (net.list_of_LongProfile_objects[0].x_ext.max() - seg.x) *
+#                 abs(A_Qs-A_Q) ) 
+#             )
+#     return gain
+# 
+# def compute_network_Qs_gain(net, Qs, A_Qs, A_Q, Qs0):
+#     gain = [np.zeros(len(seg.Q_s)) for seg in net.list_of_LongProfile_objects]
+#     for seg in net.list_of_LongProfile_objects:
+#         amp = (
+#             # Qs[seg.ID][2000:,:].max(axis=0) - 
+#             # Qs[seg.ID][2000:,:].min(axis=0)
+#             Qs[seg.ID].max(axis=0) - 
+#             Qs[seg.ID].min(axis=0)
+#             ) / 2.
+#         gain[seg.ID] = amp / ( Qs0[seg.ID] * abs(A_Qs-A_Q) )
+#     return gain
+# 
+# def find_network_lag(net, prop, time, scale, period):
+#     lag = [np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects]
+#     for seg in net.list_of_LongProfile_objects:
+#         lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale) / period
+#     return lag
 
 # ---- Load expected lengths
 arr = np.loadtxt("./expected_length/expected_lengths.dat")
@@ -116,23 +117,41 @@ lp = LongProfile()
 lp.basic_constants()
 lp.bedload_lumped_constants()
 lp.set_hydrologic_constants()
-lp.set_x(x_ext=np.arange(0., L+5.e2, 1.e3))
-lp.set_Q(Q=mean_Q)
-lp.set_B(B=B)
-lp.set_z(S0=-(mean_Qs/(lp.k_Qs*mean_Q))**(6./7.))
-lp.set_Qs_input_upstream(mean_Qs)
-lp.set_z_bl(0.)
-lp.set_uplift_rate(0.)
-lp.set_niter()
-lp.evolve_threshold_width_river(nt=1000, dt=3.15e9)
-lp.compute_Q_s()
+dx = 1.e3
+x = [np.arange(0., L+dx, dx)]
+S0 = [(mean_Qs/(lp.k_Qs*mean_Q))**(6./7.)]
+upstream_segment_IDs = [[]]
+downstream_segment_IDs = [[]]
+z = [(x[0].max()-x[0])*S0]
+Q = [np.full(len(x),mean_Q)]
+B = [np.full(len(x),B)]
+net = Network()
+net.initialize(
+    config_file = None,
+    x_bl =L+dx,
+    z_bl = 0.,
+    S0 = S0,
+    upstream_segment_IDs = upstream_segment_IDs,
+    downstream_segment_IDs = downstream_segment_IDs,
+    x = x,
+    z = z,
+    Q = Q,
+    B = B,
+    overwrite = False
+    )
+net.set_niter(3)
+net.get_z_lengths()
+diff = (7./6.) * lp.k_Qs * mean_Q * (S0[0]**(1./6.)) / (B[0] * (1. - lp.lambda_p))
+lp = net.list_of_LongProfile_objects[0]
 lp.compute_equilibration_time()
 
 
+
 # ---- Unpack network results
-indir = "./glic/output_170423/"
+# indir = "./glic/output_170423/"
 # indir = "./glic/output_200423/"
 # indir = "./glic/output_210423/"
+indir = "./glic/output_170523/"
 netdirs = next(os.walk(indir))[1]
 hacks = []
 nets = []

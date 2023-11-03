@@ -1,5 +1,5 @@
 from grlp import *
-from extras import *
+from grlp_extras import *
 from copy import deepcopy
 from matplotlib import cm
 from matplotlib.colors import LinearSegmentedColormap
@@ -8,48 +8,50 @@ from matplotlib.colors import LinearSegmentedColormap
 # ---- River properties
 x0 = 10.e3
 L = 100.e3
-mean_Qw = 10.
+mean_Q = 10.
 mean_Qs = 0.001
 B = 98.1202038813591
-lp = set_up_long_profile(L, mean_Qw, mean_Qs, 0., B, dx=5.e2, evolve=True)
+# lp = set_up_long_profile(L, mean_Q, mean_Qs, 0., B, dx=5.e2, evolve=True)
 
 # ---- Network
 mag = 10
-net_topo = Shreve_Random_Network(magnitude=mag, min_link_length=1, max_link_length=1)
-sources = [i for i,up_ids in enumerate(net_topo.upstream_segment_IDs) if len(up_ids)==0]
-topo_lengths = [len(downstream_IDs(net_topo.downstream_segment_IDs, i)) for i in range(len(net_topo.nxs))]
-link_length = L / max(topo_lengths)
-link_n = max(5, int(link_length/5.e2))
-net_topo.nxs = [link_n for i in range(len(net_topo.nxs))]
-dx = link_length / link_n
-up_sources = []
-for i in range(len(net_topo.upstream_segment_IDs)):
-    count = 0
-    up_IDs = upstream_IDs(net_topo.upstream_segment_IDs, i)
-    for ID in up_IDs:
-        if len(upstream_IDs(net_topo.upstream_segment_IDs, ID)) == 1:
-            count += 1
-    up_sources.append(count)
-Qw_max = (mean_Qw / np.mean(up_sources)) * mag
-Qs_max = (mean_Qs / np.mean(up_sources)) * mag
-net = set_up_network_object(
-    nx_list=net_topo.nxs,
-    dx=dx,
-    upstream_segment_list=net_topo.upstream_segment_IDs,
-    downstream_segment_list=net_topo.downstream_segment_IDs,
-    Q_max=Qw_max,
-    Qs_max=Qs_max,
-    evolve=True)
+net, net_topo = generate_random_network(mag, L, B, mean_Q, mean_Qs, evolve=True)
+
+# net_topo = Shreve_Random_Network(magnitude=mag, min_link_length=1, max_link_length=1)
+# sources = [i for i,up_ids in enumerate(net_topo.upstream_segment_IDs) if len(up_ids)==0]
+# topo_lengths = [len(downstream_IDs(net_topo.downstream_segment_IDs, i)) for i in range(len(net_topo.nxs))]
+# link_length = L / max(topo_lengths)
+# link_n = max(5, int(link_length/5.e2))
+# net_topo.nxs = [link_n for i in range(len(net_topo.nxs))]
+# dx = link_length / link_n
+# up_sources = []
+# for i in range(len(net_topo.upstream_segment_IDs)):
+#     count = 0
+#     up_IDs = upstream_IDs(net_topo.upstream_segment_IDs, i)
+#     for ID in up_IDs:
+#         if len(upstream_IDs(net_topo.upstream_segment_IDs, ID)) == 1:
+#             count += 1
+#     up_sources.append(count)
+# Qw_max = (mean_Qw / np.mean(up_sources)) * mag
+# Qs_max = (mean_Qs / np.mean(up_sources)) * mag
+# net = set_up_network_object(
+#     nx_list=net_topo.nxs,
+#     dx=dx,
+#     upstream_segment_list=net_topo.upstream_segment_IDs,
+#     downstream_segment_list=net_topo.downstream_segment_IDs,
+#     Q_max=Qw_max,
+#     Qs_max=Qs_max,
+#     evolve=True)
 net.compute_network_properties()
-for seg in net.list_of_LongProfile_objects: seg.compute_Q_s()
-for seg in net.list_of_LongProfile_objects: seg.set_B(B)
+# for seg in net.list_of_LongProfile_objects: seg.compute_Q_s()
+# for seg in net.list_of_LongProfile_objects: seg.set_B(B)
 
 # ---- Plot
-# planform = plot_network(net)
+planform = plot_network(net)
 
 # ---- Evolve
-period = 3.15e13
-Qs0 = net.list_of_LongProfile_objects[net.sources[0]].Q_s_0
+period = 3.15e12
+S0 = net.list_of_LongProfile_objects[net.list_of_channel_head_segment_IDs[0]].S0
 Qw0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
 dt = period/1000.
 time = np.arange(-0.3*period, 4*period+dt, dt)
@@ -62,9 +64,10 @@ z = [np.zeros((len(time), len(seg.z)))
 Qs = [np.zeros((len(time), len(seg.Q_s)))
     for seg in net.list_of_LongProfile_objects]
 for i,s in enumerate(scale):
-    for seg in net.list_of_LongProfile_objects:
-        if seg.ID in net.sources:
-            seg.set_Qs_input_upstream(Qs0 * s)
+    # for seg in net.list_of_LongProfile_objects:
+    #     if seg.ID in net.list_of_channel_head_segment_IDs:
+            # seg.set_Qs_input_upstream(Qs0 * s)
+    net.update_z_ext_external_upstream( S0 = np.full(len(net.list_of_LongProfile_objects), S0*(s**(6./7.))) )
     net.evolve_threshold_width_river_network(nt=1, dt=dt)
     for seg in net.list_of_LongProfile_objects:
         z[seg.ID][i,:] = seg.z.copy()
@@ -89,8 +92,8 @@ for seg in net.list_of_LongProfile_objects:
 
 # ---- Plot
 fig, axs = plt.subplots(1,2)
-axs[0].plot(lp.x/1000., lp.compute_z_gain(period), "--")
-axs[1].plot(lp.x/1000., lp.compute_z_lag(period)/period, "--")
+# axs[0].plot(lp.x/1000., lp.compute_z_gain(period), "--")
+# axs[1].plot(lp.x/1000., lp.compute_z_lag(period)/period, "--")
 for seg in net.list_of_LongProfile_objects:
     axs[0].plot(seg.x/1000., gain[seg.ID])
     axs[1].plot(seg.x/1000., (lag[seg.ID]['plags']+lag[seg.ID]['tlags'])/(2*period))

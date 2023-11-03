@@ -1,4 +1,5 @@
 from grlp import *
+from grlp_extras import *
 import scipy
 import os
 import pickle
@@ -19,22 +20,40 @@ lp = LongProfile()
 lp.basic_constants()
 lp.bedload_lumped_constants()
 lp.set_hydrologic_constants()
-lp.set_x(x_ext=np.arange(0., L+5.e2, 1.e3))
-lp.set_Q(Q=mean_Q)
-lp.set_B(B=B)
-lp.set_z(S0=-(mean_Qs/(lp.k_Qs*mean_Q))**(6./7.))
-lp.set_Qs_input_upstream(mean_Qs)
-lp.set_z_bl(0.)
-lp.set_uplift_rate(0.)
-lp.set_niter()
-lp.compute_Q_s()
+dx = 1.e3
+x = [np.arange(0., L+dx, dx)]
+S0 = [(mean_Qs/(lp.k_Qs*mean_Q))**(6./7.)]
+upstream_segment_IDs = [[]]
+downstream_segment_IDs = [[]]
+z = [(x[0].max()-x[0])*S0]
+Q = [np.full(len(x),mean_Q)]
+B = [np.full(len(x),B)]
+net = Network()
+net.initialize(
+    config_file = None,
+    x_bl =L+dx,
+    z_bl = 0.,
+    S0 = S0,
+    upstream_segment_IDs = upstream_segment_IDs,
+    downstream_segment_IDs = downstream_segment_IDs,
+    x = x,
+    z = z,
+    Q = Q,
+    B = B,
+    overwrite = False
+    )
+net.set_niter(3)
+net.get_z_lengths()
+diff = (7./6.) * lp.k_Qs * mean_Q * (S0[0]**(1./6.)) / (B[0] * (1. - lp.lambda_p))
+lp = net.list_of_LongProfile_objects[0]
 lp.compute_equilibration_time()
 
-
 # ---- Unpack network results
-indir = "./glic/output_170423/"
+# indir = "./glic/output_170423/"
 # indir = "./glic/output_200423/"
 # indir = "./glic/output_210423/"
+indir = "./glic/output_170523/"
+# indir = "./../output/network_sweep_m20_2/"
 netdirs = next(os.walk(indir))[1]
 hacks = []
 nets = []
@@ -55,6 +74,7 @@ for netdir in netdirs:
             evolve=False, 
             topology=prop['topology']
         )
+        net.compute_network_properties()
         nets.append(net)
     with open(indir + netdir + "/gain.obj", "rb") as f:
         gain = pickle.load(f)
@@ -63,36 +83,63 @@ for netdir in netdirs:
         lag = pickle.load(f)
         lags.append(lag)
             
-import sys
-sys.exit()
-        
-# ---- Example
+# import sys
+# sys.exit()
 
-netID = 5
+# # ---- Example
+# 
+# netID = 6
+# period = 0
+# 
+# for seg in nets[netID].list_of_LongProfile_objects:
+#     plt.plot(
+#         seg.x/1.e3, lags[netID]['lag_z'][period][seg.ID]
+#     )
+# plt.show()
+# 
+# # rerun for debugging
+# periods = np.logspace(-2.,2.,7) * lp.equilibration_time
+# period = periods[0]
+# neti = copy.deepcopy(nets[netID])
+# print("starting")
+# z, Qs, time, scale = evolve_network_periodic(neti, period, 0.2, 0.)
+# z_gain = compute_network_z_gain(neti, z, 0.2, 0., S0)
+# Qs_gain = compute_network_Qs_gain(neti, Qs, 0.2, 0., [q[0,:] for q in Qs])
+# z_lag = find_network_lag(neti, z, time, scale, period)
+# Qs_lag = find_network_lag(neti, Qs, time, scale, period)
+# 
+# for seg in neti.list_of_LongProfile_objects:
+#     plt.plot(
+#         seg.x/1.e3, z_lag[seg.ID]
+#     )
+# plt.show()
+# 
+# import sys
+# sys.exit()
 
-orders = np.arange(1,len(nets[netID].order_counts)+1,1)
-
-# Rb
-plt.plot(orders, nets[netID].bifurcation_ratio**(max(orders)-orders), "--")
-plt.scatter(
-    orders, 
-    [nets[netID].order_counts[o] for o in nets[netID].orders])
-
-# Rl
-plt.plot(orders,
-    nets[netID].order_lengths[1]/1.e3*(nets[netID].length_ratio**(orders-1)), "--")
-plt.scatter(
-    orders, 
-    np.array([nets[netID].order_lengths[o] for o in nets[netID].orders])/1.e3)
-
-# Ra
-plt.plot(orders, nets[netID].order_discharges[1]*(nets[netID].discharge_ratio**(orders-1)), "--")
-plt.scatter(
-    orders, 
-    [nets[netID].order_discharges[o] for o in nets[netID].orders])
-
-plt.yscale("log")
-plt.show()
+# orders = np.arange(1,len(nets[netID].order_counts)+1,1)
+# 
+# # Rb
+# plt.plot(orders, nets[netID].bifurcation_ratio**(max(orders)-orders), "--")
+# plt.scatter(
+#     orders, 
+#     [nets[netID].order_counts[o] for o in nets[netID].orders])
+# 
+# # Rl
+# plt.plot(orders,
+#     nets[netID].order_lengths[1]/1.e3*(nets[netID].length_ratio**(orders-1)), "--")
+# plt.scatter(
+#     orders, 
+#     np.array([nets[netID].order_lengths[o] for o in nets[netID].orders])/1.e3)
+# 
+# # Ra
+# plt.plot(orders, nets[netID].order_discharges[1]*(nets[netID].discharge_ratio**(orders-1)), "--")
+# plt.scatter(
+#     orders, 
+#     [nets[netID].order_discharges[o] for o in nets[netID].orders])
+# 
+# plt.yscale("log")
+# plt.show()
 
 # ---- Network props
 
@@ -142,7 +189,8 @@ plt.show()
 # ---- Effective length vs Mean length
 
 fig, axs = plt.subplots(2,3,sharey=True)
-eff_length = [ np.sqrt(g['Teq_z'][0]*lp.diffusivity.mean())/100.e3 for g in gains]
+# eff_length = [ np.sqrt(g['Teq_z'][0]*lp.diffusivity.mean())/100.e3 for g in gains]
+eff_length = [ np.sqrt(g['Teq_z'][0]*diff)/100.e3 for g in gains]
 
 axs[0,0].scatter([n.bifurcation_ratio for n in nets], eff_length, c=[max(n.segment_orders) for n in nets])
 axs[0,0].set_xlabel("Bifurcation ratio")
@@ -179,14 +227,14 @@ plt.show()
 
 fig, axs = plt.subplots(1,2)
 axs[0].hist(
-    np.array(eff_length) /
+    np.array(eff_length)[:,0] /
     np.array([n.mean_downstream_distance/100.e3 for n in nets])
     )
 axs[0].set_xlabel("Effective length / Mean length")
 axs[0].set_ylabel("Count")
 axs[1].scatter(
-    [len(n.sources) for n in nets],
-    np.array(eff_length) / np.array([n.mean_downstream_distance/100.e3 for n in nets])
+    [len(n.list_of_channel_head_segment_IDs) for n in nets],
+    np.array(eff_length)[:,0] / np.array([n.mean_downstream_distance/100.e3 for n in nets])
     )
 plt.show()
 

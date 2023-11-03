@@ -21,4 +21,4 @@ packages = [{include = "grlp_extras.py", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-grlp = { git =  "https://github.com/MNiMORPH/GRLP.git", branch = "network_building" }
+grlp = { git =  "https://github.com/MNiMORPH/GRLP.git", branch = "master" }
