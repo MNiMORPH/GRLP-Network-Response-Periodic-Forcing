@@ -115,7 +115,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/network/glic/output_061123/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/network/glic/output_071123/" + str(i) + "/"
     
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
