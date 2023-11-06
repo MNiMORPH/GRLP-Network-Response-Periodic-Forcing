@@ -87,7 +87,6 @@ def analyse_network(i):
     Qs_gains = []
     Qs_lags = []
     for period in periods:
-        print(period)
         
         # Run, compute metrics
         neti = copy.deepcopy(net)
@@ -116,7 +115,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_network_analysis/network/glic/output_041123" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/network/glic/output_061123/" + str(i) + "/"
     
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
