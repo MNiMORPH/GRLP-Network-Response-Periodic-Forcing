@@ -73,7 +73,7 @@ def analyse_network(i):
             np.full(int(possible_length_range), mag) ))
     
     # ---- Set up network
-    mag = 20
+    mag = 40
     # mag = int(random.choice(magnitude_choices))
     net, net_topo = generate_random_network(mag, L, B, mean_Q, mean_Qs, evolve=True)
     
@@ -115,7 +115,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/network/glic/output_071123/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/network/glic/output_081123/" + str(i) + "/"
     
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
