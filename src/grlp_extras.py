@@ -175,7 +175,7 @@ def evolve_network_periodic(net, period, A_Qs, A_Q):
         #     seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
         #     if seg.ID in net.list_of_channel_head_segment_IDs:
                 # seg.set_Qs_input_upstream(S0 * ((1. + A_Qs*s)**(6./7.)))
-        net.update_z_ext_external_upstream( S0 = np.full(len(net.list_of_LongProfile_objects), S0 * ((1. + A_Qs*s)**(6./7.))) )
+        net.update_z_ext_external_upstream( S0 = np.full(len(net.list_of_channel_head_segment_IDs), S0 * ((1. + A_Qs*s)**(6./7.))) )
         net.evolve_threshold_width_river_network(nt=1, dt=dt)
         for seg in net.list_of_LongProfile_objects:
             z[seg.ID][i,:] = seg.z.copy()
