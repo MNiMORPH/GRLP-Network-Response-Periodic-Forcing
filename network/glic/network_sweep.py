@@ -73,8 +73,8 @@ def analyse_network(i):
             np.full(int(possible_length_range), mag) ))
     
     # ---- Set up network
-    mag = 40
-    # mag = int(random.choice(magnitude_choices))
+    # mag = 40
+    mag = int(random.choice(magnitude_choices))
     net, net_topo = generate_random_network(mag, L, B, mean_Q, mean_Qs, evolve=True)
     
     # ---- Hack
