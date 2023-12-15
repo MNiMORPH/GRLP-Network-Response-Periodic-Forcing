@@ -168,10 +168,12 @@ def evolve_network_periodic(net, period, A_Qs, A_Q):
     Qw0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
     for seg in net.list_of_LongProfile_objects:
         Qw0[seg.ID] = seg.Q.copy()
+    ssd0 = [seg.ssd.copy() for seg in net.list_of_LongProfile_objects]
     
     # ---- Evolve
     for i,s in enumerate(scale):
-        # for seg in net.list_of_LongProfile_objects:
+        for seg in net.list_of_LongProfile_objects:
+            seg.set_source_sink_distributed(ssd0[seg.ID] * (1. + A_Qs*s))
         #     seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
         #     if seg.ID in net.list_of_channel_head_segment_IDs:
                 # seg.set_Qs_input_upstream(S0 * ((1. + A_Qs*s)**(6./7.)))
