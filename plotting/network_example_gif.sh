@@ -19,27 +19,27 @@ basedir="../output/linear/gif"
 # scale_grds2=("e" "e" "E")
 # elev_grds=("nSeW" "nSew" "nSEw")
 
-# labels=("Qw_fast")
-# # labels=("fast")
-# titles=("@%3%P@%% = @%3%T@-eq@-@%% / 5")
-# profile_grds=("nSEW")
-# scale_grds=("nsW")
-# scale_grds2=("E")
-# elev_grds=("nSEW")
+labels=("Qw_fast")
+# labels=("fast")
+titles=("@%3%P@%% = @%3%T@-eq@-@%% / 5")
+profile_grds=("nSEW")
+scale_grds=("nsW")
+scale_grds2=("E")
+elev_grds=("nSEW")
 
-labels=("Qw_fast" "Qw_medium")
-# labels=("fast" "medium")
-titles=("@%3%P@%% = @%3%T@-eq@-@%% / 5" "@%3%P@%% = @%3%T@-eq@-@%%")
-profile_grds=("nSeW" "nSEw")
-scale_grds=("nsW" "nsw")
-scale_grds2=("e" "E")
-elev_grds=("nSeW" "nSEw")
+# labels=("Qw_fast" "Qw_medium")
+# # labels=("fast" "medium")
+# titles=("@%3%P@%% = @%3%T@-eq@-@%% / 5" "@%3%P@%% = @%3%T@-eq@-@%%")
+# profile_grds=("nSeW" "nSEw")
+# scale_grds=("nsW" "nsw")
+# scale_grds2=("e" "E")
+# elev_grds=("nSeW" "nSEw")
 
 
 # ---- Make individual scenes
 
-# for t in {000..199} ; do
-for t in 199 ; do
+for t in {000..199} ; do
+# for t in 199 ; do
   echo "Plotting scene $t."
 
   out=$basedir/scene$t
@@ -128,11 +128,11 @@ for t in 199 ; do
   # Show
   gmt psbasemap -R0/1/0/1 -JX1i -B+n -O >> $out.ps
   gmt psconvert -A -E400 -Tj $out.ps
-  eog $out.jpg &
+  # eog $out.jpg &
 
 done
 
 # ---- Create gif
 # convert -loop 0 $basedir/scene*.jpg $basedir/periodic.gif
-# ffmpeg -framerate 10 -pattern_type glob -i "$basedir/scene*.jpg" -final_delay 500 -vf "scale=1024:-1" -y $basedir/periodic.gif
-# eog $basedir/periodic.gif &
+ffmpeg -framerate 10 -pattern_type glob -i "$basedir/scene*.jpg" -final_delay 500 -vf "scale=1024:-1" -y $basedir/periodic.gif
+eog $basedir/periodic.gif &
