@@ -52,8 +52,11 @@ lp.compute_equilibration_time()
 # indir = "./glic/output_170423/"
 # indir = "./glic/output_200423/"
 # indir = "./glic/output_210423/"
-indir = "./glic/output_170523/"
-# indir = "./../output/network_sweep_m20_2/"
+# indir = "./glic/output_170523/"
+# indir = "./glic/output_061123/"
+# indir = "./glic/output_071123/"
+# indir = "./glic/output_081123/"
+indir = "./glic/output_101123/"
 netdirs = next(os.walk(indir))[1]
 hacks = []
 nets = []
@@ -87,32 +90,46 @@ for netdir in netdirs:
 # sys.exit()
 
 # # ---- Example
-# 
-# netID = 6
+
 # period = 0
-# 
+# for i,net in enumerate(nets):
+#     print(i)
+#     for seg in net.list_of_LongProfile_objects:
+#         plt.plot(
+#             seg.x/1.e3, lags[i]['lag_Qs'][period][seg.ID]
+#         )
+#     plt.show()
+
+# netID = 0
+# period = 0
 # for seg in nets[netID].list_of_LongProfile_objects:
 #     plt.plot(
-#         seg.x/1.e3, lags[netID]['lag_z'][period][seg.ID]
+#         seg.x/1.e3, lags[netID]['lag_Qs'][period][seg.ID]
 #     )
 # plt.show()
-# 
+
 # # rerun for debugging
 # periods = np.logspace(-2.,2.,7) * lp.equilibration_time
 # period = periods[0]
 # neti = copy.deepcopy(nets[netID])
+# # neti.evolve_threshold_width_river_network(nt=1000, dt=3.15e11)
 # print("starting")
-# z, Qs, time, scale = evolve_network_periodic(neti, period, 0.2, 0.)
+# z, Qs, time, scale = evolve_network_periodic2(neti, period, 0.2, 0.)
 # z_gain = compute_network_z_gain(neti, z, 0.2, 0., S0)
 # Qs_gain = compute_network_Qs_gain(neti, Qs, 0.2, 0., [q[0,:] for q in Qs])
-# z_lag = find_network_lag(neti, z, time, scale, period)
-# Qs_lag = find_network_lag(neti, Qs, time, scale, period)
-# 
+# z_lag = find_network_lag2(neti, z, time, scale, period)
+# Qs_lag = find_network_lag2(neti, Qs, time, scale, period)
+
+# fig, axs = plt.subplots(1,2)
 # for seg in neti.list_of_LongProfile_objects:
-#     plt.plot(
+#     # fig, axs = plt.subplots(1,2)
+#     axs[0].plot(
 #         seg.x/1.e3, z_lag[seg.ID]
 #     )
-# plt.show()
+#     axs[1].plot(
+#         seg.x/1.e3, Qs_lag[seg.ID]
+#     )
+# # plt.show()
 # 
 # import sys
 # sys.exit()
@@ -210,10 +227,10 @@ axs[1,1].scatter([1/h['p'] for h in hacks], eff_length, c=[max(n.segment_orders)
 axs[1,1].set_xlabel("Hack exponent")
 
 reg = np.polyfit(
-    np.array([n.mean_downstream_distance for n in nets])/100.e3,
-    eff_length,
+    np.array([n.mean_downstream_distance for n in nets if len(n.list_of_channel_head_segment_IDs)])/100.e3,
+    [l for i,l in enumerate(eff_length) if len(nets[i].list_of_channel_head_segment_IDs)],
     1)
-Ls = np.linspace(0.5,0.8,10)
+Ls = np.linspace(0.4,1.,10)
 axs[1,2].plot(Ls, reg[0]*Ls + reg[1], "--")
 axs[1,2].scatter(
     np.array([n.mean_downstream_distance for n in nets])/100.e3,
@@ -394,25 +411,25 @@ with open(outdir + "lin_gain.dg", "wb") as f:
     np.savetxt(f, arr)
     
 # ---- Export: network sweep
-# outdir = "../output/network_sweep_m20/"
-outdir = "../output/network_sweep_m40/"
+outdir = "../output/network_sweep_m20_v2/"
+# outdir = "../output/network_sweep_m40/"
 # outdir = "../output/network_sweep_m2-m60/"
 eff_length = [ np.sqrt(g['Teq_z'][0]*lp.diffusivity.mean())/100.e3 for g in gains]
 lin_periods = np.logspace(-2.5,2.5,81) * lp.equilibration_time
 periods = np.logspace(-2.,2.,7) * lp.equilibration_time
 
-with open(outdir + "props.dat", "wb") as f:
-    arr = np.column_stack((
-        [n.bifurcation_ratio for n in nets],
-        [n.length_ratio for n in nets],
-        [n.discharge_ratio for n in nets],
-        [n.max_topological_length for n in nets],
-        [1./h['p'] for h in hacks],
-        [n.mean_downstream_distance/L for n in nets],
-        eff_length,
-        [len(n.sources) for n in nets]
-        ))
-    np.savetxt(f, arr)
+# with open(outdir + "props.dat", "wb") as f:
+#     arr = np.column_stack((
+#         [n.bifurcation_ratio for n in nets],
+#         [n.length_ratio for n in nets],
+#         [n.discharge_ratio for n in nets],
+#         [n.max_topological_length for n in nets],
+#         [1./h['p'] for h in hacks],
+#         [n.mean_downstream_distance/L for n in nets],
+#         eff_length,
+#         [len(n.sources) for n in nets]
+#         ))
+#     np.savetxt(f, arr)
     
 with open(outdir + "Le_fit.dat", "wb") as f:
     reg = np.polyfit(
