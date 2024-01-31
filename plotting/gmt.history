@@ -1,10 +1,10 @@
 # GMT 6 Session common arguments shelf
 BEGIN GMT 6.1.1
-B	nSewxa1f3p+l@%2%P@%% / @%2%T@-eq@-@%%y0.2
+B	nSeWx20+lDownstream distance, @%2%x@%% [km]y200+lElevation, @%2%z@%% [m]
 J	X
-JX	X3il/2i
-R	0.00316/316/-0.1/1.1
-X	3.2i
+JX	X2.6i/2i
+R	-10/110/0/700
+X	3.7i
 Y	6i
-@L	10
+@L	19
 END
