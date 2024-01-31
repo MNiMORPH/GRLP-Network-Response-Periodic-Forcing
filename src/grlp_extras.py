@@ -122,34 +122,49 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, p, B, x0=10.e3, dx=1.e3, evolve=Tru
     lp.basic_constants()
     lp.bedload_lumped_constants()
     lp.set_hydrologic_constants()
-    lp.set_x(x_ext=np.arange(0., L+dx, dx))
-    lp.set_B(B=B)
-    lp.set_uplift_rate(0.)
-    lp.set_niter(3)
+    
+    # x
+    x = np.arange(0,L,dx)
     
     # Qw
     k_x_Qw = compute_power_law_coefficient(mean_Qw, p, L, x0)
-    Qw = k_x_Qw*((lp.x+x0)**p)
-    lp.set_Q(Q=Qw)
+    Qw = k_x_Qw*((x+x0)**p)
     
     # Qs
     k_x_Qs = compute_power_law_coefficient(mean_Qs, p, L, x0)
-    ssd = p * k_x_Qs * (lp.x+x0)**(p-1.) / (B * (1. - lp.lambda_p))
-    lp.set_source_sink_distributed(ssd)
+    ssd = p * k_x_Qs * (x+x0)**(p-1.) / (B * (1. - lp.lambda_p))
 
     # z
-    lp.set_z(S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.))
-    # lp.set_z_bl(0.)
-    lp.set_Qs_input_upstream(k_x_Qs * (x0**p))
+    S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.)
+
+    net = Network()
+    net.initialize(
+        config_file = None,
+        x_bl = L,
+        z_bl = 0.,
+        S0 = [S0],
+        upstream_segment_IDs = [[]],
+        downstream_segment_IDs = [[]],
+        x = [x],
+        z = [(L-x)*S0],
+        Q = [Qw],
+        B = [np.full(len(x),B)],
+        overwrite = False
+        )
+    net.set_niter(3)
+    net.get_z_lengths()
+    net.list_of_LongProfile_objects[0].set_source_sink_distributed(ssd)
 
     if evolve:
-        lp.evolve_threshold_width_river(nt=10000, dt=3.15e10)
-    lp.compute_Q_s()
+        net.evolve_threshold_width_river_network(nt=100, dt=3.15e11)
+    
     
     # properties
-    lp.compute_equilibration_time()
+    for seg in net.list_of_LongProfile_objects:
+        seg.compute_Q_s()
+    net.list_of_LongProfile_objects[0].compute_equilibration_time()
     
-    return lp
+    return net
 
 def evolve_network_periodic(net, period, A_Qs, A_Q):
     
@@ -177,7 +192,17 @@ def evolve_network_periodic(net, period, A_Qs, A_Q):
         #     seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
         #     if seg.ID in net.list_of_channel_head_segment_IDs:
                 # seg.set_Qs_input_upstream(S0 * ((1. + A_Qs*s)**(6./7.)))
-        net.update_z_ext_external_upstream( S0 = np.full(len(net.list_of_channel_head_segment_IDs), S0 * ((1. + A_Qs*s)**(6./7.))) )
+    
+        new_Q = [Qw0[j]*(1. + A_Q*s) for j in range(len(net.list_of_LongProfile_objects))]
+        net.update_Q(new_Q)
+        net.create_Q_ext_lists()
+        net.update_Q_ext_from_Q()
+        net.update_Q_ext_internal()
+        net.update_Q_ext_external_upstream()  # b.c., Q_ext[0] = Q[0]
+        net.update_Q_ext_external_downstream()   # b.c., Q_ext[-1] = Q[-1]
+        net.update_dQ_ext_2cell()
+
+        net.update_z_ext_external_upstream( S0 = np.full(len(net.list_of_channel_head_segment_IDs), S0 * (((1. + A_Qs*s)/(1. + A_Q*s))**(6./7.))) )
         net.evolve_threshold_width_river_network(nt=1, dt=dt)
         for seg in net.list_of_LongProfile_objects:
             z[seg.ID][i,:] = seg.z.copy()
@@ -211,12 +236,12 @@ def compute_network_Qs_gain(net, Qs, A_Qs, A_Q, Qs0):
         gain[seg.ID] = amp / ( Qs0[seg.ID] * abs(A_Qs-A_Q) )
     return gain
 
-def find_network_lag(net, prop, time, scale, period):
+def find_network_lag(net, prop, time, scale, period, can_lead=False):
     
     # Initial attempt
     lag = [np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects]
     for seg in net.list_of_LongProfile_objects:
-        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale, period=period) / period
+        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale, period=period, can_lead=can_lead) / period
     
     # Check for cycle-skipped segment
     completed_segs = []
