@@ -55,8 +55,8 @@ lp.compute_equilibration_time()
 # indir = "./glic/output_170523/"
 # indir = "./glic/output_061123/"
 # indir = "./glic/output_071123/"
-# indir = "./glic/output_081123/"
-indir = "./glic/output_101123/"
+indir = "./glic/output_081123/"
+# indir = "./glic/output_101123/"
 netdirs = next(os.walk(indir))[1]
 hacks = []
 nets = []

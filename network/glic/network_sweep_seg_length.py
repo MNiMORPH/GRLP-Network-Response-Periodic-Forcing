@@ -1,6 +1,6 @@
 from grlp import *
 from grlp_extras import *
-from scipy.stats import  gamma, norm
+import scipy.stats as sts
 from scipy.optimize import minimize
 import random
 import copy
@@ -10,32 +10,40 @@ import os
 def analyse_network(i):
     
     print("Working on network " + str(i) + ".")
-
-    # ---- Network props
-    ext_link_length = gamma(2., scale=255./2.)
-    int_link_length = gamma(2., scale=267./2.)
-    ext_length_area_scl = norm(loc=127.e3/255., scale=127.e3/255.*0.1)
-    int_length_area_scl = norm(loc=814.e2/267., scale=814.e2/267.*0.1)
-    rainfall = 1.e3 / 3.154e10
-    Cr = 0.4
-    B = 100.
+    
+    # Network props
+    effective_rainfall = 1.e3*0.4/3.154e10
+    B = 98.1202038813591
     sediment_discharge_ratio = 1.e4
-
+    
+    # # Shreve numbers
+    # segment_length = sts.gamma(2., scale=260./2.)
+    # segment_length_area_ratio = sts.norm(loc=300., scale=30.)
+    # supply_area = sts.norm(loc=52000., scale=5200.)
+    
+    # My numbers
+    mean_total_length = 100.e3
+    expected_topological_length = 18.1852
+    mean_segment_length = 100.e3 / 18.185
+    mean_segment_length_area_ratio = 300. # from Shreve
+    mean_supply_area = mean_segment_length * mean_segment_length_area_ratio / 2.
+    segment_length = sts.gamma(2., scale=mean_segment_length/2.)
+    segment_length_area_ratio = sts.norm(loc=mean_segment_length_area_ratio, scale=mean_segment_length_area_ratio/10.)
+    supply_area = sts.norm(loc=mean_supply_area, scale=mean_supply_area/10.)    
+    
     # ---- Network topology
-    net_topo = Shreve_Random_Network(
+    net, net_topo = generate_random_network(
         magnitude=40, 
-        segment_length=(ext_link_length, int_link_length),
-        segment_length_area_ratio=(ext_length_area_scl, int_length_area_scl)
-        )
-    net = set_up_network_object(
-        nx_list = [5 for i in range(len(net_topo.downstream_segment_IDs))], 
-        dxs = np.array(net_topo.segment_lengths)/5, 
-        segment_lengths = net_topo.segment_lengths, 
-        upstream_segment_list =  net_topo.upstream_segment_IDs,
-        downstream_segment_list = net_topo.downstream_segment_IDs, 
-        discharge_list = [area*rainfall*0.4 for area in net_topo.segment_areas], 
-        sediment_discharge_ratio = sediment_discharge_ratio, 
-        B = B, 
+        segment_length=segment_length,
+        segment_length_area_ratio=segment_length_area_ratio,
+        supply_area=supply_area,
+        approx_dx=5.e2,
+        min_nxs=5,
+        mean_discharge=False,
+        effective_rainfall=effective_rainfall,
+        sediment_discharge_ratio=sediment_discharge_ratio,
+        width=B,
+        topology=False,
         evolve=True
         )
     net.compute_network_properties()
@@ -50,9 +58,9 @@ def analyse_network(i):
     L_eff = 0.7 * net.mean_downstream_distance
     dx = L_eff / 100.
     S0 = (1./(lp.k_Qs*sediment_discharge_ratio))**(6./7.)
-    mean_Qw = np.array([seg.Q for seg in net.list_of_LongProfile_objects]).mean()
-    mean_S = np.array([seg.S for seg in net.list_of_LongProfile_objects]).mean()
-    mean_B = np.array([seg.B for seg in net.list_of_LongProfile_objects]).mean()
+    mean_Qw = np.hstack([seg.Q for seg in net.list_of_LongProfile_objects]).mean()
+    mean_S = np.hstack([seg.S for seg in net.list_of_LongProfile_objects]).mean()
+    mean_B = np.hstack([seg.B for seg in net.list_of_LongProfile_objects]).mean()
     lin_net = Network()
     lin_net.initialize(
         config_file = None,
@@ -76,52 +84,60 @@ def analyse_network(i):
     hack = find_network_hack_parameters(net)
 
     # ---- Periodic
-    periods = np.logspace(-2.,2.,5) * lin_net.list_of_LongProfile_objects[0].equilibration_time
-    z_gains = []
-    z_lags = []
-    Qs_gains = []
-    Qs_lags = []
+    periods = np.logspace(-2.,2.,7) * lin_net.list_of_LongProfile_objects[0].equilibration_time
+    z_gains = {'Qs': [], 'Qw': []}
+    z_lags = {'Qs': [], 'Qw': []}
+    Qs_gains = {'Qs': [], 'Qw': []}
+    Qs_lags = {'Qs': [], 'Qw': []}
     for period in periods:
-        print(period)
         
-        # Run, compute metrics
-        neti = copy.deepcopy(net)
-        z, Qs, time, scale = evolve_network_periodic(neti, period, 0.2, 0.)
-        z_gain = compute_network_z_gain(neti, z, 0.2, 0., S0)
-        Qs_gain = compute_network_Qs_gain(neti, Qs, 0.2, 0., [q[0,:] for q in Qs])
-        z_lag = find_network_lag(net, z, time, scale, period)
-        Qs_lag = find_network_lag(net, Qs, time, scale, period)
-        
-        # Record gain
-        z_gains.append(z_gain)
-        Qs_gains.append(Qs_gain)
-        
-        # Record lag
-        z_lags.append(z_lag)
-        Qs_lags.append(Qs_lag)
+        for lab, A_Qs, A_Qw, can_lead in zip(['Qs', 'Qw'], [0.2, 0.], [0., 0.2], [False, True]):
+            
+            # Run, compute metrics
+            neti = copy.deepcopy(net)
+            z, Qs, time, scale = evolve_network_periodic(neti, period, A_Qs, A_Qw)
+            z_gain = compute_network_z_gain(neti, z, A_Qs, A_Qw, S0)
+            Qs_gain = compute_network_Qs_gain(neti, Qs, A_Qs, A_Qw, [q[0,:] for q in Qs])
+            z_lag = find_network_lag(net, z, time, scale, period)
+            # Qs_lag = find_network_lag(net, Qs, time, scale, period)
+            Qs_lag = find_lag_time_single(Qs[0][:,-1], time, scale, period, can_lead=can_lead)/period
+            
+            # Record gain
+            z_gains[lab].append(z_gain)
+            Qs_gains[lab].append(Qs_gain)
+            
+            # Record lag
+            z_lags[lab].append(z_lag)
+            Qs_lags[lab].append(Qs_lag)
 
     # ---- Compute best fitting equilibration times
     net_Teq = find_network_equilibration_time(
-        [g[0][-1] for g in z_gains],
+        [g[0][-1] for g in z_gains['Qs']],
         periods,
         lin_net)
     net_Teq_Qs = find_network_equilibration_time_Qs(
-        [g[0][-1] for g in Qs_gains], 
+        [g[0][-1] for g in Qs_gains['Qs']], 
         periods,
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/network/glic/output_161223/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/output/network/m40_rnd_seg_length/" + str(i) + "/"
     
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
         pickle.dump(
             {'topology': net_topo.links,
-            'nx_list': [5 for i in range(len(net_topo.downstream_segment_IDs))], 
-            'dxs': np.array(net_topo.segment_lengths)/5, 
+            'nx_list': [len(seg.x) for seg in net.list_of_LongProfile_objects], 
+            'dxs': [seg.x[1]-seg.x[0] for seg in net.list_of_LongProfile_objects], 
             'lengths': net_topo.segment_lengths,
-            'areas': net_topo.segment_areas,
-            'discharges': [area*rainfall*0.4 for area in net_topo.segment_areas], 
+            'source_areas': net_topo.source_areas,
+            'segment_areas': net_topo.segment_areas,
+            'supply_discharges': [
+                area*effective_rainfall for area in net_topo.source_areas
+                ],
+            'internal_discharges': [
+                area*effective_rainfall for area in net_topo.segment_areas
+                ],
             'sediment_discharge_ratio': sediment_discharge_ratio,
             'B': B}, 
             f
