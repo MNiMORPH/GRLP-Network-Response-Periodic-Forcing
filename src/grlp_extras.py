@@ -1,6 +1,7 @@
 from grlp import *
 from scipy.signal import find_peaks
-
+import os
+import pickle
 
 def find_lag_time_single(val, time, scale, threshold=0., can_lead=False, period=False, full=False):
     
@@ -265,7 +266,7 @@ def compute_network_z_gain(net, z, A_Qs, A_Q, S0):
             ) / 2.
         gain[seg.ID] = (
             amp / (
-                S0 * 
+                S0[seg.ID] * 
                 (net.list_of_LongProfile_objects[0].x_ext[0].max() - seg.x) *
                 abs(A_Qs-A_Q) ) 
             )
@@ -336,3 +337,54 @@ def find_network_equilibration_time_Qs(net_gain, net_periods, lin_net):
         args=(net_gain,net_periods,lin_net,))
         
     return lin_net.list_of_LongProfile_objects[0].equilibration_time / fit.x[0]
+
+def read_sweep(indir):
+    
+    netdirs = next(os.walk(indir))[1]
+    nets = []
+    hacks = []
+    gains = []
+    lags = []
+    for netdir in netdirs:
+        
+        with open(indir + netdir + "/hack.obj", "rb") as f:
+            hack = pickle.load(f)
+            hacks.append(hack)
+            
+        with open(indir + netdir + "/props.obj", "rb") as f:
+            prop = pickle.load(f)
+            if 'lengths' in prop.keys():
+                net, net_topo = generate_random_network(
+                    magnitude=None, 
+                    segment_lengths=prop['lengths'],
+                    supply_discharges=prop['supply_discharges'],
+                    internal_discharges=prop['internal_discharges'],
+                    approx_dx=5.e2,
+                    min_nxs=5,
+                    sediment_discharge_ratio=prop['sediment_discharge_ratio'],
+                    width=98.1202038813591,
+                    topology=prop['topology']
+                    )
+            else:
+                net, net_topo = generate_random_network(
+                    magnitude=None, 
+                    max_length=100.e3,
+                    approx_dx=5.e2,
+                    min_nxs=5,
+                    mean_discharge=prop['Q_mean'],
+                    sediment_discharge_ratio=1.e4,
+                    width=98.1202038813591,
+                    topology=prop['topology']
+                    )
+            net.compute_network_properties()
+            nets.append(net)
+            
+        with open(indir + netdir + "/gain.obj", "rb") as f:
+            gain = pickle.load(f)
+            gains.append(gain)
+            
+        with open(indir + netdir + "/lag.obj", "rb") as f:
+            lag = pickle.load(f)
+            lags.append(lag)
+            
+    return nets, hacks, gains, lags

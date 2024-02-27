@@ -16,6 +16,26 @@ def analyse_network(i):
     B = 98.1202038813591
     sediment_discharge_ratio = 1.e4
     
+    # ---- Read in expected topological lengths
+    expected_topological_lengths = np.loadtxt("../expected_length/expected_lengths.dat")
+    
+    # ---- Make choices for random magnitude
+    min_mag = 2
+    max_mag = 100
+    magnitude_choices = np.array([], dtype=int)
+    for mag in range(min_mag,max_mag+1):
+        if mag==2:
+            possible_length_range = 1
+        else:
+            possible_length_range = 1 + np.log2(mag - int(1. + np.log2(mag)))
+        magnitude_choices = np.hstack(( 
+            magnitude_choices, 
+            np.full(int(possible_length_range), mag) ))
+    
+    # ---- Set up network
+    # mag = 40
+    mag = int(random.choice(magnitude_choices))
+    
     # # Shreve numbers
     # segment_length = sts.gamma(2., scale=260./2.)
     # segment_length_area_ratio = sts.norm(loc=300., scale=30.)
@@ -23,8 +43,8 @@ def analyse_network(i):
     
     # My numbers
     mean_total_length = 100.e3
-    expected_topological_length = 18.1852
-    mean_segment_length = 100.e3 / 18.185
+    expected_topological_length = expected_topological_lengths[mag-1,1]
+    mean_segment_length = 100.e3 / expected_topological_length
     mean_segment_length_area_ratio = 300. # from Shreve
     mean_supply_area = mean_segment_length * mean_segment_length_area_ratio / 2.
     segment_length = sts.gamma(2., scale=mean_segment_length/2.)
@@ -33,7 +53,7 @@ def analyse_network(i):
     
     # ---- Network topology
     net, net_topo = generate_random_network(
-        magnitude=40, 
+        magnitude=mag, 
         segment_length=segment_length,
         segment_length_area_ratio=segment_length_area_ratio,
         supply_area=supply_area,
@@ -92,11 +112,11 @@ def analyse_network(i):
     for period in periods:
         
         for lab, A_Qs, A_Qw, can_lead in zip(['Qs', 'Qw'], [0.2, 0.], [0., 0.2], [False, True]):
-            
+                        
             # Run, compute metrics
             neti = copy.deepcopy(net)
             z, Qs, time, scale = evolve_network_periodic(neti, period, A_Qs, A_Qw)
-            z_gain = compute_network_z_gain(neti, z, A_Qs, A_Qw, S0)
+            z_gain = compute_network_z_gain(neti, z, A_Qs, A_Qw, [seg.S for seg in net.list_of_LongProfile_objects])
             Qs_gain = compute_network_Qs_gain(neti, Qs, A_Qs, A_Qw, [q[0,:] for q in Qs])
             z_lag = find_network_lag(net, z, time, scale, period)
             # Qs_lag = find_network_lag(net, Qs, time, scale, period)
@@ -121,7 +141,8 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/output/network/m40_rnd_seg_length/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/output/network/m2-100_rnd_seg_length/" + str(i) + "/"
+    # outdir = "./test/" + str(i) + "/"
     
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
