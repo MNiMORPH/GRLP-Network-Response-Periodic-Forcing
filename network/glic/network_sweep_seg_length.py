@@ -33,8 +33,8 @@ def analyse_network(i):
             np.full(int(possible_length_range), mag) ))
     
     # ---- Set up network
-    # mag = 40
-    mag = int(random.choice(magnitude_choices))
+    mag = 40
+    # mag = int(random.choice(magnitude_choices))
     
     # # Shreve numbers
     # segment_length = sts.gamma(2., scale=260./2.)
@@ -52,15 +52,29 @@ def analyse_network(i):
     supply_area = sts.norm(loc=mean_supply_area, scale=mean_supply_area/10.)    
     
     # ---- Network topology
+    # net, net_topo = generate_random_network(
+    #     magnitude=mag, 
+    #     segment_length=segment_length,
+    #     segment_length_area_ratio=segment_length_area_ratio,
+    #     supply_area=supply_area,
+    #     approx_dx=5.e2,
+    #     min_nxs=5,
+    #     mean_discharge=False,
+    #     effective_rainfall=effective_rainfall,
+    #     sediment_discharge_ratio=sediment_discharge_ratio,
+    #     width=B,
+    #     topology=False,
+    #     evolve=True
+    #     )
     net, net_topo = generate_random_network(
         magnitude=mag, 
         segment_length=segment_length,
-        segment_length_area_ratio=segment_length_area_ratio,
-        supply_area=supply_area,
+        segment_length_area_ratio=False,
+        supply_area=False,
         approx_dx=5.e2,
         min_nxs=5,
-        mean_discharge=False,
-        effective_rainfall=effective_rainfall,
+        mean_discharge=10.,
+        effective_rainfall=False,
         sediment_discharge_ratio=sediment_discharge_ratio,
         width=B,
         topology=False,
@@ -141,7 +155,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/output/network/m2-100_rnd_seg_length/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/output/network/m40_rnd_seg_length_no_internal/" + str(i) + "/"
     # outdir = "./test/" + str(i) + "/"
     
     os.makedirs(outdir)
