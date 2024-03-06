@@ -12,7 +12,7 @@ def analyse_network(i):
     print("Working on network " + str(i) + ".")
     
     # Network props
-    effective_rainfall = 1.e3*0.4/3.154e10
+    effective_rainfall = 1.e4*0.4/3.154e10
     B = 98.1202038813591
     sediment_discharge_ratio = 1.e4
     
@@ -80,8 +80,23 @@ def analyse_network(i):
         topology=False,
         evolve=True
         )
+    # net, net_topo = generate_random_network(
+    #     magnitude=mag, 
+    #     max_length=100.e3,
+    #     segment_length=False,
+    #     segment_length_area_ratio=mean_segment_length_area_ratio,
+    #     supply_area=mean_supply_area,
+    #     approx_dx=5.e2,
+    #     min_nxs=5,
+    #     mean_discharge=False,
+    #     effective_rainfall=effective_rainfall,
+    #     sediment_discharge_ratio=sediment_discharge_ratio,
+    #     width=B,
+    #     topology=False,
+    #     evolve=True
+    #     )
     net.compute_network_properties()
-
+    
     # ---- Basic lp object to get k_Qs for later
     lp = LongProfile()
     lp.basic_constants()
@@ -89,7 +104,8 @@ def analyse_network(i):
     lp.set_hydrologic_constants()
 
     # ---- Liear version
-    L_eff = 0.7 * net.mean_downstream_distance
+    # L_eff = 0.7 * net.mean_downstream_distance
+    L_eff = 100.e3
     dx = L_eff / 100.
     S0 = (1./(lp.k_Qs*sediment_discharge_ratio))**(6./7.)
     mean_Qw = np.hstack([seg.Q for seg in net.list_of_LongProfile_objects]).mean()
@@ -168,10 +184,10 @@ def analyse_network(i):
             'source_areas': net_topo.source_areas,
             'segment_areas': net_topo.segment_areas,
             'supply_discharges': [
-                area*effective_rainfall for area in net_topo.source_areas
+                seg.Q[0] for seg in net.list_of_LongProfile_objects
                 ],
             'internal_discharges': [
-                area*effective_rainfall for area in net_topo.segment_areas
+                seg.Q[-1]-seg.Q[0] for seg in net.list_of_LongProfile_objects
                 ],
             'sediment_discharge_ratio': sediment_discharge_ratio,
             'B': B}, 
