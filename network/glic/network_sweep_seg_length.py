@@ -66,35 +66,35 @@ def analyse_network(i):
     #     topology=False,
     #     evolve=True
     #     )
-    net, net_topo = generate_random_network(
-        magnitude=mag, 
-        segment_length=segment_length,
-        segment_length_area_ratio=False,
-        supply_area=False,
-        approx_dx=5.e2,
-        min_nxs=5,
-        mean_discharge=10.,
-        effective_rainfall=False,
-        sediment_discharge_ratio=sediment_discharge_ratio,
-        width=B,
-        topology=False,
-        evolve=True
-        )
     # net, net_topo = generate_random_network(
     #     magnitude=mag, 
-    #     max_length=100.e3,
-    #     segment_length=False,
-    #     segment_length_area_ratio=mean_segment_length_area_ratio,
-    #     supply_area=mean_supply_area,
+    #     segment_length=segment_length,
+    #     segment_length_area_ratio=False,
+    #     supply_area=False,
     #     approx_dx=5.e2,
     #     min_nxs=5,
-    #     mean_discharge=False,
-    #     effective_rainfall=effective_rainfall,
+    #     mean_discharge=10.,
+    #     effective_rainfall=False,
     #     sediment_discharge_ratio=sediment_discharge_ratio,
     #     width=B,
     #     topology=False,
     #     evolve=True
     #     )
+    net, net_topo = generate_random_network(
+        magnitude=mag, 
+        max_length=100.e3,
+        segment_length=False,
+        segment_length_area_ratio=mean_segment_length_area_ratio,
+        supply_area=mean_supply_area,
+        approx_dx=5.e2,
+        min_nxs=5,
+        mean_discharge=False,
+        effective_rainfall=effective_rainfall,
+        sediment_discharge_ratio=sediment_discharge_ratio,
+        width=B,
+        topology=False,
+        evolve=True
+        )
     net.compute_network_properties()
     
     # ---- Basic lp object to get k_Qs for later
@@ -171,7 +171,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/output/network/m40_rnd_seg_length_no_internal/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/output/network/m40_fix_seg_length_w_internal/" + str(i) + "/"
     # outdir = "./test/" + str(i) + "/"
     
     os.makedirs(outdir)
