@@ -33,8 +33,8 @@ def analyse_network(i):
             np.full(int(possible_length_range), mag) ))
     
     # ---- Set up network
-    mag = 40
-    # mag = int(random.choice(magnitude_choices))
+    # mag = 40
+    mag = int(random.choice(magnitude_choices))
     
     # # Shreve numbers
     # segment_length = sts.gamma(2., scale=260./2.)
@@ -171,7 +171,7 @@ def analyse_network(i):
         lin_net)
 
     # ---- Output
-    outdir = "/home/mcnab/grlp_network_analysis/output/network/m40_fix_seg_length_w_internal/" + str(i) + "/"
+    outdir = "/home/mcnab/grlp_network_analysis/output/network/m2-100_fix_seg_length_w_internal/" + str(i) + "/"
     # outdir = "./test/" + str(i) + "/"
     
     os.makedirs(outdir)
