@@ -1,8 +1,8 @@
 #!/bin/bash -i
 
 # ---- Set defaults
-set_gmt_defaults
-
+# set_gmt_defaults
+source setup_gmt.sh
 
 # ---- Inputs / Output
 basedir="../../output/continuous/periods"
@@ -10,11 +10,11 @@ out="periods"
 
 # ---- Variables
 proj=-JX2il/2i
-pmin=0.001
-pmax=100
+pmin=0.003
+pmax=300
 
 # ---- CPTs
-gmt makecpt -T0.35/0.75/0.1 -Cplasma -D -G0/0.95 -I > p.cpt
+gmt makecpt -T1.2/2.8/0.4 -Cplasma -D -G0/0.95 > p.cpt
 
 # ---- G_z
 rgn=-R${pmin}/${pmax}/-0.1/1.3
@@ -27,7 +27,7 @@ gmt psxy $basedir/G_z_num.pg $rgn $proj -Cp.cpt -Ey+a+cf+w3p+p0.8p -O -K >> $out
 gmt psxy $basedir/G_z_num.pg $rgn $proj -Sc4.5p -Gblack -O -K >> $out.ps
 gmt psxy $basedir/G_z_num.pg $rgn $proj -Sc3p -Cp.cpt -O -K >> $out.ps
 echo a | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
-echo 0.3 1.3 "@~\144@~@%2%z@%%" | \
+echo 1 1.3 "@~\144@~@%2%z@%%" | \
   gmt pstext $rgn $proj -F+f10p,Helvetica,black+jMC -D0i/0.2i -N -O -K >> $out.ps
 echo "> -W0.8p
 0.0015 1.05
@@ -63,7 +63,7 @@ gmt psxy $basedir/G_Qs_out_lin.pg $rgn $proj -W0.8p -O -K >> $out.ps
 gmt psxy $basedir/G_Qs_num.pg $rgn $proj -Sc4.5p -Gblack -O -K >> $out.ps
 gmt psxy $basedir/G_Qs_num.pg $rgn $proj -Sc3p -Cp.cpt -O -K >> $out.ps
 echo b | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
-echo 0.3 1.3 "@~\144@~@%2%Q@-s@-@%%: Varying sediment supply" | \
+echo 1 1.3 "@~\144@~@%2%Q@-s@-@%%: Varying sediment supply" | \
   gmt pstext $rgn $proj -F+f10p,Helvetica,black+jMC -D0i/0.2i -N -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BnseW -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.2+l"Gain, @%2%G@-Qs@-@%%" -O -K >> $out.ps
 
@@ -83,7 +83,7 @@ gmt psxy $basedir/G_Qs_Qw_out_lin.pg $rgn $proj -W0.8p -O -K >> $out.ps
 gmt psxy $basedir/G_Qs_Qw_num.pg $rgn $proj -Sc4.5p -Gblack -O -K >> $out.ps
 gmt psxy $basedir/G_Qs_Qw_num.pg $rgn $proj -Sc3p -Cp.cpt -O -K >> $out.ps
 echo c | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
-echo 0.3 1.3 "@~\144@~@%2%Q@-s@-@%%: Varying water supply" | \
+echo 1 1.3 "@~\144@~@%2%Q@-s@-@%%: Varying water supply" | \
   gmt pstext $rgn $proj -F+f10p,Helvetica,black+jMC -D0i/0.2i -N -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BnsEw -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.2+l"Gain, @%2%G@-Qs@-@%%" -O -K >> $out.ps
 
@@ -94,7 +94,7 @@ gmt psxy $basedir/lag_Qs_Qw_out_lin.pg $rgn $proj -W0.8p -O -K >> $out.ps
 gmt psxy $basedir/lag_Qs_Qw_num.pg $rgn $proj -Sc4.5p -Gblack -O -K >> $out.ps
 gmt psxy $basedir/lag_Qs_Qw_num.pg $rgn $proj -Sc3p -Cp.cpt -O -K >> $out.ps
 echo f | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
-gmt psscale $rgn $proj -Dx0.5i/0.15i+w0.8i/0.08i+jMC+h+m -Bx0.1+l"Hack exponent, @%2%h@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+gmt psscale $rgn $proj -Dx0.5i/0.15i+w0.8i/0.08i+jMC+h+m -Bx0.4+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BnSEw -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.05+l"Lag, @~\152@~@%2%@-Qs@-@%% / @%2%P@%%" -O >> $out.ps
 
 # ---- Show

@@ -23,7 +23,7 @@ rgn_Qs=-R-5/105/0/3.5
 proj=-JX2.6i/2i
 
 # ---- CPTs
-gmt makecpt -T0.35/0.75/0.1 -Cplasma -D -G0/0.95 -I > p.cpt
+gmt makecpt -T1.2/2.8/0.4 -Cplasma -D -G0/0.95 -I > p.cpt
 
 # ---- Discharges
 gmt psbasemap $rgn $proj -B+n -Y6i -K > $out.ps
@@ -49,10 +49,10 @@ echo "100 2
 88 2" | gmt psxy $rgn_Qw $proj -W0.8p,dimgrey,4_4 -O -K >> $out.ps
 echo "88 7 @%2%Q@-w@-@%%(@%2%x@%%)
 88 4.5 @%2%Q@-s@-@%%(@%2%x@%%)
-88 2 @%2%Q@-w@-@%%, @%2%Q@-s@-@%%" | gmt pstext $rgn_Qw $proj -F+f7p,Helvetica,black+jRM -D-0.05i/0i -O -K >> $out.ps
-overbar 83.5 2 7 $rgn_Qw
-overbar 76 2 7 $rgn_Qw
-gmt psscale $rgn $proj -Dx1.3i/1.85i+w0.8i/0.08i+jMC+h -Bx0.1+l"Hack exponent, @%2%h@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+88 2 @~\341@~@%2%Q@-w@-@%%@~\361@~, @~\341@~@%2%Q@-s@-@%%@~\361@~" | gmt pstext $rgn_Qw $proj -F+f7p,Helvetica,black+jRM -D-0.05i/0i -O -K >> $out.ps
+# overbar 83.5 2 7 $rgn_Qw
+# overbar 76 2 7 $rgn_Qw
+gmt psscale $rgn $proj -Dx1.3i/1.85i+w0.8i/0.08i+jMC+h -Bx0.4+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
 # gmt psscale $rgn $proj -Dx0.12i/1.2i+w0.8i/0.08i+jMC -Bx0.1+l"Hack exponent, @%2%h@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
 echo "a" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 gmt psbasemap $rgn_Qw $proj \

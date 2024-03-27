@@ -21,7 +21,7 @@ B = 98.1202038813591
 S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.)
 
 # ---- Loop over ps
-ps = np.array([0.4, 0.5, 0.6, 0.7])
+ps = np.array([1.4, 1.8, 2.2, 2.6])
 periods = np.array([10., 100., 1000.]) * 3.154e10
 G_zs = []
 lag_zs = []
@@ -34,7 +34,7 @@ for period in periods:
         
         print(p)
         
-        net = set_up_long_profile(L, mean_Qw, mean_Qs, 1/p, B, dx=1.e2, evolve=True)
+        net = set_up_long_profile(L, mean_Qw, mean_Qs, p, B, dx=1.e2, evolve=True)
 
         # ---- Evolve
         A = 0.2
@@ -42,7 +42,7 @@ for period in periods:
         z_Qw, Qs_Qw, time_Qw, scale_Qw = evolve_network_periodic(deepcopy(net), period, 0., 0.2)
 
         # ---- Analyse
-        z_gain = compute_network_z_gain(net, z, 0.2, 0., S0)
+        z_gain = compute_network_z_gain(net, z, 0.2, 0., [S0])
         z_lag = find_network_lag(net, z, time, scale, period)
         G_zs_p.append(z_gain[0])
         lag_zs_p.append(z_lag[0])

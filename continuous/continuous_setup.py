@@ -13,9 +13,9 @@ mean_Qw = 10.
 mean_Qs = 0.001
 B = 98.1202038813591
 lps = {}
-for p in [0.4, 0.5, 0.6, 0.7]:
+for p in np.array([1.4, 1.8, 2.2, 2.6]):
     print(p)
-    net = set_up_long_profile(L, mean_Qw, mean_Qs, 1./p, B, dx=1.e2, evolve=True)
+    net = set_up_long_profile(L, mean_Qw, mean_Qs, p, B, dx=1.e2, evolve=True)
     lps[p] = net
 # S = (mean_Qs / (lps[1.4].list_of_LongProfile_objects[0].k_Qs * mean_Qw))**(6./7.)
 lp_ref = set_up_long_profile(L, mean_Qw, mean_Qs, 0, B, dx=1.e2, evolve=True)

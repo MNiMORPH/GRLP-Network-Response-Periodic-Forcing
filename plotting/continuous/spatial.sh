@@ -22,7 +22,7 @@ title=("@%3%P@%% = @%3%T@-eq@-@%% / 10" "@%3%P@%% = @%3%T@-eq@-@%%" "@%3%P@%% = 
 gmt psbasemap $rgn $proj -B+n -Y6i -X-1.5i -K > $out.ps
 
 # ---- CPTs
-gmt makecpt -T0.35/0.75/0.1 -Cplasma -D -G0/0.95 -I > p.cpt
+gmt makecpt -T1.2/2.8/0.4 -Cplasma -D -G0/0.95 -I > p.cpt
 
 for i in ${!periods[@]} ; do
 
@@ -72,7 +72,7 @@ for i in ${!periods[@]} ; do
       -O -K >> $out.ps
     
   if [ ${periods[$i]} == "slow" ] ; then
-    gmt psscale $rgn $proj -Dx1.45i/1.85i+w0.8i/0.08i+jMC+h -Bx0.1+l"Hack exponent, @%2%h@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+    gmt psscale $rgn $proj -Dx1.45i/1.85i+w0.8i/0.08i+jMC+h -Bx0.4+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
   fi
   
 done

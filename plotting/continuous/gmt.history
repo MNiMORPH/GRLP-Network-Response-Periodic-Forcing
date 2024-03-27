@@ -1,10 +1,10 @@
 # GMT 6 Session common arguments shelf
 BEGIN GMT 6.1.1
-B	nSEwx1f3p+lPeriod, @%2%P@%% / @%2%T@-eq@-@%%y0.05+lLag, @~\152@~@%2%@-Qs@-@%% / @%2%P@%%
+B	+n
 J	X
-JX	X2il/2i
-R	0.001/100/-0.275/0.025
-X	2.25i
-Y	-2.2i
-@L	48
+JX	X2i/1.5i
+R	-10/110/0/750
+X	2.2i
+Y	-2.1i
+@L	53
 END

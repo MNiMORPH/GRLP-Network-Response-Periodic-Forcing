@@ -65,8 +65,9 @@ B = 98.1202038813591
 S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.)
 
 # ---- Loop over periods
-periods = np.logspace(-2.5, 1.5, 9) * 3.154e12
-ps = np.array([0.4, 0.5, 0.6, 0.7])
+periods = np.logspace(-2., 2., 9) * 3.154e12
+# ps = np.array([0.4, 0.5, 0.6, 0.7])
+ps = np.array([1.4, 1.8, 2.2, 2.6])
 G_zs = []
 G_Qss = []
 G_Qs_Qws = []
@@ -81,7 +82,8 @@ lag_z_errs = []
 # lag_Qs_Qw_errs = []
 for p in ps:
     
-    net = set_up_long_profile(L, mean_Qw, mean_Qs, 1/p, B, dx=1.e3, evolve=True)
+    # net = set_up_long_profile(L, mean_Qw, mean_Qs, 1/p, B, dx=1.e3, evolve=True)
+    net = set_up_long_profile(L, mean_Qw, mean_Qs, p, B, dx=1.e3, evolve=True)
     G_z_p = []
     lag_z_p = []
     G_Qs_p = []
@@ -103,7 +105,7 @@ for p in ps:
         z, Qs, time, scale = evolve_network_periodic(deepcopy(net), period, 0.2, 0.)
         z_Qw, Qs_Qw, time_Qw, scale_Qw = evolve_network_periodic(deepcopy(net), period, 0., 0.2)
 
-        z_gain = compute_network_z_gain(net, z, 0.2, 0., S0)
+        z_gain = compute_network_z_gain(net, z, 0.2, 0., [S0])
         Qs_gain = compute_network_Qs_gain(net, Qs, 0.2, 0., [q[0,:] for q in Qs])
         z_lag = find_network_lag(net, z, time, scale, period)
         # Qs_lag = find_network_lag(net, Qs, time, scale, period)
@@ -143,7 +145,7 @@ for p in ps:
     
 # ---- Linear
 lp = net.list_of_LongProfile_objects[0]
-lin_periods = np.logspace(-3., 2., 81) * lp.equilibration_time
+lin_periods = np.logspace(-2.5, 2.5, 81) * lp.equilibration_time
 lin_gain = np.zeros((len(lin_periods), len(lp.x)))
 lin_lag = np.zeros((len(lin_periods), len(lp.x)))
 lin_gain_Qs = np.zeros((len(lin_periods), len(lp.x)))
