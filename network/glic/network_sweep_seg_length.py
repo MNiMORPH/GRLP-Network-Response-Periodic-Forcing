@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.stats as sts
-from scipy.optimize import minimize
 import random
 import copy
 import pickle
@@ -22,11 +21,9 @@ def analyse_network(iter):
     print("Working on network " + str(i) + ".")
         
     # ---- Make choices for magnitude
-    if props['magnitude']:
-        magnitude = props['magnitude']
-    else:
-        min_mag = 2
-        max_mag = 100
+    try:
+        min_mag = props['magnitude'][0]
+        max_mag = props['magnitude'][1]
         magnitude_choices = np.array([], dtype=int)
         for mag in range(min_mag,max_mag+1):
             if mag==2:
@@ -37,6 +34,8 @@ def analyse_network(iter):
                 magnitude_choices, 
                 np.full(int(possible_length_range), mag) ))
         magnitude = int(random.choice(magnitude_choices))
+    except TypeError:
+        magnitude = props['magnitude']
 
     # ---- Set up random segment length/area generators
     try:
