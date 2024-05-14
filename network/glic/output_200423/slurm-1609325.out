@@ -1,7 +1,0 @@
-environment: /usr/share/lmod/lmod/libexec/lmod: No such file or directory
-srun: error: Unable to create step for job 1609325: More processors requested than permitted
-srun: error: Unable to create step for job 1609325: More processors requested than permitted
-srun: error: Unable to create step for job 1609325: More processors requested than permitted
-Starting: 15:10:14
-Working on network 209.
-Finished: 16:57:12
