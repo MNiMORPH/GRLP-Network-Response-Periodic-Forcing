@@ -67,7 +67,8 @@ def analyse_network(iter):
         mean_discharge=props['mean_discharge'],
         effective_rainfall=props['effective_rainfall'],
         sediment_discharge_ratio=props['sediment_discharge_ratio'],
-        width=props['width'],
+        mean_width=props['mean_width'],
+        variable_width=props['variable_width'],
         topology=None,
         evolve=True
         )
@@ -81,8 +82,11 @@ def analyse_network(iter):
         props['max_length'],
         props['mean_discharge'],
         props['mean_discharge']/props['sediment_discharge_ratio'],
+        props['mean_width'],
         0.,
-        props['width'])
+        0.,
+        0.
+        )
     lin_net.list_of_LongProfile_objects[0].compute_equilibration_time()
     
     # ---- Periodic
@@ -99,18 +103,18 @@ def analyse_network(iter):
             neti = copy.deepcopy(net)
             periodic = grlpx.evolve_network_periodic(neti, period, A_Qs, A_Qw)
             
-            z_gain = grlpx.compute_network_gain(periodic['z'], 0.2)
-            Qs_gain = grlpx.compute_network_gain(periodic['Qs'], 0.2)
-            z_lag = grlpx.find_network_lag(net, periodic['z'], periodic['time'], periodic['S_scale'], period)
-            Qs_lag = grlpx.find_lag_time_single(periodic['Qs'][0][:,-1], periodic['time'], periodic['S_scale'], period, can_lead=can_lead)/period
+            # z_gain = grlpx.compute_network_gain(periodic['z'], 0.2)
+            # Qs_gain = grlpx.compute_network_gain(periodic['Qs'], 0.2)
+            # z_lag = grlpx.find_network_lag(net, periodic['z'], periodic['time'], periodic['S_scale'], period)
+            # Qs_lag = grlpx.find_lag_time_single(periodic['Qs'][0][:,-1], periodic['time'], periodic['S_scale'], period, can_lead=can_lead)/period
             
             # Record gain
-            z_gains[lab].append(z_gain)
-            Qs_gains[lab].append(Qs_gain)
+            z_gains[lab].append(periodic['G_z'])
+            Qs_gains[lab].append(periodic['G_Qs'])
             
             # Record lag
-            z_lags[lab].append(z_lag)
-            Qs_lags[lab].append(Qs_lag)
+            z_lags[lab].append(periodic['lag_z'])
+            Qs_lags[lab].append(periodic['lag_Qs'])
 
     # ---- Compute best fitting equilibration times
     net_Teq = grlpx.find_network_equilibration_time(
@@ -133,6 +137,7 @@ def analyse_network(iter):
             'lengths': net_topo.segment_lengths,
             'source_areas': net_topo.source_areas,
             'segment_areas': net_topo.segment_areas,
+            'mean_discharge': props['mean_discharge'],
             'supply_discharges': [
                 seg.Q[0] if not seg.upstream_segment_IDs else 0. \
                     for seg in net.list_of_LongProfile_objects
@@ -141,7 +146,8 @@ def analyse_network(iter):
                 seg.Q[-1]-seg.Q[0] for seg in net.list_of_LongProfile_objects
                 ],
             'sediment_discharge_ratio': props['sediment_discharge_ratio'],
-            'B': props['width']
+            'mean_width': props['mean_width'],
+            'variable_width': props['variable_width']
             }, 
             f
         )
@@ -174,7 +180,7 @@ if __name__ == "__main__":
     print("Starting: " + datetime.now().strftime("%H:%M:%S"))
     
     import multiprocessing as mp
-    with mp.Pool(processes=10) as pool:
+    with mp.Pool(processes=2) as pool:
         results = pool.map(
             analyse_network, 
             [(k, setup_file) for k in range(i,j+1)]

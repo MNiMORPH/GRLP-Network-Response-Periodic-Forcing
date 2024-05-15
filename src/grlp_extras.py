@@ -254,7 +254,7 @@ def find_lag_times(val, time, scale, threshold=0., can_lead=False, period=False)
 def compute_power_law_coefficient(mean, p, L, x0):
     return mean * L * (p+1.) / ((L+x0)**(p+1.) - x0**(p+1.))
 
-def set_up_long_profile(L, mean_Qw, mean_Qs, p, B, x0=10.e3, dx=1.e3, evolve=True):
+def set_up_long_profile(L, mean_Qw, mean_Qs, mean_B, p_Qw, p_Qs, p_B, x0=10.e3, dx=1.e3, evolve=True):
     
     # initial set up
     lp = LongProfile()
@@ -266,12 +266,16 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, p, B, x0=10.e3, dx=1.e3, evolve=Tru
     x = np.arange(0,L,dx)
     
     # Qw
-    k_x_Qw = compute_power_law_coefficient(mean_Qw, p, L, x0)
-    Qw = k_x_Qw*((x+x0)**p)
-    
+    k_x_Qw = compute_power_law_coefficient(mean_Qw, p_Qw, L, x0)
+    Qw = k_x_Qw*((x+x0)**p_Qw)
+
+    # B
+    k_x_B = compute_power_law_coefficient(mean_B, p_B, L, x0)
+    B = k_x_B*((x+x0)**p_B)
+
     # Qs
-    k_x_Qs = compute_power_law_coefficient(mean_Qs, p, L, x0)
-    ssd = p * k_x_Qs * (x+x0)**(p-1.) / (B * (1. - lp.lambda_p))
+    k_x_Qs = compute_power_law_coefficient(mean_Qs, p_Qs, L, x0)
+    ssd = p_Qs * k_x_Qs * (x+x0)**(p_Qs-1.) / (B * (1. - lp.lambda_p))
 
     # z
     S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.)
@@ -287,7 +291,7 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, p, B, x0=10.e3, dx=1.e3, evolve=Tru
         x = [x],
         z = [(L-x)*S0],
         Q = [Qw],
-        B = [np.full(len(x),B)],
+        B = [B],
         overwrite = False
         )
     net.set_niter(3)
@@ -305,10 +309,10 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, p, B, x0=10.e3, dx=1.e3, evolve=Tru
     
     return net
 
-def evolve_network_periodic(net, period, A_Qs, A_Qw):
+def evolve_network_periodic(net, period, A_Qs, A_Qw, nperiods=4):
     
     # ---- Set up time domain
-    time, dt = np.linspace(0., period*4., 4000, retstep=True)
+    time, dt = np.linspace(0., period*nperiods, 1000*nperiods, retstep=True)
     Qs_scale = 1 + A_Qs*np.sin(2. * np.pi * time / period)
     Qw_scale = 1 + A_Qw*np.sin(2. * np.pi * time / period)
     S_scale = (Qs_scale/Qw_scale)**(6./7.)
@@ -355,13 +359,23 @@ def evolve_network_periodic(net, period, A_Qs, A_Qw):
             seg.compute_Q_s()
             Qs[seg.ID][i,:] = seg.Q_s.copy()
     
+    if A_Qw > 0:
+        Qs_can_lead = True
+    else:
+        Qs_can_lead = False
+    
     return {
         'z': z, 
         'Qs': Qs, 
         'time': time,
         'Qs_scale': Qs_scale,
         'Qw_scale': Qw_scale,
-        'S_scale': S_scale
+        'S_scale': S_scale,
+        'G_z': compute_network_gain(z, max([A_Qs, A_Qw])),
+        'G_Qs': compute_network_gain(Qs, max([A_Qs, A_Qw])),
+        'lag_z': find_network_lag(net, z, time, S_scale, period),
+        'lag_Qs': find_lag_time_single(
+            Qs[0][:,-1], time, S_scale, period, can_lead=Qs_can_lead)
         }
 
 def compute_network_gain(prop, force_amplitude):
@@ -445,7 +459,21 @@ def read_sweep(indir):
             
         with open(indir + netdir + "/props.obj", "rb") as f:
             prop = pickle.load(f)
-            if 'lengths' in prop.keys():
+            if 'mean_width' in prop.keys():
+                net, net_topo = generate_random_network(
+                    magnitude=None, 
+                    segment_lengths=prop['lengths'],
+                    mean_discharge=prop['mean_discharge'],
+                    supply_discharges=prop['supply_discharges'],
+                    internal_discharges=prop['internal_discharges'],
+                    approx_dx=5.e2,
+                    min_nxs=5,
+                    sediment_discharge_ratio=prop['sediment_discharge_ratio'],
+                    mean_width=prop['mean_width'],
+                    variable_width=prop['variable_width'],
+                    topology=prop['topology']
+                    )
+            else:
                 net, net_topo = generate_random_network(
                     magnitude=None, 
                     segment_lengths=prop['lengths'],
@@ -454,18 +482,7 @@ def read_sweep(indir):
                     approx_dx=5.e2,
                     min_nxs=5,
                     sediment_discharge_ratio=prop['sediment_discharge_ratio'],
-                    width=98.1202038813591,
-                    topology=prop['topology']
-                    )
-            else:
-                net, net_topo = generate_random_network(
-                    magnitude=None, 
-                    max_length=100.e3,
-                    approx_dx=5.e2,
-                    min_nxs=5,
-                    mean_discharge=prop['Q_mean'],
-                    sediment_discharge_ratio=1.e4,
-                    width=98.1202038813591,
+                    mean_width=98.1202038813591,
                     topology=prop['topology']
                     )
             net.compute_network_properties()
