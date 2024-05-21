@@ -1,0 +1,60 @@
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+Starting: 13:44:35
+slurmstepd: error: *** STEP 2869526.0 ON node042 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.2 ON node044 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.3 ON node178 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.9 ON node184 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.1 ON node043 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.4 ON node179 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.5 ON node180 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.6 ON node181 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.8 ON node183 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2869526.7 ON node182 CANCELLED AT 2024-05-19T13:44:39 DUE TO TIME LIMIT ***
+Working on network 62.
+Working on network 63.
+Working on network 66.
+Working on network 67.
+Working on network 42.
+Working on network 43.
+Working on network 46.
+Working on network 47.
+Working on network 80.
+Working on network 81.
+Working on network 86.
+Working on network 87.
+Working on network 50.
+Working on network 51.
+Working on network 54.
+Working on network 55.
+Working on network 72.
+Working on network 73.
+Working on network 76.
+Working on network 77.
+srun: error: node181: task 0: Terminated
+srun: error: node179: task 0: Terminated
+srun: error: node183: task 0: Terminated
+srun: error: node178: task 0: Terminated
+srun: error: node180: task 0: Terminated
+srun: error: node182: task 0: Terminated
+srun: error: node184: task 0: Terminated
+srun: Force Terminated StepId=2869526.7
+srun: Force Terminated StepId=2869526.4
+srun: Force Terminated StepId=2869526.3
+srun: Force Terminated StepId=2869526.8
+srun: Force Terminated StepId=2869526.6
+srun: Force Terminated StepId=2869526.5
+srun: error: node042: task 0: Terminated
+srun: Force Terminated StepId=2869526.9
+srun: Force Terminated StepId=2869526.0
+srun: error: node044: task 0: Terminated
+srun: Force Terminated StepId=2869526.2
+srun: error: node043: task 0: Terminated
+srun: Force Terminated StepId=2869526.1
