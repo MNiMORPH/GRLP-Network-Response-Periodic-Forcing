@@ -1,0 +1,184 @@
+Starting: 09:58:00
+Starting: 09:58:00
+Starting: 09:58:01
+Starting: 09:58:01
+Starting: 09:58:01
+Starting: 09:58:01
+Starting: 09:58:01
+Starting: 09:58:02
+Starting: 09:58:04
+Starting: 09:58:04
+Working on network 26.
+Working on network 30.
+Working on network 25.
+Working on network 32.
+Working on network 23.
+Working on network 38.
+Working on network 22.
+Working on network 37.
+Working on network 28.
+Working on network 31.
+Working on network 29.
+Working on network 35.
+Working on network 21.
+Working on network 36.
+Working on network 20.
+Working on network 33.
+Working on network 27.
+Working on network 34.
+Working on network 24.
+Working on network 39.
+Finished: 02:18:56
+Working on network 62.
+Working on network 70.
+Working on network 66.
+Working on network 71.
+Working on network 69.
+Working on network 72.
+Working on network 65.
+Working on network 78.
+Working on network 63.
+Working on network 79.
+Working on network 67.
+Working on network 77.
+Working on network 61.
+Working on network 74.
+Working on network 68.
+Working on network 73.
+Working on network 60.
+Working on network 75.
+Working on network 64.
+Working on network 76.
+Finished: 02:28:38
+Working on network 49.
+Working on network 50.
+Working on network 42.
+Working on network 51.
+Working on network 40.
+Working on network 57.
+Working on network 46.
+Working on network 55.
+Working on network 41.
+Working on network 54.
+Working on network 45.
+Working on network 52.
+Working on network 48.
+Working on network 58.
+Working on network 44.
+Working on network 53.
+Working on network 47.
+Working on network 59.
+Working on network 43.
+Working on network 56.
+Finished: 03:54:27
+Working on network 87.
+Working on network 90.
+Working on network 84.
+Working on network 93.
+Working on network 82.
+Working on network 94.
+Working on network 80.
+Working on network 91.
+Working on network 86.
+Working on network 98.
+Working on network 88.
+Working on network 96.
+Working on network 83.
+Working on network 92.
+Working on network 89.
+Working on network 95.
+Working on network 85.
+Working on network 97.
+Finished: 09:09:42
+Working on network 9.
+Working on network 10.
+Working on network 1.
+Working on network 12.
+Working on network 8.
+Working on network 16.
+Working on network 3.
+Working on network 11.
+Working on network 4.
+Working on network 17.
+Working on network 0.
+Working on network 18.
+Working on network 6.
+Working on network 13.
+Working on network 5.
+Working on network 14.
+Working on network 2.
+Working on network 15.
+Working on network 7.
+Working on network 19.
+Finished: 11:54:12
+Working on network 104.
+Working on network 113.
+Working on network 102.
+Working on network 110.
+Working on network 103.
+Working on network 112.
+Working on network 106.
+Working on network 111.
+Working on network 108.
+Working on network 115.
+Working on network 109.
+Working on network 116.
+Working on network 107.
+Working on network 119.
+Working on network 105.
+Working on network 118.
+Working on network 101.
+Working on network 117.
+Finished: 16:32:52
+Working on network 123.
+Working on network 130.
+Working on network 127.
+Working on network 132.
+Working on network 122.
+Working on network 137.
+Working on network 121.
+Working on network 131.
+Working on network 120.
+Working on network 134.
+Working on network 128.
+Working on network 133.
+Working on network 124.
+Working on network 135.
+Working on network 126.
+Working on network 136.
+Working on network 125.
+Working on network 139.
+Working on network 129.
+Working on network 138.
+Finished: 16:32:56
+slurmstepd: error: *** STEP 2955334.9 ON node256 CANCELLED AT 2024-06-01T09:58:16 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2955334.8 ON node255 CANCELLED AT 2024-06-01T09:58:16 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 2955334.7 ON node254 CANCELLED AT 2024-06-01T09:58:16 DUE TO TIME LIMIT ***
+Working on network 146.
+Working on network 153.
+Working on network 144.
+Working on network 155.
+Working on network 147.
+Working on network 150.
+Working on network 149.
+Working on network 156.
+Working on network 148.
+Working on network 152.
+Working on network 140.
+Working on network 158.
+Working on network 182.
+Working on network 193.
+Working on network 188.
+Working on network 194.
+Working on network 164.
+Working on network 170.
+Working on network 160.
+Working on network 172.
+Working on network 168.
+Working on network 177.
+srun: error: node254: task 0: Terminated
+srun: error: node256: task 0: Terminated
+srun: Force Terminated StepId=2955334.7
+srun: error: node255: task 0: Terminated
+srun: Force Terminated StepId=2955334.9
+srun: Force Terminated StepId=2955334.8
