@@ -384,9 +384,9 @@ def evolve_network_periodic(net, period, A_Qs, A_Q, nperiods=4):
         'S_scale': S_scale,
         'G_z': compute_network_gain(z, max([A_Qs, A_Q])),
         'G_Qs': compute_network_gain(Qs, max([A_Qs, A_Q])),
-        'lag_z': find_network_lag(net, z, time, S_scale, period),
+        'lag_z': find_network_lag(net, z, time, S_scale, period)/period,
         'lag_Qs': find_lag_time_single(
-            Qs[0][:,-1], time, S_scale, period, can_lead=Qs_can_lead)
+            Qs[0][:,-1], time, S_scale, period, can_lead=Qs_can_lead)/period
         }
 
 def compute_network_gain(prop, force_amplitude):
@@ -404,7 +404,7 @@ def find_network_lag(net, prop, time, scale, period, can_lead=False):
     # Initial attempt
     lag = [np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects]
     for seg in net.list_of_LongProfile_objects:
-        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale, period=period, can_lead=can_lead) / period
+        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale, period=period, can_lead=can_lead)
     
     # Check for cycle-skipped segment
     completed_segs = []
@@ -412,8 +412,8 @@ def find_network_lag(net, prop, time, scale, period, can_lead=False):
         while net.list_of_LongProfile_objects[segID].downstream_segment_IDs:
             down_segID = net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
             if down_segID not in completed_segs:
-                if (lag[down_segID][0] - lag[segID][-1]) > 0.5:
-                    lag[down_segID] -= 1.
+                if (lag[down_segID][0] - lag[segID][-1]) > 0.5*period:
+                    lag[down_segID] -= period
                 completed_segs.append(down_segID)
             segID = down_segID
     
