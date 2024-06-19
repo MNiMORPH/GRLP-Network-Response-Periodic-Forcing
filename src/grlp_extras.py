@@ -44,8 +44,12 @@ def find_lag_time_single(val, time, scale, threshold=0., can_lead=False):
         trough_lags = np.array(trough_lags_i[1:]).mean()
     else:
         trough_lags = np.nan
+        
+    average_lag = (peak_lags + trough_lags)/2.
+    if average_lag < -0.25:
+        average_lag = np.nan
     
-    return (peak_lags + trough_lags)/2.
+    return average_lag
 
 
 # def compute_coeff_internal_external(lp, A_Q=0., A_Qs=0., A_Qs_i=0.):
@@ -254,7 +258,7 @@ def find_lag_times(val, time, scale, threshold=0., can_lead=False, period=False)
 def compute_power_law_coefficient(mean, p, L, x0):
     return mean * L * (p+1.) / ((L+x0)**(p+1.) - x0**(p+1.))
 
-def set_up_long_profile(L, mean_Qw, mean_Qs, mean_B, p_Qw, p_Qs, p_B, x0=10.e3, dx=1.e3, evolve=True):
+def set_up_long_profile(L, Q_mean, Qs_mean, B_mean, p_Q, p_Qs, p_B, x0=10.e3, dx=1.e3, evolve=True):
     
     # initial set up
     lp = LongProfile()
@@ -266,19 +270,19 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, mean_B, p_Qw, p_Qs, p_B, x0=10.e3, 
     x = np.arange(0,L,dx)
     
     # Qw
-    k_x_Qw = compute_power_law_coefficient(mean_Qw, p_Qw, L, x0)
-    Qw = k_x_Qw*((x+x0)**p_Qw)
+    k_x_Qw = compute_power_law_coefficient(Q_mean, p_Q, L, x0)
+    Qw = k_x_Qw*((x+x0)**p_Q)
 
     # B
-    k_x_B = compute_power_law_coefficient(mean_B, p_B, L, x0)
+    k_x_B = compute_power_law_coefficient(B_mean, p_B, L, x0)
     B = k_x_B*((x+x0)**p_B)
 
     # Qs
-    k_x_Qs = compute_power_law_coefficient(mean_Qs, p_Qs, L, x0)
+    k_x_Qs = compute_power_law_coefficient(Qs_mean, p_Qs, L, x0)
     ssd = p_Qs * k_x_Qs * (x+x0)**(p_Qs-1.) / (B * (1. - lp.lambda_p))
 
     # z
-    S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.)
+    S0=(Qs_mean/(lp.k_Qs * Q_mean))**(6./7.)
 
     net = Network()
     net.initialize(
@@ -309,27 +313,21 @@ def set_up_long_profile(L, mean_Qw, mean_Qs, mean_B, p_Qw, p_Qs, p_B, x0=10.e3, 
     
     return net
 
-def evolve_network_periodic(net, period, A_Qs, A_Qw, nperiods=4):
-    
-    # ---- Set up time domain
-    time, dt = np.linspace(0., period*nperiods, 1000*nperiods, retstep=True)
-    Qs_scale = 1 + A_Qs*np.sin(2. * np.pi * time / period)
-    Qw_scale = 1 + A_Qw*np.sin(2. * np.pi * time / period)
-    S_scale = (Qs_scale/Qw_scale)**(6./7.)
+def evolve_network(net, time, dt, Qs_scale, Q_scale, S_scale):
     
     # ---- Set up arrays for output
     z = [np.zeros(( len(time), len(seg.z) ))
             for seg in net.list_of_LongProfile_objects]
     Qs = [np.zeros(( len(time), len(seg.Q_s) ))
             for seg in net.list_of_LongProfile_objects]
-    
+
     # ---- Initial sediment and water supplies
     S0 = net.list_of_LongProfile_objects[net.list_of_channel_head_segment_IDs[0]].S0
-    Qw0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
+    Q0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
     for seg in net.list_of_LongProfile_objects:
-        Qw0[seg.ID] = seg.Q.copy()
+        Q0[seg.ID] = seg.Q.copy()
     ssd0 = [seg.ssd.copy() for seg in net.list_of_LongProfile_objects]
-    
+
     # ---- Evolve
     for i,t in enumerate(time):
         for seg in net.list_of_LongProfile_objects:
@@ -337,8 +335,8 @@ def evolve_network_periodic(net, period, A_Qs, A_Qw, nperiods=4):
         #     seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
         #     if seg.ID in net.list_of_channel_head_segment_IDs:
                 # seg.set_Qs_input_upstream(S0 * ((1. + A_Qs*s)**(6./7.)))
-    
-        new_Q = [Qw0[j]*Qw_scale[i] for j in range(len(net.list_of_LongProfile_objects))]
+
+        new_Q = [Q0[j]*Q_scale[i] for j in range(len(net.list_of_LongProfile_objects))]
         net.update_Q(new_Q)
         net.create_Q_ext_lists()
         net.update_Q_ext_from_Q()
@@ -358,8 +356,21 @@ def evolve_network_periodic(net, period, A_Qs, A_Qw, nperiods=4):
             z[seg.ID][i,:] = seg.z.copy()
             seg.compute_Q_s()
             Qs[seg.ID][i,:] = seg.Q_s.copy()
+            
+    return z, Qs
+
+def evolve_network_periodic(net, period, A_Qs, A_Q, nperiods=4):
     
-    if A_Qw > 0:
+    # ---- Set up time domain
+    time, dt = np.linspace(0., period*nperiods, 1000*nperiods, retstep=True)
+    Qs_scale = 1 + A_Qs*np.sin(2. * np.pi * time / period)
+    Q_scale = 1 + A_Q*np.sin(2. * np.pi * time / period)
+    S_scale = (Qs_scale/Q_scale)**(6./7.)
+    
+    # ---- Evolve
+    z, Qs = evolve_network(net, time, dt, Qs_scale, Q_scale, S_scale)
+    
+    if A_Q > 0:
         Qs_can_lead = True
     else:
         Qs_can_lead = False
@@ -369,10 +380,10 @@ def evolve_network_periodic(net, period, A_Qs, A_Qw, nperiods=4):
         'Qs': Qs, 
         'time': time,
         'Qs_scale': Qs_scale,
-        'Qw_scale': Qw_scale,
+        'Q_scale': Q_scale,
         'S_scale': S_scale,
-        'G_z': compute_network_gain(z, max([A_Qs, A_Qw])),
-        'G_Qs': compute_network_gain(Qs, max([A_Qs, A_Qw])),
+        'G_z': compute_network_gain(z, max([A_Qs, A_Q])),
+        'G_Qs': compute_network_gain(Qs, max([A_Qs, A_Q])),
         'lag_z': find_network_lag(net, z, time, S_scale, period),
         'lag_Qs': find_lag_time_single(
             Qs[0][:,-1], time, S_scale, period, can_lead=Qs_can_lead)
