@@ -1,151 +1,77 @@
-from grlp import *
-from grlp_extras import *
-from copy import deepcopy
-from matplotlib import cm
-from matplotlib.colors import LinearSegmentedColormap
+import numpy as np
+import matplotlib.pyplot as plt
+import copy
 
-def find_lag_time_single(val, time, scale, threshold=0., can_lead=False, period=False, full=False):
-    
-    scl_peaks, __ = find_peaks(scale)
-    scl_troughs, __ = find_peaks(-scale)
-    scl_tps = np.sort( np.hstack(( scl_peaks, scl_troughs )) )
-
-    obs_peaks, __ = find_peaks(val)
-    obs_troughs, __ = find_peaks(-val)
-    obs_tps = np.sort( np.hstack(( obs_peaks, obs_troughs )) )
-    if not can_lead:
-        obs_tps = obs_tps[ np.where( obs_tps >= scl_tps[0] ) ]
-    
-    obs_tps_attached = np.zeros( len(obs_tps), dtype=int )
-    obs_lag_time = np.zeros( len(obs_tps), dtype=int )
-
-    for j,tp in enumerate(obs_tps):
-        if j > len(scl_tps)-1:
-            continue
-        obs_tps_attached[j] = scl_tps[j]
-        obs_lag_time[j] = time[tp] - time[scl_tps[j]]
-        
-    peak_lags_i = []
-    trough_lags_i = []
-
-    for k,tp in enumerate(obs_tps_attached):
-
-        if obs_lag_time[k] != 0.:
-            if any(scl_peaks == tp):
-                peak_lags_i.append( obs_lag_time[k].copy() )
-            else:
-                trough_lags_i.append( obs_lag_time[k].copy() )
-
-    if len(peak_lags_i) > 1:
-        peak_lags = np.array(peak_lags_i[1:]).mean()
-    else:
-        peak_lags = np.nan
-
-    if len(trough_lags_i) > 1:
-        trough_lags = np.array(trough_lags_i[1:]).mean()
-    else:
-        trough_lags = np.nan
-    
-    return (peak_lags + trough_lags)/2.
+import grlp
+import grlp_extras as grlpx
 
 
-# initial set up
-lp = LongProfile()
-lp.basic_constants()
-lp.bedload_lumped_constants()
-lp.set_hydrologic_constants()
+# ---- Output?
+output_gmt = True
 
 
 # ---- River properties
-x0 = 10.e3
+x0 = 50.e3
 L = 100.e3
-mean_Qw = 10.
-mean_Qs = 0.001
-B = 98.1202038813591
-S0=(mean_Qs/(lp.k_Qs * mean_Qw))**(6./7.)
+Q_mean = 26.
+Qs_mean = Q_mean * 1.e-4
+B_mean = 254.
+ps = np.array([1.4, 1.6, 1.8, 2., 2.2])
+
 
 # ---- Loop over periods
-periods = np.logspace(-2., 2., 9) * 3.154e12
-# ps = np.array([0.4, 0.5, 0.6, 0.7])
-ps = np.array([1.4, 1.8, 2.2, 2.6])
-G_zs = []
-G_Qss = []
-G_Qs_Qws = []
-lag_zs = []
-lag_Qss = []
-lag_Qs_Qws = []
-G_z_errs = []
-G_Qs_errs = []
-# G_Qs_Qw_errs = []
-lag_z_errs = []
-# lag_Qs_errs = []
-# lag_Qs_Qw_errs = []
-for p in ps:
+periods = np.logspace(-2., 2., 29) * 3.154e12
+periodics_Qs = [[] for p in ps]
+periodics_Qw = [[] for p in ps]
+for i,p in enumerate(ps):
+    print(p)
     
-    # net = set_up_long_profile(L, mean_Qw, mean_Qs, 1/p, B, dx=1.e3, evolve=True)
-    net = set_up_long_profile(L, mean_Qw, mean_Qs, p, B, dx=1.e3, evolve=True)
-    G_z_p = []
-    lag_z_p = []
-    G_Qs_p = []
-    lag_Qs_p = []
-    G_Qs_Qw_p = []
-    lag_Qs_Qw_p = []
-    G_z_err_p = []
-    lag_z_err_p = []
-    # G_Qs_err_p = []
-    # lag_Qs_err_p = []
-    # G_Qs_Qw_err_p = []
-    # lag_Qs_Qw_err_p = []
+    # net = grlpx.set_up_long_profile(
+    #     L=L,
+    #     Q_mean=Q_mean,
+    #     Qs_mean=Qs_mean,
+    #     B_mean=B_mean,
+    #     p_Q=p,
+    #     p_Qs=p,
+    #     p_B=0,
+    #     x0=x0,
+    #     dx=5.e2,
+    #     evolve=True
+    #     )
+    net = grlpx.set_up_long_profile(
+        L=L,
+        Q_mean=Q_mean,
+        Qs_mean=Qs_mean,
+        B_mean=B_mean,
+        p_Q=p,
+        p_Qs=p,
+        p_B=p,
+        x0=x0,
+        dx=5.e2,
+        evolve=True
+        )
 
     for period in periods:
         
-        print(period)
-        
-        A = 0.2
-        z, Qs, time, scale = evolve_network_periodic(deepcopy(net), period, 0.2, 0.)
-        z_Qw, Qs_Qw, time_Qw, scale_Qw = evolve_network_periodic(deepcopy(net), period, 0., 0.2)
+        periodic_Qs = grlpx.evolve_network_periodic(
+            net=copy.deepcopy(net),
+            period=period,
+            A_Qs=0.2, 
+            A_Q=0.
+            )
+        periodic_Qw = grlpx.evolve_network_periodic(
+            net=copy.deepcopy(net),
+            period=period,
+            A_Qs=0., 
+            A_Q=0.2
+            )
+        periodics_Qs[i].append(periodic_Qs)
+        periodics_Qw[i].append(periodic_Qw)
 
-        z_gain = compute_network_z_gain(net, z, 0.2, 0., [S0])
-        Qs_gain = compute_network_Qs_gain(net, Qs, 0.2, 0., [q[0,:] for q in Qs])
-        z_lag = find_network_lag(net, z, time, scale, period)
-        # Qs_lag = find_network_lag(net, Qs, time, scale, period)
-        Qs_lag = find_lag_time_single(Qs[0][:,-1], time, scale, period)/period
-        G_z_p.append(z_gain[0][-1])
-        G_Qs_p.append(Qs_gain[0][-1])
-        lag_z_p.append(z_lag[0][-1])
-        # lag_Qs_p.append(Qs_lag[0][-1])
-        lag_Qs_p.append(Qs_lag)
-        G_z_err_p.append([z_gain[0][-1]-z_gain[0].min(), z_gain[0].max()-z_gain[0][-1]])
-        # G_Qs_err_p.append([Qs_gain[0][-1]-Qs_gain[0].min(), Qs_gain[0].max()-Qs_gain[0][-1]])
-        lag_z_err_p.append([z_lag[0][-1]-z_lag[0].min(), z_lag[0].max()-z_lag[0][-1]])
-        # lag_Qs_err_p.append([Qs_lag[0][-1]-Qs_lag[0].min(), Qs_lag[0].max()-Qs_lag[0][-1]])
-
-        Qs_gain = compute_network_Qs_gain(net, Qs_Qw, 0., 0.2, [q[0,:] for q in Qs])
-        # Qs_lag = find_network_lag(net, Qs_Qw, time_Qw, scale_Qw, period, can_lead=True)
-        Qs_lag = find_lag_time_single(Qs_Qw[0][:,-1], time, scale, period, can_lead=True)/period
-        G_Qs_Qw_p.append(Qs_gain[0][-1])
-        # lag_Qs_Qw_p.append(Qs_lag[0][-1])
-        lag_Qs_Qw_p.append(Qs_lag)
-        # G_Qs_Qw_err_p.append([Qs_gain[0][-1]-Qs_gain[0].min(), Qs_gain[0].max()-Qs_gain[0][-1]])
-        # lag_Qs_Qw_err_p.append([Qs_lag[0][-1]-Qs_lag[0].min(), Qs_lag[0].max()-Qs_lag[0][-1]])
-    
-    G_zs.append(G_z_p)
-    G_Qss.append(G_Qs_p)
-    G_Qs_Qws.append(G_Qs_Qw_p)
-    lag_zs.append(lag_z_p)
-    lag_Qss.append(lag_Qs_p)
-    lag_Qs_Qws.append(lag_Qs_Qw_p)
-
-    G_z_errs.append(G_z_err_p)
-    # G_Qs_errs.append(G_Qs_err_p)
-    # G_Qs_Qw_errs.append(G_Qs_Qw_err_p)
-    lag_z_errs.append(lag_z_err_p)
-    # lag_Qs_errs.append(lag_Qs_err_p)
-    # lag_Qs_Qw_errs.append(lag_Qs_Qw_err_p)
     
 # ---- Linear
 lp = net.list_of_LongProfile_objects[0]
-lin_periods = np.logspace(-2.5, 2.5, 81) * lp.equilibration_time
+lin_periods = np.logspace(-2., 2., 81) * lp.equilibration_time
 lin_gain = np.zeros((len(lin_periods), len(lp.x)))
 lin_lag = np.zeros((len(lin_periods), len(lp.x)))
 lin_gain_Qs = np.zeros((len(lin_periods), len(lp.x)))
@@ -167,179 +93,208 @@ for i,p in enumerate(lin_periods):
 # ---- Plot
 fig, axs = plt.subplots(2,3,sharex=True)
 
-axs[0,0].plot(lin_periods/lp.equilibration_time, lin_gain[:,-1])
-axs[1,0].plot(lin_periods/lp.equilibration_time, lin_lag[:,-1])
-axs[1,0].plot(lin_periods/lp.equilibration_time, lin_lag[:,-0], "--")
-axs[0,1].plot(lin_periods/lp.equilibration_time, lin_gain_Qs[:,-1])
-axs[1,1].plot(lin_periods/lp.equilibration_time, lin_lag_Qs[:,-1])
-axs[0,2].plot(lin_periods/lp.equilibration_time, lin_gain_Qs_Qw[:,-1])
-axs[1,2].plot(lin_periods/lp.equilibration_time, lin_lag_Qs_Qw[:,-1])
+axs[0,0].fill(
+    np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+    np.hstack(( lin_gain[:,-1], lin_gain[:,0][::-1] )),
+    "0.9"
+    )
+    
+axs[1,0].fill(
+    np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+    np.hstack(( lin_lag[:,-1], lin_lag[:,0][::-1] )),
+    "0.9"
+    )
+
+axs[0,0].plot(lin_periods/lp.equilibration_time, lin_gain[:,-1], "0.6")
+axs[1,0].plot(lin_periods/lp.equilibration_time, lin_lag[:,-1], "0.6")
+axs[0,1].plot(lin_periods/lp.equilibration_time, lin_gain_Qs[:,-1], "0.6")
+axs[1,1].plot(lin_periods/lp.equilibration_time, lin_lag_Qs[:,-1], "0.6")
+axs[0,2].plot(lin_periods/lp.equilibration_time, lin_gain_Qs_Qw[:,-1], "0.6")
+axs[1,2].plot(lin_periods/lp.equilibration_time, lin_lag_Qs_Qw[:,-1], "0.6")
 
 for i in range(len(ps)):
 
-    axs[0,0].errorbar(
+    axs[0,0].plot(
         periods/lp.equilibration_time, 
-        G_zs[i], 
-        yerr=np.vstack(G_z_errs[i]).transpose(),
-        fmt="o")
-
-    axs[1,0].errorbar(
+        [periodic['G_z'][0][-1] for periodic in periodics_Qs[i]]
+        )
+    axs[0,0].plot(
         periods/lp.equilibration_time, 
-        lag_zs[i], 
-        yerr=np.vstack(lag_z_errs[i]).transpose(),
-        fmt="o")
+        [periodic['G_z'][0][0] for periodic in periodics_Qs[i]],
+        "--"
+        )
         
-    axs[0,1].scatter(
+    axs[1,0].plot(
         periods/lp.equilibration_time, 
-        G_Qss[i])
-
-    axs[1,1].scatter(
+        [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Qs[i])]
+        )
+    axs[1,0].plot(
         periods/lp.equilibration_time, 
-        lag_Qss[i])
-
-    axs[0,2].scatter(
+        [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Qs[i])],
+        "--"
+        )
+    axs[1,0].plot(
         periods/lp.equilibration_time, 
-        G_Qs_Qws[i])
+        [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
+        ":"
+        )
 
-    axs[1,2].scatter(
+    axs[0,1].plot(
         periods/lp.equilibration_time, 
-        lag_Qs_Qws[i])
+        [periodic['G_Qs'][0][-1] for periodic in periodics_Qs[i]]
+        )
 
-axs[1,0].set_ylim(0,0.4)
-axs[1,1].set_ylim(0,0.4)
+    axs[1,1].plot(
+        periods/lp.equilibration_time, 
+        [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qs[i])]
+        )
+
+    axs[0,2].plot(
+        periods/lp.equilibration_time, 
+        [periodic['G_Qs'][0][-1] for periodic in periodics_Qw[i]]
+        )
+
+    axs[1,2].plot(
+        periods/lp.equilibration_time, 
+        [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qw[i])]
+        )
+
+axs[1,0].set_ylim(0., 0.4)
+axs[1,1].set_ylim(0, 0.4)
+for ax in axs[0]:
+    ax.set_ylim(0., 1.2)
 axs[0,0].set_xscale("log")
+
+axs[0,0].set_ylabel(r"$G$")
+axs[1,0].set_ylabel(r"$\varphi / P$")
+
+for ax in axs[1]:
+    ax.set_xlabel(r"$P$ / $T_{eq}$")
 plt.show()
 
 
 # ---- Output
 
-out_dir = "../output/continuous/periods/"
+if output_gmt:
 
-with open(out_dir + "G_z_out_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        lin_periods/lp.equilibration_time,
-        lin_gain[:,-1]
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "G_z_rng_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
-        np.hstack(( lin_gain[:,-1], lin_gain[:,0][::-1] ))
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "G_z_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
-        hdr = b"> -Z%f\n" % p
-        f.write(hdr)
-        arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            G_zs[i],
-            np.full(len(periods), p),
-            np.vstack(G_z_errs[i]).transpose()[0],
-            np.vstack(G_z_errs[i]).transpose()[1]
-            ))
-        np.savetxt(f, arr)
-        
-with open(out_dir + "G_z_in_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
-        hdr = b"> -Z%f\n" % p
-        f.write(hdr)
-        arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            G_zs[i] - np.vstack(G_z_errs[i]).transpose()[0],
-            np.full(len(periods), p),
-            np.vstack(G_z_errs[i]).transpose()[0],
-            np.vstack(G_z_errs[i]).transpose()[1]
-            ))
-        np.savetxt(f, arr)
-        
-with open(out_dir + "lag_z_out_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        lin_periods/lp.equilibration_time,
-        lin_lag[:,-1]
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "lag_z_rng_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
-        np.hstack(( lin_lag[:,-1], lin_lag[:,0][::-1] ))
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "lag_z_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
-        arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            lag_zs[i],
-            np.full(len(periods), p),
-            np.vstack(lag_z_errs[i]).transpose()[0],
-            np.vstack(lag_z_errs[i]).transpose()[1]
-            ))
-        np.savetxt(f, arr)
-        
-with open(out_dir + "G_Qs_out_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        lin_periods/lp.equilibration_time,
-        lin_gain_Qs[:,-1]
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "G_Qs_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
-        arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            G_Qss[i],
-            np.full(len(periods), p)
-            ))
-        np.savetxt(f, arr)
+    # out_dir = "../output/continuous/periods/"
+    out_dir = "../output/continuous/periods_var_width/"
 
-with open(out_dir + "lag_Qs_out_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        lin_periods/lp.equilibration_time,
-        lin_lag_Qs[:,-1]
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "lag_Qs_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
+    with open(out_dir + "G_z_out_lin.pg", "wb") as f:
         arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            lag_Qss[i],
-            np.full(len(periods), p)
+            lin_periods/lp.equilibration_time,
+            lin_gain[:,-1]
             ))
         np.savetxt(f, arr)
         
-with open(out_dir + "G_Qs_Qw_out_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        lin_periods/lp.equilibration_time,
-        lin_gain_Qs_Qw[:,-1]
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "G_Qs_Qw_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
+    with open(out_dir + "G_z_rng_lin.pg", "wb") as f:
         arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            G_Qs_Qws[i],
-            np.full(len(periods), p)
+            np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+            np.hstack(( lin_gain[:,-1], lin_gain[:,0][::-1] ))
             ))
         np.savetxt(f, arr)
+        
+    with open(out_dir + "G_z_num.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods/lp.equilibration_time, 
+                [periodic['G_z'][0][0] for periodic in periodics_Qs[i]],
+                [periodic['G_z'][0][-1] for periodic in periodics_Qs[i]],
+                ))
+            np.savetxt(f, arr)
+            
+    with open(out_dir + "lag_z_out_lin.pg", "wb") as f:
+        arr = np.column_stack((
+            lin_periods/lp.equilibration_time,
+            lin_lag[:,-1]
+            ))
+        np.savetxt(f, arr)
+        
+    with open(out_dir + "lag_z_rng_lin.pg", "wb") as f:
+        arr = np.column_stack((
+            np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+            np.hstack(( lin_lag[:,-1], lin_lag[:,0][::-1] ))
+            ))
+        np.savetxt(f, arr)
+        
+    with open(out_dir + "lag_z_num.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods/lp.equilibration_time, 
+                [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Qs[i])],
+                [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Qs[i])],
+                [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
+                ))
+            np.savetxt(f, arr)
+            
+    with open(out_dir + "G_Qs_out_lin.pg", "wb") as f:
+        arr = np.column_stack((
+            lin_periods/lp.equilibration_time,
+            lin_gain_Qs[:,-1]
+            ))
+        np.savetxt(f, arr)
+        
+    with open(out_dir + "G_Qs_num.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods/lp.equilibration_time, 
+                [periodic['G_Qs'][0][-1] for periodic in periodics_Qs[i]]
+                ))
+            np.savetxt(f, arr)
 
-with open(out_dir + "lag_Qs_Qw_out_lin.pg", "wb") as f:
-    arr = np.column_stack((
-        lin_periods/lp.equilibration_time,
-        lin_lag_Qs_Qw[:,-1]
-        ))
-    np.savetxt(f, arr)
-    
-with open(out_dir + "lag_Qs_Qw_num.pg", "wb") as f:
-    for i,p in enumerate(ps):
+    with open(out_dir + "lag_Qs_out_lin.pg", "wb") as f:
         arr = np.column_stack((
-            periods/lp.equilibration_time, 
-            lag_Qs_Qws[i],
-            np.full(len(periods), p)
+            lin_periods/lp.equilibration_time,
+            lin_lag_Qs[:,-1]
             ))
         np.savetxt(f, arr)
+        
+    with open(out_dir + "lag_Qs_num.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods/lp.equilibration_time, 
+                [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qs[i])]
+                ))
+            np.savetxt(f, arr)
+            
+    with open(out_dir + "G_Qs_Qw_out_lin.pg", "wb") as f:
+        arr = np.column_stack((
+            lin_periods/lp.equilibration_time,
+            lin_gain_Qs_Qw[:,-1]
+            ))
+        np.savetxt(f, arr)
+        
+    with open(out_dir + "G_Qs_Qw_num.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods/lp.equilibration_time, 
+                [periodic['G_Qs'][0][-1] for periodic in periodics_Qw[i]]
+                ))
+            np.savetxt(f, arr)
+
+    with open(out_dir + "lag_Qs_Qw_out_lin.pg", "wb") as f:
+        arr = np.column_stack((
+            lin_periods/lp.equilibration_time,
+            lin_lag_Qs_Qw[:,-1]
+            ))
+        np.savetxt(f, arr)
+        
+    with open(out_dir + "lag_Qs_Qw_num.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods/lp.equilibration_time, 
+                [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qw[i])]
+                ))
+            np.savetxt(f, arr)

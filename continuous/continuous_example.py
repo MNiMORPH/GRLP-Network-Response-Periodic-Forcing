@@ -1,25 +1,47 @@
-from grlp import *
-from grlp_extras import *
-# from extras import *
-from copy import deepcopy
-from matplotlib import cm
-from matplotlib.colors import LinearSegmentedColormap
+import numpy as np
+import matplotlib.pyplot as plt
+import copy
 
+import grlp
+import grlp_extras as grlpx
+
+# ---- Output?
+output_gmt = True
 
 # ---- River properties
-x0 = 10.e3
+x0 = 50.e3
 L = 100.e3
-mean_Qw = 10.
-mean_Qs = 0.001
-B = 98.1202038813591
+Q_mean = 26.
+Qs_mean = Q_mean * 1.e-4
+B_mean = 254.
 p = 1.8
-net = set_up_long_profile(L, mean_Qw, mean_Qs, p, B, dx=5.e2, evolve=True)
-ref_net = set_up_long_profile(L, mean_Qw, mean_Qs, 0, B, dx=5.e2, evolve=True)
+net = grlpx.set_up_long_profile(
+    L=L, 
+    Q_mean=Q_mean,
+    Qs_mean=Qs_mean, 
+    B_mean=B_mean,
+    p_Q=p,
+    p_Qs=p, 
+    p_B=0., 
+    dx=5.e2, 
+    evolve=True
+    )
+ref_net = grlpx.set_up_long_profile(
+    L=L, 
+    Q_mean=Q_mean,
+    Qs_mean=Qs_mean, 
+    B_mean=B_mean,
+    p_Q=0.,
+    p_Qs=0., 
+    p_B=0., 
+    dx=5.e2, 
+    evolve=True
+    )
 ref_net.list_of_LongProfile_objects[0].compute_equilibration_time()
 
-# ---- Evolve
 
-periods = np.array([0.1, 1., 10.]) * ref_net.list_of_LongProfile_objects[0].equilibration_time
+# ---- Evolve
+periods = np.array([10., 100., 1000.]) * 3.154e10
 
 evolutions_Qs = []
 ref_evolutions_Qs = []
@@ -28,27 +50,31 @@ ref_spinups_Qs = []
 
 for i,period in enumerate(periods):
 
+    neti = copy.deepcopy(net)
+    ref_neti = copy.deepcopy(ref_net)
+
     spinup_time, dt = np.linspace(-period/4., 0., 250, retstep=True)
-    spinup_z = np.zeros((len(spinup_time), len(net.list_of_LongProfile_objects[0].x)))
-    spinup_Qs = np.zeros((len(spinup_time), len(net.list_of_LongProfile_objects[0].x)))
-    for i,t in enumerate(spinup_time):
-        net.evolve_threshold_width_river_network(nt=1, dt=dt)
-        net.list_of_LongProfile_objects[0].compute_Q_s()
-        spinup_z[i,:] = net.list_of_LongProfile_objects[0].z
-        spinup_Qs[i,:] = net.list_of_LongProfile_objects[0].Q_s
+    spinup_z, spinup_Qs = grlpx.evolve_network(
+        net=neti,
+        time=spinup_time,
+        dt=dt,
+        Qs_scale=np.ones_like(spinup_time),
+        Q_scale=np.ones_like(spinup_time),
+        S_scale=np.ones_like(spinup_time)
+    )
+    ref_spinup_z, ref_spinup_Qs = grlpx.evolve_network(
+        net=ref_neti,
+        time=spinup_time,
+        dt=dt,
+        Qs_scale=np.ones_like(spinup_time),
+        Q_scale=np.ones_like(spinup_time),
+        S_scale=np.ones_like(spinup_time)
+    )
     spinups_Qs.append({
         'time': spinup_time,
         'z': spinup_z,
         'Qs': spinup_Qs
     })
-    
-    ref_spinup_z = np.zeros((len(spinup_time), len(ref_net.list_of_LongProfile_objects[0].x)))
-    ref_spinup_Qs = np.zeros((len(spinup_time), len(ref_net.list_of_LongProfile_objects[0].x)))
-    for i,t in enumerate(spinup_time):
-        ref_net.evolve_threshold_width_river_network(nt=1, dt=dt)
-        ref_net.list_of_LongProfile_objects[0].compute_Q_s()
-        ref_spinup_z[i,:] = ref_net.list_of_LongProfile_objects[0].z
-        ref_spinup_Qs[i,:] = ref_net.list_of_LongProfile_objects[0].Q_s
     ref_spinups_Qs.append({
         'time': spinup_time,
         'z': ref_spinup_z,
@@ -56,30 +82,23 @@ for i,period in enumerate(periods):
     })
     
     # evolve periodic
-    z, Qs, time, scale = evolve_network_periodic(
-        net=deepcopy(net),
+    periodic = grlpx.evolve_network_periodic(
+        net=neti,
         period=period,
         A_Qs=0.2,
-        A_Q=0.)
-    ref_z, ref_Qs, ref_time, ref_scale = evolve_network_periodic(
-        net=deepcopy(ref_net),
+        A_Q=0.
+        )
+    ref_periodic = grlpx.evolve_network_periodic(
+        net=ref_neti,
         period=period,
         A_Qs=0.2,
-        A_Q=0.)
+        A_Q=0.
+        )
 
     # save
-    evolutions_Qs.append({
-        'z': z,
-        'Qs': Qs,
-        'time': time,
-        'scale': scale
-        })
-    ref_evolutions_Qs.append({
-        'z': ref_z,
-        'Qs': ref_Qs,
-        'time': ref_time,
-        'scale': ref_scale
-        })
+    evolutions_Qs.append(periodic)
+    ref_evolutions_Qs.append(ref_periodic)
+
 
 
 evolutions_Qw = []
@@ -89,27 +108,31 @@ ref_spinups_Qw = []
 
 for i,period in enumerate(periods):
 
+    neti = copy.deepcopy(net)
+    ref_neti = copy.deepcopy(ref_net)
+
     spinup_time, dt = np.linspace(-period/4., 0., 250, retstep=True)
-    spinup_z = np.zeros((len(spinup_time), len(net.list_of_LongProfile_objects[0].x)))
-    spinup_Qs = np.zeros((len(spinup_time), len(net.list_of_LongProfile_objects[0].x)))
-    for i,t in enumerate(spinup_time):
-        net.evolve_threshold_width_river_network(nt=1, dt=dt)
-        net.list_of_LongProfile_objects[0].compute_Q_s()
-        spinup_z[i,:] = net.list_of_LongProfile_objects[0].z
-        spinup_Qs[i,:] = net.list_of_LongProfile_objects[0].Q_s
+    spinup_z, spinup_Qs = grlpx.evolve_network(
+        net=neti,
+        time=spinup_time,
+        dt=dt,
+        Qs_scale=np.ones_like(spinup_time),
+        Q_scale=np.ones_like(spinup_time),
+        S_scale=np.ones_like(spinup_time)
+    )
+    ref_spinup_z, ref_spinup_Qs = grlpx.evolve_network(
+        net=ref_neti,
+        time=spinup_time,
+        dt=dt,
+        Qs_scale=np.ones_like(spinup_time),
+        Q_scale=np.ones_like(spinup_time),
+        S_scale=np.ones_like(spinup_time)
+    )
     spinups_Qw.append({
         'time': spinup_time,
         'z': spinup_z,
         'Qs': spinup_Qs
     })
-    
-    ref_spinup_z = np.zeros((len(spinup_time), len(ref_net.list_of_LongProfile_objects[0].x)))
-    ref_spinup_Qs = np.zeros((len(spinup_time), len(ref_net.list_of_LongProfile_objects[0].x)))
-    for i,t in enumerate(spinup_time):
-        ref_net.evolve_threshold_width_river_network(nt=1, dt=dt)
-        ref_net.list_of_LongProfile_objects[0].compute_Q_s()
-        ref_spinup_z[i,:] = ref_net.list_of_LongProfile_objects[0].z
-        ref_spinup_Qs[i,:] = ref_net.list_of_LongProfile_objects[0].Q_s
     ref_spinups_Qw.append({
         'time': spinup_time,
         'z': ref_spinup_z,
@@ -117,116 +140,246 @@ for i,period in enumerate(periods):
     })
     
     # evolve periodic
-    z, Qs, time, scale = evolve_network_periodic(
-        net=deepcopy(net),
+    periodic = grlpx.evolve_network_periodic(
+        net=neti,
         period=period,
         A_Qs=0.,
-        A_Q=0.2)
-    ref_z, ref_Qs, ref_time, ref_scale = evolve_network_periodic(
-        net=deepcopy(ref_net),
+        A_Q=0.2
+        )
+    ref_periodic = grlpx.evolve_network_periodic(
+        net=ref_neti,
         period=period,
         A_Qs=0.,
-        A_Q=0.2)
+        A_Q=0.2
+        )
 
     # save
-    evolutions_Qw.append({
-        'z': z,
-        'Qs': Qs,
-        'time': time,
-        'scale': scale
-        })
-    ref_evolutions_Qw.append({
-        'z': ref_z,
-        'Qs': ref_Qs,
-        'time': ref_time,
-        'scale': ref_scale
-        })
+    evolutions_Qw.append(periodic)
+    ref_evolutions_Qw.append(ref_periodic)
 
 
-# # ---- Plots
-# fig, axs = plt.subplots(3,3,sharey='row')
-# 
-# for i,period in enumerate(periods):
-# 
-#     ev = evolutions[i]
-#     ref_ev = ref_evolutions[i]
-# 
-#     axs[0,i].plot(ev['time']/3.154e10, ev['scale'], color="0.7")
-#     axs[0,i].plot(ev['time']/3.154e10, ref_ev['Qs'][0][:,-1]/ref_ev['Qs'][0][:,-1].mean(), "--", color="0.3")
-#     axs[0,i].plot(ev['time']/3.154e10, ev['Qs'][0][:,-1]/ev['Qs'][0][:,-1].mean())
-# 
-#     xs = [0, 40, 80, 120, 160]
-#     axs[1,i].plot(ev['time']/3.154e10, ref_ev['z'][0][:,xs], "--", color="0.3")
-#     axs[1,i].plot(ev['time']/3.154e10, ev['z'][0][:,xs])
-# 
-#     ts = [3000,3050,3100,3150,3200,3250]
-#     for t in ts:
-#         axs[2,i].plot(net.list_of_LongProfile_objects[0].x/1.e3, ev['z'][0][t,:])
-#         axs[2,i].plot(net.list_of_LongProfile_objects[0].x/1.e3, ev['z'][0][t,:]-ev['z'][0][0,:], "--")
-# 
-# plt.show()
-
-# ---- Write output
-basedir = "../output/continuous/example/"
-
-labels = ["fast/", "medium/", "slow/"]
+# ---- Plots
+fig, axs = plt.subplots(4,3,sharey='row')
 
 for i,period in enumerate(periods):
-    
-    outdir = basedir + labels[i]
 
-    with open(outdir + "Qs_scale.tq", "wb") as f:
-        arr = np.column_stack((
-            np.hstack(( spinups_Qs[i]['time'][0], evolutions_Qs[i]['time']))/3.15e10,
-            np.hstack(( mean_Qs*1.e3, evolutions_Qs[i]['scale']*mean_Qs*1.e3))
-            ))
-        np.savetxt(f, arr)
-        
-    with open(outdir + "Qs_out.tq", "wb") as f:
-        arr = np.column_stack((
-            np.hstack(( spinups_Qs[i]['time'], evolutions_Qs[i]['time']))/3.15e10,
-            np.hstack(( spinups_Qs[i]['Qs'][:,-1], evolutions_Qs[i]['Qs'][0][:,-1]))/spinups_Qs[i]['Qs'][0,-1]
-            ))
-        np.savetxt(f, arr)
-        
-    with open(outdir + "ref_Qs_out.tq", "wb") as f:
-        arr = np.column_stack((
-            np.hstack(( spinups_Qs[i]['time'], evolutions_Qs[i]['time']))/3.15e10,
-            np.hstack(( ref_spinups_Qs[i]['Qs'][:,-1], ref_evolutions_Qs[i]['Qs'][0][:,-1]))/ref_spinups_Qs[i]['Qs'][0,-1]
-            ))
-        np.savetxt(f, arr)
+    ev = evolutions_Qs[i]
+    ref_ev = ref_evolutions_Qs[i]
+    
+    ev_Qw = evolutions_Qw[i]
+    ref_ev_Qw = ref_evolutions_Qw[i]
+
+    axs[0,i].plot(ev['time']/3.154e10, ev['Qs_scale'], color="0.7")
+    axs[0,i].plot(
+        ev['time']/3.154e10,
+        ref_ev['Qs'][0][:,-1] / ref_ev['Qs'][0][:,-1].mean(),
+        "--",
+        color="0.3"
+        )
+    axs[0,i].plot(
+        ev['time']/3.154e10,
+        ev['Qs'][0][:,-1] / ev['Qs'][0][:,-1].mean()
+        )
+
+    axs[1,i].plot(ev['time']/3.154e10, ev_Qw['Q_scale'], color="0.7")
+    axs[1,i].plot(
+        ev['time']/3.154e10,
+        ref_ev_Qw['Qs'][0][:,-1] / ref_ev_Qw['Qs'][0][:,-1].mean(),
+        "--",
+        color="0.3"
+        )
+    axs[1,i].plot(
+        ev['time']/3.154e10,
+        ev_Qw['Qs'][0][:,-1] / ev_Qw['Qs'][0][:,-1].mean()
+        )
+
 
     xs = [0, 40, 80, 120, 160]
-    with open(outdir + "profile.te", "wb") as f:
-        for x in xs:
-            hdr = b"> %.f\n" % (net.list_of_LongProfile_objects[0].x[x]/1.e3)
-            f.write(hdr)
+    axs[2,i].plot(ev['time']/3.154e10, ref_ev['z'][0][:,xs], "--", color="0.3")
+    axs[2,i].plot(ev['time']/3.154e10, ev['z'][0][:,xs])
+
+    ts = [3000,3050,3100,3150,3200,3250]
+    for t in ts:
+        axs[3,i].plot(
+            net.list_of_LongProfile_objects[0].x/1.e3,
+            ev['z'][0][t,:]
+            )
+        axs[3,i].plot(
+            net.list_of_LongProfile_objects[0].x/1.e3,
+            ev['z'][0][t,:]-ev['z'][0][0,:],
+            "--"
+            )
+
+axs[0,0].set_ylabel(r"$Q_{s,0}'$, $Q_{s,L}'$")
+for ax in axs[0]:
+    ax.set_xlabel(r"$t$ [kyr]")
+    
+axs[1,0].set_ylabel(r"$Q_{w,0}'$, $Q_{s,L}'$")
+for ax in axs[1]:
+    ax.set_xlabel(r"$t$ [kyr]")
+
+axs[2,0].set_ylabel(r"$z$ [m]")
+for ax in axs[2]:
+    ax.set_xlabel(r"$t$ [kyr]")
+
+axs[3,0].set_ylabel(r"$z$ [m]")
+for ax in axs[3]:
+    ax.set_xlabel(r"$x$ [km]")
+
+fig.tight_layout(pad=0.2)
+plt.show()
+
+
+# ---- Write output
+
+if output_gmt:
+    
+    basedir = "../output/continuous/example/"
+
+    labels = ["fast/", "medium/", "slow/"]
+
+    for i,period in enumerate(periods):
+        
+        outdir = basedir + labels[i]
+
+        with open(outdir + "Qs_scale.tq", "wb") as f:
             arr = np.column_stack((
-                evolutions_Qs[i]['time']/3.15e10,
-                evolutions_Qs[i]['z'][0][:,x]
+                np.hstack((
+                    spinups_Qs[i]['time'][0],
+                    evolutions_Qs[i]['time']
+                    )) / 3.15e10,
+                np.hstack((
+                    1.,
+                    evolutions_Qs[i]['Qs_scale']
+                    ))
+                ))
+            np.savetxt(f, arr)
+            
+        with open(outdir + "Qs_out.tq", "wb") as f:
+            arr = np.column_stack((
+                np.hstack((
+                    spinups_Qs[i]['time'],
+                    evolutions_Qs[i]['time']
+                    )) / 3.15e10,
+                np.hstack((
+                    spinups_Qs[i]['Qs'][0][:,-1],
+                    evolutions_Qs[i]['Qs'][0][:,-1]
+                    )) / spinups_Qs[i]['Qs'][0][0,-1]
+                ))
+            np.savetxt(f, arr)
+            
+        with open(outdir + "ref_Qs_out.tq", "wb") as f:
+            arr = np.column_stack((
+                np.hstack((
+                    spinups_Qs[i]['time'],
+                    evolutions_Qs[i]['time']
+                    )) / 3.15e10,
+                np.hstack((
+                    ref_spinups_Qs[i]['Qs'][0][:,-1],
+                    ref_evolutions_Qs[i]['Qs'][0][:,-1]
+                    )) / ref_spinups_Qs[i]['Qs'][0][0,-1]
                 ))
             np.savetxt(f, arr)
 
-    with open(outdir + "Qw_scale.tq", "wb") as f:
-        arr = np.column_stack((
-            np.hstack(( spinups_Qw[i]['time'][0], evolutions_Qw[i]['time']))/3.15e10,
-            np.hstack(( 1., evolutions_Qw[i]['scale']))
-            ))
-        np.savetxt(f, arr)
+        xs = [0, 40, 80, 120, 160]
+        with open(outdir + "profile.te", "wb") as f:
+            for x in xs:
+                hdr = b"> -Z%.f\n" % (
+                    net.list_of_LongProfile_objects[0].x[x]/1.e3
+                    )
+                f.write(hdr)
+                arr = np.column_stack((
+                    np.hstack((
+                        spinups_Qs[i]['time'],
+                        evolutions_Qs[i]['time']
+                        )) / 3.15e10,
+                    np.hstack((
+                        spinups_Qs[i]['z'][0][:,x],
+                        evolutions_Qs[i]['z'][0][:,x]
+                        ))
+                    ))
+                np.savetxt(f, arr)
+
+        with open(outdir + "ref_profile.te", "wb") as f:
+            for x in xs:
+                hdr = b"> -Z%.f\n" % (
+                    net.list_of_LongProfile_objects[0].x[x]/1.e3
+                    )
+                f.write(hdr)
+                arr = np.column_stack((
+                    np.hstack((
+                        ref_spinups_Qs[i]['time'],
+                        ref_evolutions_Qs[i]['time']
+                        )) / 3.15e10,
+                    np.hstack((
+                        ref_spinups_Qs[i]['z'][0][:,x],
+                        ref_evolutions_Qs[i]['z'][0][:,x]
+                        ))
+                    ))
+                np.savetxt(f, arr)
+
+        ts = np.linspace(2000, 2250, 5).astype(int)
+        with open(outdir + "profile.de", "wb") as f:
+            for t in ts:
+                hdr = b"> -Z%.f\n" % t
+                f.write(hdr)
+                arr = np.column_stack((
+                    net.list_of_LongProfile_objects[0].x/1.e3,
+                    evolutions_Qs[i]['z'][0][t,:]
+                    ))
+                np.savetxt(f, arr)
+                
+        with open(outdir + "profile_pert.de", "wb") as f:
+            for t in ts:
+                hdr = b"> -Z%.f\n" % t
+                f.write(hdr)
+                arr = np.column_stack((
+                    net.list_of_LongProfile_objects[0].x/1.e3,
+                    evolutions_Qs[i]['z'][0][t,:]-evolutions_Qs[i]['z'][0][0,:]
+                    ))
+                np.savetxt(f, arr)
+                
+        with open(outdir + "scale_circles.ts", "wb") as f:
+            arr = np.column_stack((
+                evolutions_Qs[i]['time'][ts]/3.15e10,
+                evolutions_Qs[i]['Qs_scale'][ts],
+                ts
+                ))
+            np.savetxt(f, arr)
+
+        with open(outdir + "Qw_scale.tq", "wb") as f:
+            arr = np.column_stack((
+                np.hstack((
+                    spinups_Qw[i]['time'][0],
+                    evolutions_Qw[i]['time']
+                    )) / 3.15e10,
+                np.hstack(( 1., evolutions_Qw[i]['Q_scale']))
+                ))
+            np.savetxt(f, arr)
+            
+        with open(outdir + "Qw_Qs_out.tq", "wb") as f:
+            arr = np.column_stack((
+                np.hstack((
+                    spinups_Qw[i]['time'],
+                    evolutions_Qw[i]['time']
+                    )) / 3.15e10,
+                np.hstack((
+                    spinups_Qw[i]['Qs'][0][:,-1],
+                    evolutions_Qw[i]['Qs'][0][:,-1]
+                    )) / spinups_Qw[i]['Qs'][0][0,-1]
+                ))
+            np.savetxt(f, arr)
+            
+        with open(outdir + "Qw_ref_Qs_out.tq", "wb") as f:
+            arr = np.column_stack((
+                np.hstack((
+                    spinups_Qw[i]['time'],
+                    evolutions_Qw[i]['time']
+                    )) / 3.15e10,
+                np.hstack((
+                    ref_spinups_Qw[i]['Qs'][0][:,-1],
+                    ref_evolutions_Qw[i]['Qs'][0][:,-1]
+                    )) / ref_spinups_Qw[i]['Qs'][0][0,-1]
+                ))
+            np.savetxt(f, arr)
         
-    with open(outdir + "Qw_Qs_out.tq", "wb") as f:
-        arr = np.column_stack((
-            np.hstack(( spinups_Qw[i]['time'], evolutions_Qw[i]['time']))/3.15e10,
-            np.hstack(( spinups_Qw[i]['Qs'][:,-1], evolutions_Qw[i]['Qs'][0][:,-1]))/spinups_Qw[i]['Qs'][0,-1]
-            ))
-        np.savetxt(f, arr)
-        
-    with open(outdir + "Qw_ref_Qs_out.tq", "wb") as f:
-        arr = np.column_stack((
-            np.hstack(( spinups_Qw[i]['time'], evolutions_Qw[i]['time']))/3.15e10,
-            np.hstack(( ref_spinups_Qw[i]['Qs'][:,-1], ref_evolutions_Qw[i]['Qs'][0][:,-1]))/ref_spinups_Qw[i]['Qs'][0,-1]
-            ))
-        np.savetxt(f, arr)
-        
-    
-    

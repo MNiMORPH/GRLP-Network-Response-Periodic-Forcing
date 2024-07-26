@@ -1,11 +1,11 @@
 %!PS-Adobe-3.0
 %%BoundingBox: 0 0 595 842
 %%HiResBoundingBox: 0 0 595.0000 842.0000             
-%%Title: GMT v6.1.1 [64-bit] Document from psbasemap
+%%Title: GMT v6.5.0 [64-bit] Document from psbasemap
 %%Creator: GMT6
 %%For: unknown
 %%DocumentNeededResources: font Helvetica
-%%CreationDate: Tue Mar 19 14:00:13 2024
+%%CreationDate: Tue Jul  2 14:40:17 2024
 %%LanguageLevel: 2
 %%DocumentData: Clean7Bit
 %%Orientation: Portrait
@@ -112,9 +112,11 @@
   PSL_eps_state restore
 }!
 /PSL_transp {
-  /.setopacityalpha where {pop .setblendmode .setopacityalpha}{
-  /pdfmark where {pop [ /BM exch /CA exch dup /ca exch /SetTransparency pdfmark}
-  {pop pop} ifelse} ifelse
+  /PSL_BM_arg edef /PSL_S_arg edef /PSL_F_arg edef
+  /.setfillconstantalpha where
+  { pop PSL_BM_arg .setblendmode PSL_S_arg .setstrokeconstantalpha PSL_F_arg .setfillconstantalpha }
+  { /pdfmark where {pop [ /BM PSL_BM_arg /CA PSL_S_arg /ca PSL_F_arg /SetTransparency pdfmark} if }
+  ifelse
 }!
 /Standard+_Encoding [
 /.notdef	/.notdef	/.notdef	/.notdef	/.notdef	/.notdef	/.notdef	/.notdef
@@ -253,9 +255,16 @@ PSL_pathtextdict begin
     V cpx cpy itransform T
       dy dx atan R
       0 justy M
-      char show
-      0 justy neg G
-      currentpoint transform
+      PSL_font_F {
+        char show}
+      if
+      PSL_font_FO {
+        currentpoint N M V char true charpath fs U V char false charpath S U char E 0 G
+      } if
+      PSL_font_OF {
+        currentpoint N M V char false charpath S U V char true charpath fs U char E 0 G
+      } if
+      0 justy neg G currentpoint transform
       /cpy exch def /cpx exch def
     U /setdist setdist charwidth add def
   } def
@@ -279,6 +288,9 @@ end
   /PSL_strokeline false def
   /PSL_fillbox psl_bits 128 and 128 eq def
   /PSL_drawbox psl_bits 256 and 256 eq def
+  /PSL_font_F  psl_bits 1536 and 0 eq def
+  /PSL_font_FO psl_bits 512 and 512 eq def
+  /PSL_font_OF psl_bits 1024 and 1024 eq def
   /PSL_n_paths1 PSL_n_paths 1 sub def
   /PSL_usebox PSL_fillbox PSL_drawbox or def
   PSL_clippath {clipsave N clippath} if
@@ -326,8 +338,10 @@ end
     node_type 1 eq
     {n 0 eq
       {PSL_CT_drawline}
-      {	PSL_CT_reversepath
-	PSL_CT_textline} ifelse
+      {
+        PSL_CT_reversepath
+	      PSL_CT_textline}
+      ifelse
       /j 0 def
       PSL_xp j PSL_xx i get put
       PSL_yp j PSL_yy i get put
@@ -554,6 +568,9 @@ end
   /PSL_rounded psl_bits 32 and 32 eq def
   /PSL_fillbox psl_bits 128 and 128 eq def
   /PSL_drawbox psl_bits 256 and 256 eq def
+  /PSL_font_F  psl_bits 1536 and 0 eq def
+  /PSL_font_FO psl_bits 512 and 512 eq def
+  /PSL_font_OF psl_bits 1024 and 1024 eq def
   /PSL_n_labels_minus_1 PSL_n_labels 1 sub def
   /PSL_usebox PSL_fillbox PSL_drawbox or def
   0 1 PSL_n_labels_minus_1
@@ -568,7 +585,15 @@ end
       PSL_drawbox {V PSL_setboxpen S U} if
       N
     } if
-    PSL_placetext {PSL_ST_place_label} if
+    PSL_font_F {
+      PSL_placetext {PSL_ST_place_label} if
+    } if
+    PSL_font_FO {
+      PSL_placetext {PSL_ST_place_label_FO} if
+    } if
+    PSL_font_OF {
+      PSL_placetext {PSL_ST_place_label_OF} if
+    } if
   } for
 } def
 /PSL_straight_path_clip
@@ -638,6 +663,20 @@ end
     psl_label dup sd neg 0 exch G show
     U
 } def
+/PSL_ST_place_label_FO
+{
+    V psl_xp psl_yp T psl_angle R
+    psl_SW PSL_justx mul psl_y0 M
+    psl_label dup sd neg 0 exch G false charpath V fs U S N
+    U
+} def
+/PSL_ST_place_label_OF
+{
+    V psl_xp psl_yp T psl_angle R
+    psl_SW PSL_justx mul psl_y0 M
+    psl_label dup sd neg 0 exch G false charpath V S U fs N
+    U
+} def
 /PSL_nclip 0 def
 /PSL_clip {clip /PSL_nclip PSL_nclip 1 add def} def
 /PSL_eoclip {eoclip /PSL_nclip PSL_nclip 1 add def} def
@@ -677,7 +716,8 @@ O0
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -691,7 +731,8 @@ O0
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -699,12 +740,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/fast/G_z_lin.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/fast/G_z_lin.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_3
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -716,26 +758,21 @@ clipsave
 P
 PSL_clip N
 200 416 M
-48 -23 D
-74 -30 D
-84 -28 D
-64 -18 D
-76 -18 D
-76 -15 D
-92 -15 D
-74 -10 D
-90 -10 D
-90 -8 D
-96 -7 D
-102 -6 D
-116 -5 D
-88 -3 D
-74 -2 D
-94 -2 D
-150 -2 D
-510 -1 D
+50 -24 D
+100 -39 D
+90 -28 D
+110 -27 D
+110 -21 D
+130 -18 D
+170 -18 D
+180 -12 D
+190 -8 D
+150 -4 D
+200 -3 D
+510 -2 D
 S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -744,12 +781,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/fast/G_z.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/fast/G_z.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_4
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 clipsave
 0 0 M
@@ -758,96 +796,110 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-0.992 0.698 0.184 C
-200 284 M
-34 -10 D
-40 -7 D
-50 -6 D
-46 -3 D
-70 -2 D
-84 2 D
-96 6 D
-144 13 D
-174 21 D
-132 19 D
-174 29 D
-148 28 D
-174 37 D
-142 33 D
-178 45 D
-140 38 D
-146 42 D
-26 8 D
+0.996 0.734 0.169 C
+200 451 M
+40 -17 D
+90 -31 D
+90 -25 D
+130 -29 D
+120 -22 D
+110 -16 D
+150 -16 D
+90 -5 D
+110 -3 D
+130 1 D
+170 9 D
+150 13 D
+150 18 D
+150 23 D
+130 23 D
+170 35 D
+10 3 D
 S
-0.876 0.386 0.388 C
-200 255 M
-24 -8 D
-40 -6 D
-38 -3 D
-84 -1 D
-104 7 D
-124 13 D
-128 17 D
-132 22 D
-88 17 D
-112 24 D
-122 29 D
-122 32 D
-124 35 D
-120 36 D
-108 34 D
-164 54 D
-134 46 D
-158 56 D
-72 26 D
+0.928 0.471 0.327 C
+200 455 M
+70 -27 D
+100 -31 D
+90 -22 D
+110 -23 D
+140 -23 D
+110 -14 D
+110 -10 D
+120 -5 D
+140 -1 D
+160 7 D
+160 13 D
+160 19 D
+160 25 D
+170 32 D
+120 27 D
+70 18 D
 S
-0.639 0.117 0.604 C
-200 233 M
-10 -4 D
-18 -4 D
-34 -4 D
-62 -1 D
-82 6 D
-152 15 D
-114 15 D
-92 16 D
-68 14 D
-92 22 D
-92 25 D
-90 27 D
-102 33 D
-100 35 D
-122 45 D
-96 37 D
-148 59 D
-156 64 D
-244 102 D
-124 52 D
+0.773 0.251 0.494 C
+200 460 M
+70 -27 D
+70 -22 D
+70 -18 D
+90 -20 D
+110 -21 D
+130 -19 D
+110 -12 D
+130 -8 D
+90 -2 D
+130 1 D
+150 8 D
+190 18 D
+130 18 D
+160 27 D
+160 33 D
+130 32 D
+70 19 D
 S
-0.288 0.0118 0.629 C
-200 221 M
-34 -7 D
-28 -3 D
-56 -1 D
-250 23 D
-90 11 D
-78 13 D
-78 17 D
-74 20 D
-58 18 D
-70 24 D
-90 34 D
-72 29 D
-68 29 D
-70 31 D
-70 32 D
-62 29 D
-86 41 D
-130 63 D
-314 153 D
-220 104 D
+0.544 0.0379 0.647 C
+200 464 M
+50 -19 D
+100 -31 D
+90 -22 D
+60 -13 D
+120 -21 D
+110 -15 D
+100 -11 D
+130 -8 D
+130 -2 D
+120 3 D
+140 9 D
+90 8 D
+120 15 D
+130 20 D
+130 24 D
+90 19 D
+150 37 D
+110 31 D
+20 6 D
+S
+0.249 0.0157 0.613 C
+200 469 M
+50 -19 D
+80 -25 D
+90 -22 D
+100 -21 D
+130 -21 D
+110 -13 D
+100 -9 D
+130 -5 D
+80 -1 D
+110 3 D
+110 7 D
+160 15 D
+130 18 D
+110 19 D
+110 21 D
+150 35 D
+110 30 D
+130 40 D
 S
 PSL_cliprestore
+U
 %%EndObject
 0 A
 FQ
@@ -879,21 +931,21 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica-Bold,black -N -D0i/0.22i -O -K
+%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica,black+jCB+cCT -N -D0i/0.16i -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_6
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-PSL_font_encode 1 get 0 eq {Standard+_Encoding /Helvetica-Bold /Helvetica-Bold PSL_reencode PSL_font_encode 1 1 put} if
-1200 2664 M 183 F1
-PSL_font_encode 3 get 0 eq {Standard+_Encoding /Helvetica-BoldOblique /Helvetica-BoldOblique PSL_reencode PSL_font_encode 3 1 put} if
-V MU 0 0 M 183 F3 (P) FP 183 F1 ( = ) FP 183 F3 (T) FP 0 -46 G 128 F3 (eq) FP 0 46 G 183 F1 ( / 10) FP pathbbox N 4 1 roll exch pop add exch U -2 div exch -2 div exch G
-183 F3 (P) Z
-183 F1 ( = ) Z
-183 F3 (T) Z
-0 -46 G 128 F3 (eq) Z
-0 46 G 183 F1 ( / 10) Z
+1200 2592 M PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
+183 F0
+PSL_font_encode 2 get 0 eq {Standard+_Encoding /Helvetica-Oblique /Helvetica-Oblique PSL_reencode PSL_font_encode 2 1 put} if
+V MU 0 0 M 183 F2 (P) FP 183 F0 ( = ) FP 183 F2 (T) FP 0 -46 G 128 F2 (eq) FP 0 46 G 183 F0 ( / 10) FP pathbbox N pop exch pop add U -2 div 0 G
+183 F2 (P) Z
+183 F0 ( = ) Z
+183 F2 (T) Z
+0 -46 G 128 F2 (eq) Z
+0 46 G 183 F0 ( / 10) Z
 %%EndObject
 0 A
 FQ
@@ -908,7 +960,8 @@ O0
 1 setlinejoin
 3.32550952342 setmiterlimit
 25 W
-/PSL_slant_y 0 def
+0 A
+/PSL_slant_y 0 def /PSL_slant_x 0 def
 2 setlinecap
 N 0 2400 M 0 -2400 D S
 /PSL_A0_y 83 def
@@ -995,6 +1048,7 @@ N 2200 0 M 0 83 D S
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
 0 -2400 T
 0 setlinecap
+0 A
 %%EndObject
 0 A
 FQ
@@ -1008,7 +1062,8 @@ O0
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -1016,12 +1071,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/fast/Lag_z_lin.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p,dimgrey,4_4 -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/fast/Lag_z_lin.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
 %%BeginObject PSL_Layer_9
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -1033,9 +1089,10 @@ clipsave
 P
 PSL_clip N
 200 840 M
-729 1560 D
+731 1560 D
 1 3 D S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -1044,12 +1101,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/fast/Lag_z.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p -Cp.cpt -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/fast/Lag_z.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p -Cp.cpt -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
 %%BeginObject PSL_Layer_10
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 clipsave
 0 0 M
@@ -1058,1542 +1116,419 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-0.992 0.698 0.184 C
-200 1043 M
-24 155 D
-26 125 D
-22 79 D
-22 60 D
-16 32 D
-16 25 D
-2 1 D
-4 6 D
-10 11 D
-2 1 D
-2 4 D
-4 1 D
-2 4 D
-4 1 D
-2 4 D
-4 0 D
-4 4 D
-4 0 D
-4 4 D
-8 1 D
-2 3 D
-20 2 D
-10 2 D
+0.996 0.734 0.169 C
+200 895 M
+30 62 D
+70 131 D
+30 52 D
+10 15 D
+10 19 D
+20 33 D
+60 90 D
+30 42 D
+60 76 D
+30 35 D
+50 52 D
+50 44 D
+10 7 D
+10 9 D
+10 5 D
+10 10 D
+10 5 D
+10 8 D
+20 11 D
+10 7 D
+60 28 D
+40 14 D
 10 0 D
-2 -2 D
-26 -2 D
-6 -2 D
-2 0 D
-2 -2 D
-10 -1 D
-14 -4 D
-4 -1 D
-2 -2 D
-4 0 D
-2 -2 D
-6 0 D
-4 -3 D
-2 0 D
-2 -2 D
-8 -1 D
-2 -2 D
-2 0 D
-2 -2 D
-10 -1 D
-8 -3 D
-2 0 D
-2 -2 D
-6 0 D
-2 -3 D
-14 -2 D
-2 -3 D
-12 -1 D
-2 -2 D
-2 0 D
-4 -3 D
-10 -1 D
-4 -1 D
-4 -3 D
-10 -1 D
-12 -4 D
-8 -1 D
-2 -2 D
-12 -1 D
-2 -2 D
-4 0 D
-2 -2 D
-12 -1 D
-4 -1 D
-2 -2 D
-14 0 D
-2 -2 D
-10 -2 D
-14 -2 D
-2 -2 D
-14 -1 D
-2 -2 D
-20 -2 D
-6 -2 D
-2 -2 D
-20 -1 D
-10 -4 D
-14 -1 D
-26 -6 D
-12 -1 D
-4 -3 D
-18 -1 D
-2 -2 D
-4 0 D
-2 -3 D
-16 -1 D
-12 -4 D
-12 -2 D
-10 -2 D
-2 -2 D
-10 -1 D
-6 -1 D
-2 -2 D
-6 0 D
-2 -2 D
-8 0 D
-2 -2 D
-6 -1 D
-2 -2 D
-8 0 D
-2 -2 D
-4 0 D
-2 -2 D
-8 0 D
-2 -2 D
-6 0 D
-4 -4 D
-14 -3 D
-10 -3 D
-16 -5 D
-10 -2 D
-4 -3 D
-6 -1 D
-10 -3 D
-4 -1 D
-2 -2 D
-10 -2 D
-8 -3 D
-24 -8 D
-2 -2 D
-6 0 D
-4 -3 D
-2 0 D
-2 -2 D
-8 -1 D
-6 -4 D
-6 -1 D
-4 -3 D
-8 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-14 -5 D
-10 -3 D
-2 -2 D
-8 -2 D
-4 -3 D
-8 -2 D
-4 -3 D
-6 -2 D
-2 -2 D
-6 0 D
-2 -3 D
-10 -3 D
-4 -3 D
-6 -1 D
-6 -4 D
-8 -3 D
-2 -2 D
-6 -1 D
-4 -4 D
-8 -1 D
-2 -3 D
-6 -1 D
-2 -1 D
-2 -3 D
-6 -1 D
-6 -4 D
-4 0 D
-2 -2 D
-2 0 D
-2 -3 D
-6 -1 D
-2 -1 D
-2 -3 D
-6 -1 D
-4 -3 D
-4 0 D
-6 -5 D
-4 -1 D
-2 -2 D
-2 0 D
-2 -2 D
-8 -3 D
-2 -2 D
-6 -2 D
-4 -3 D
-4 0 D
-2 -3 D
-8 -3 D
-2 -2 D
-6 -2 D
-2 -2 D
-6 -2 D
-6 -4 D
-2 0 D
-2 -2 D
-2 0 D
-4 -3 D
-2 0 D
-4 -4 D
-8 -3 D
-2 -2 D
-4 0 D
-2 -3 D
-6 -2 D
-8 -5 D
-2 0 D
-16 -10 D
-2 0 D
-6 -4 D
-2 0 D
-4 -4 D
-4 -1 D
-6 -4 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -2 D
-2 0 D
-12 -8 D
-2 0 D
-2 -2 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -2 D
-6 -2 D
-16 -10 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -2 D
-4 -1 D
-4 -4 D
-4 -1 D
-4 -4 D
-6 -2 D
-2 -3 D
-6 -1 D
-2 -4 D
-6 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-4 -4 D
-2 0 D
-6 -5 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-4 -1 D
-6 -5 D
-2 0 D
-6 -5 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-6 -5 D
-18 -11 D
-2 0 D
-2 -4 D
-6 -2 D
-12 -9 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-8 -5 D
-2 -2 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-4 -5 D
-2 0 D
-6 -5 D
-2 0 D
-2 -3 D
-4 -1 D
-6 -5 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -4 D
-4 -1 D
-6 -5 D
-2 0 D
-2 -4 D
-4 0 D
-2 -3 D
-6 -2 D
-4 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 0 D
-2 -4 D
-4 -1 D
-6 -5 D
-6 -5 D
-4 -1 D
-2 -4 D
-4 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-4 -4 D
-2 0 D
-4 -5 D
-4 -1 D
-4 -4 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -4 D
-2 -2 D
-2 0 D
-6 -5 D
-6 -5 D
-4 -1 D
-2 -3 D
-2 0 D
-6 -5 D
-10 -7 D
-10 -8 D
-4 -1 D
-2 -3 D
-2 0 D
-6 -5 D
-10 -7 D
-6 -4 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-8 -7 D
-S
-0.876 0.386 0.388 C
-200 1039 M
-24 230 D
-20 131 D
-16 75 D
-16 51 D
-14 30 D
-14 19 D
-14 11 D
-14 3 D
-22 -1 D
-2 -2 D
-4 0 D
-2 -2 D
-4 0 D
-4 -4 D
-6 -1 D
-4 -4 D
-6 -1 D
-4 -4 D
-8 -1 D
-2 -4 D
-6 -1 D
-4 -4 D
-4 0 D
-4 -3 D
-2 0 D
-4 -3 D
-2 0 D
-2 -2 D
-2 0 D
-2 -2 D
-4 0 D
-4 -3 D
-4 0 D
-6 -5 D
-8 0 D
-4 -4 D
-14 -3 D
-14 -3 D
-2 -2 D
-10 -1 D
-10 -1 D
-2 -2 D
-16 -1 D
-12 -1 D
-2 -2 D
-54 0 D
-2 -2 D
-90 -2 D
-38 -2 D
-22 -2 D
-14 0 D
-2 -2 D
-6 0 D
-2 -2 D
-24 -2 D
-2 -2 D
-16 -1 D
-10 -3 D
-12 0 D
-2 -2 D
-2 0 D
-2 -2 D
-16 -2 D
-2 -2 D
-16 -3 D
-8 -1 D
-2 -2 D
-4 0 D
-4 -3 D
-10 -1 D
-10 -4 D
-8 -1 D
-2 -3 D
-12 -1 D
-2 -3 D
-12 -2 D
-6 -4 D
-6 0 D
-6 -4 D
-8 0 D
-2 -4 D
-10 -1 D
-2 -3 D
-10 -2 D
-2 -2 D
-10 -3 D
-2 -2 D
-10 -3 D
-2 -2 D
-6 -1 D
-6 -4 D
-6 -1 D
-6 -5 D
-6 -1 D
-6 -4 D
-6 -1 D
-4 -4 D
-6 0 D
-2 -3 D
-10 -2 D
-2 -3 D
-8 -2 D
-8 -5 D
-4 -1 D
-6 -4 D
-4 0 D
-2 -3 D
-6 -1 D
-4 -4 D
-20 -8 D
-6 -4 D
-4 -1 D
-4 -3 D
-2 0 D
-22 -12 D
-2 0 D
-2 -3 D
-8 -3 D
-2 -2 D
-2 0 D
-2 -2 D
-2 0 D
-4 -3 D
-2 0 D
-2 -2 D
-2 0 D
-6 -5 D
-4 0 D
-2 -3 D
-6 -2 D
-6 -4 D
-4 -1 D
-16 -10 D
-2 0 D
-2 -3 D
-6 -1 D
-2 -4 D
-6 -1 D
-12 -8 D
-2 0 D
-2 -2 D
-2 0 D
-6 -5 D
-2 0 D
-6 -4 D
-2 0 D
-4 -4 D
-4 -1 D
-4 -3 D
-2 0 D
-4 -4 D
-4 -1 D
-14 -9 D
-2 0 D
-22 -14 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-16 -10 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-4 -4 D
-4 -1 D
-4 -4 D
-4 -1 D
-4 -4 D
-4 -1 D
-4 -3 D
-2 0 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -4 D
-4 -1 D
-32 -21 D
-2 -2 D
-4 -1 D
-16 -11 D
-2 0 D
-10 -7 D
-6 -5 D
-2 0 D
-6 -4 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-8 -7 D
-2 0 D
-6 -5 D
-2 0 D
-6 -4 D
-2 0 D
-2 -3 D
-10 -7 D
-2 0 D
-6 -5 D
-2 0 D
-12 -9 D
-2 0 D
-6 -5 D
-2 0 D
-16 -11 D
-2 -1 D
-2 -3 D
-6 -2 D
-16 -11 D
-4 -3 D
-2 0 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-16 -12 D
-2 0 D
-6 -4 D
-2 0 D
-2 -4 D
-4 -1 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -5 D
-4 0 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 -1 D
-6 -5 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -4 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-4 -4 D
-4 0 D
-2 -4 D
-4 -1 D
-4 -4 D
-4 -1 D
-4 -4 D
-2 0 D
-4 -5 D
-6 -2 D
-2 -3 D
-4 0 D
-2 -4 D
-6 -2 D
-2 -3 D
-4 -1 D
-4 -4 D
-2 0 D
-6 -5 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-6 -2 D
-10 -8 D
-2 0 D
-6 -5 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -2 D
-10 -7 D
-10 -7 D
-2 0 D
-2 -3 D
-16 -10 D
-10 -7 D
-2 -2 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-14 -9 D
-2 0 D
-2 -3 D
-8 -5 D
-2 0 D
-4 -4 D
-2 0 D
-2 -3 D
-2 0 D
-12 -9 D
-2 0 D
-2 -3 D
-8 -5 D
-2 0 D
-8 -7 D
-2 0 D
-8 -7 D
-S
-0.639 0.117 0.604 C
-200 1010 M
-18 269 D
-14 142 D
-14 99 D
-12 52 D
-10 27 D
-6 10 D
-6 4 D
-2 2 D
-6 1 D
-8 -2 D
-2 -3 D
-4 -1 D
-4 -5 D
-2 -1 D
-4 -5 D
-2 -1 D
-10 -14 D
-2 0 D
-4 -6 D
-4 -6 D
-2 0 D
-4 -7 D
-4 -3 D
-2 -4 D
-4 -3 D
-2 -4 D
-2 0 D
-4 -5 D
-2 -1 D
-2 -3 D
-2 -1 D
-2 -4 D
-4 -1 D
-6 -5 D
-2 -1 D
-2 -3 D
-6 -1 D
-2 -4 D
-4 0 D
-2 -2 D
-2 0 D
-6 -4 D
-8 0 D
-6 -5 D
-12 -1 D
-4 1 D
-28 -1 D
-2 2 D
-18 1 D
-8 3 D
-10 1 D
-18 5 D
-6 1 D
-2 3 D
-12 1 D
-4 1 D
-4 3 D
-6 1 D
-10 3 D
-4 1 D
-4 3 D
-8 1 D
-12 4 D
-6 1 D
-4 1 D
-2 2 D
-6 1 D
-12 2 D
-4 3 D
-20 2 D
-2 3 D
-26 2 D
-10 1 D
-6 2 D
-4 0 D
-2 2 D
-28 1 D
-4 -3 D
-26 1 D
-20 -2 D
-26 -3 D
-8 -1 D
-2 -2 D
-10 -1 D
-6 -2 D
-8 -1 D
-8 -3 D
-6 -1 D
-18 -5 D
-2 -2 D
-18 -5 D
-2 -2 D
-4 0 D
-2 -2 D
-16 -5 D
-2 -2 D
-4 0 D
-2 -2 D
-2 0 D
-2 -2 D
-4 0 D
-2 -2 D
-2 0 D
-2 -2 D
-4 0 D
-6 -4 D
-6 -1 D
-2 -3 D
-8 -1 D
-4 -5 D
-8 -1 D
-2 -4 D
-6 -1 D
-2 -1 D
-2 -3 D
-6 -1 D
-4 -3 D
-2 0 D
-4 -3 D
-6 -2 D
-2 -3 D
-6 -1 D
-4 -3 D
-4 -1 D
-2 -3 D
-8 -2 D
-2 -4 D
-6 0 D
-2 -4 D
-6 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-14 -9 D
-2 0 D
-2 -4 D
-20 -12 D
-2 0 D
-2 -3 D
-4 -1 D
-4 -4 D
-2 0 D
-12 -8 D
-2 0 D
-6 -5 D
-2 0 D
-2 -3 D
-6 -2 D
-6 -5 D
-4 -2 D
-2 -3 D
-2 0 D
-6 -4 D
-2 0 D
-2 -3 D
-8 -5 D
-2 -2 D
-2 0 D
-8 -6 D
-2 0 D
-4 -4 D
-2 0 D
-6 -5 D
-12 -8 D
-2 -2 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-6 -5 D
-2 0 D
-4 -5 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-4 -1 D
-6 -5 D
-4 -3 D
-2 0 D
-10 -8 D
-26 -18 D
-2 -2 D
-2 0 D
-8 -5 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-4 -4 D
-2 0 D
-4 -5 D
-4 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -4 D
-2 0 D
-4 -5 D
-4 -1 D
-4 -4 D
-2 0 D
-4 -5 D
-6 -2 D
-2 -3 D
-2 0 D
-4 -4 D
-2 0 D
-6 -5 D
-2 0 D
-4 -5 D
-2 0 D
-6 -5 D
-10 -7 D
-2 -2 D
-4 -1 D
-6 -4 D
-2 -3 D
-20 -13 D
-2 -3 D
-4 -1 D
-10 -8 D
-2 0 D
-2 -3 D
-2 0 D
-8 -7 D
-2 0 D
-10 -8 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-22 -16 D
-2 0 D
-2 -3 D
-10 -7 D
-2 0 D
-6 -5 D
-4 -2 D
-2 -3 D
-6 -4 D
-2 0 D
-10 -8 D
-26 -18 D
-2 0 D
-12 -10 D
-2 0 D
-4 -4 D
-2 0 D
-2 -3 D
-6 -2 D
-4 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 0 D
-2 -4 D
-4 -1 D
-6 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -4 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 0 D
-2 -4 D
-4 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -4 D
-4 -1 D
-2 -3 D
-6 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -4 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -5 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-4 -1 D
-6 -5 D
-4 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-4 -4 D
-2 0 D
-6 -5 D
-10 -6 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-10 -8 D
-10 -6 D
-2 0 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -2 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -4 D
-2 0 D
-2 -3 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-2 0 D
-12 -9 D
-2 0 D
-2 -3 D
-2 0 D
-2 -2 D
-2 0 D
-10 -7 D
-6 -5 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-10 -7 D
-2 -2 D
-2 0 D
-10 -7 D
-2 0 D
-2 -3 D
-8 -5 D
-2 0 D
-4 -4 D
-4 -1 D
-6 -5 D
-22 -14 D
-2 0 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-14 -10 D
-6 -4 D
-2 0 D
-4 -4 D
-S
-0.288 0.0118 0.629 C
-200 969 M
-16 359 D
-12 172 D
-12 103 D
-10 41 D
-2 4 D
-2 1 D
-2 3 D
-6 0 D
-8 -11 D
-28 -71 D
-12 -26 D
-12 -20 D
-4 -4 D
-2 -5 D
-4 -2 D
-4 -5 D
-10 -8 D
-4 -3 D
-10 -3 D
-2 -2 D
-2 0 D
-4 -4 D
-12 -2 D
-8 -2 D
-4 2 D
-14 -2 D
-4 -1 D
-6 1 D
-4 -1 D
-6 2 D
-4 -1 D
-8 2 D
-2 -1 D
-4 1 D
-2 2 D
-6 1 D
-6 -1 D
-6 4 D
-10 1 D
-2 3 D
-8 1 D
 10 4 D
-4 0 D
-2 3 D
-8 2 D
-6 5 D
-4 1 D
-2 2 D
-6 1 D
-4 3 D
-4 1 D
-4 4 D
-2 0 D
-2 3 D
-6 2 D
-2 2 D
-4 0 D
-2 3 D
-4 1 D
-4 4 D
-6 2 D
-8 5 D
-2 3 D
-8 3 D
-6 5 D
-2 0 D
-4 4 D
-4 0 D
-2 4 D
-6 2 D
-4 3 D
-2 0 D
-6 5 D
-4 1 D
-2 3 D
-2 0 D
-2 2 D
-4 0 D
-8 5 D
-2 0 D
-2 3 D
-2 0 D
-2 2 D
-6 2 D
-2 2 D
-8 2 D
-2 2 D
-6 1 D
-2 2 D
-4 1 D
-2 2 D
+10 0 D
+20 4 D
+10 0 D
 10 2 D
-2 2 D
-6 0 D
-2 2 D
-18 3 D
-4 1 D
-2 2 D
-24 1 D
-24 1 D
-26 -2 D
-2 0 D
-2 -2 D
-18 -4 D
-2 -2 D
-12 -1 D
-2 -2 D
+50 -1 D
+10 -2 D
+10 0 D
+10 -3 D
 10 -1 D
-2 -3 D
-8 -1 D
-4 -4 D
-8 0 D
-2 -3 D
-6 -1 D
-4 -4 D
-6 0 D
-4 -4 D
-6 0 D
-6 -5 D
-4 -1 D
-2 -2 D
-2 0 D
-6 -4 D
-4 -1 D
-2 -3 D
-8 -3 D
-4 -3 D
-2 0 D
-6 -5 D
-4 -1 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-4 -4 D
-4 0 D
-4 -4 D
-2 0 D
-6 -5 D
-2 0 D
-6 -5 D
-6 -5 D
-4 -1 D
-6 -5 D
-4 -2 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 0 D
-2 -3 D
-4 -1 D
-2 -4 D
-6 -1 D
-2 -5 D
-4 0 D
-2 -4 D
-4 -1 D
-4 -5 D
-2 0 D
-4 -4 D
-2 0 D
-2 -3 D
-14 -9 D
-14 -11 D
-2 -1 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-4 -5 D
-2 -1 D
-2 -3 D
-8 -5 D
-2 -3 D
-6 -4 D
-14 -11 D
-18 -14 D
-8 -7 D
-2 0 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -4 D
-6 -4 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-18 -15 D
-2 -1 D
-2 -3 D
-8 -5 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-18 -15 D
-2 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-4 -4 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -4 D
-6 -4 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-18 -15 D
-2 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-18 -15 D
-2 -1 D
-2 -3 D
-10 -7 D
-50 -40 D
-2 0 D
-4 -5 D
-2 0 D
-10 -9 D
-2 0 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -4 D
-22 -17 D
-8 -7 D
-2 0 D
-4 -4 D
-2 0 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-14 -12 D
-2 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-2 0 D
-2 -3 D
-6 -4 D
+40 -9 D
+10 -5 D
+30 -10 D
+10 -5 D
+10 -3 D
+60 -29 D
+40 -21 D
+30 -19 D
+10 -5 D
+20 -14 D
+10 -5 D
+20 -14 D
+10 -5 D
+20 -14 D
+10 -5 D
+30 -20 D
+20 -12 D
 10 -8 D
-2 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-2 0 D
-2 -3 D
-6 -3 D
-2 -3 D
-4 -1 D
-4 -5 D
-2 0 D
-4 -4 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-4 -5 D
-4 0 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -4 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-2 -4 D
-4 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-2 -3 D
-6 -3 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 -1 D
-2 -3 D
-6 -3 D
-2 -3 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-6 -5 D
-4 -2 D
-2 -3 D
-2 0 D
-6 -5 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -2 D
+40 -26 D
+10 -8 D
+10 -5 D
+10 -8 D
+20 -12 D
+10 -8 D
+10 -5 D
+70 -46 D
+10 -5 D
+10 -8 D
+10 -5 D
+90 -59 D
+10 -5 D
+10 -10 D
+20 -11 D
+10 -8 D
+20 -12 D
+10 -9 D
+10 -5 D
+30 -23 D
+10 -6 D
+50 -38 D
+10 -6 D
+10 -9 D
+20 -14 D
+20 -17 D
+10 -7 D
+10 -9 D
+10 -7 D
+10 -10 D
+20 -15 D
+20 -19 D
+20 -15 D
+30 -29 D
+10 -8 D
+30 -29 D
+70 -67 D
+20 -22 D
+S
+0.928 0.471 0.327 C
+200 905 M
+60 116 D
+60 106 D
+50 80 D
+70 100 D
+30 39 D
+60 69 D
+40 43 D
+20 18 D
+10 7 D
+20 19 D
+30 22 D
+10 10 D
+10 4 D
+20 15 D
+20 9 D
+10 8 D
+50 24 D
+20 5 D
+20 8 D
+40 9 D
+20 2 D
+10 3 D
+60 -1 D
+20 -1 D
+50 -8 D
+70 -19 D
+50 -22 D
+10 -2 D
+80 -39 D
+70 -37 D
+10 -7 D
+20 -10 D
+10 -7 D
+10 -4 D
+30 -17 D
+10 -7 D
+20 -11 D
+20 -14 D
+10 -4 D
+30 -19 D
+10 -5 D
+10 -7 D
+20 -10 D
+30 -19 D
+40 -23 D
+10 -7 D
+20 -10 D
+10 -8 D
+10 -5 D
+80 -51 D
+10 -5 D
+10 -8 D
+40 -26 D
+10 -9 D
+10 -4 D
+20 -16 D
+10 -6 D
 10 -8 D
 10 -6 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
+30 -23 D
+10 -6 D
+10 -10 D
+10 -6 D
+60 -47 D
+20 -17 D
 10 -7 D
-6 -5 D
-2 0 D
-6 -4 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
+30 -28 D
+50 -43 D
+90 -86 D
+20 -22 D
+20 -19 D
+S
+0.773 0.251 0.494 C
+200 911 M
+50 97 D
+50 90 D
+50 80 D
+50 73 D
+60 78 D
+30 35 D
+50 51 D
+10 9 D
+20 21 D
+20 19 D
+10 5 D
+20 17 D
+30 20 D
+10 8 D
+20 11 D
+20 13 D
+50 23 D
+20 5 D
+10 4 D
+50 13 D
+30 5 D
+30 1 D
+20 1 D
+30 -1 D
+50 -7 D
+40 -7 D
+40 -11 D
+10 -4 D
+10 -2 D
+20 -7 D
+10 -5 D
+30 -10 D
+80 -35 D
+20 -9 D
+10 -6 D
+30 -13 D
+40 -19 D
+100 -55 D
+10 -4 D
+100 -56 D
+10 -4 D
+30 -17 D
 10 -7 D
-2 -2 D
-2 0 D
-2 -3 D
-2 0 D
-14 -9 D
-2 -3 D
-2 0 D
-2 -2 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-14 -9 D
-2 0 D
-2 -3 D
-2 0 D
-6 -5 D
-2 0 D
-6 -4 D
-2 -3 D
-6 -2 D
-2 -3 D
-2 0 D
-2 -2 D
-2 0 D
-6 -5 D
-2 0 D
+10 -5 D
 10 -7 D
-16 -10 D
-2 -2 D
-2 0 D
+10 -4 D
+30 -20 D
+10 -4 D
+10 -8 D
+40 -25 D
+10 -5 D
+10 -8 D
+50 -33 D
+40 -29 D
+10 -5 D
+10 -9 D
+10 -6 D
+10 -8 D
+10 -6 D
+10 -10 D
+20 -14 D
+10 -9 D
+60 -47 D
+10 -10 D
+20 -17 D
 10 -7 D
-24 -15 D
-2 0 D
-6 -5 D
-2 0 D
+60 -56 D
+10 -8 D
+80 -77 D
+10 -11 D
+10 -9 D
+10 -11 D
+S
+0.544 0.0379 0.647 C
+200 919 M
+30 58 D
+50 91 D
+20 35 D
+50 77 D
+60 84 D
+20 24 D
+10 14 D
+10 10 D
+10 14 D
+10 9 D
+40 44 D
+20 19 D
+10 7 D
+20 19 D
+10 11 D
+10 5 D
+10 10 D
+10 8 D
+10 6 D
+10 8 D
+10 6 D
+10 8 D
+50 28 D
+30 14 D
+40 14 D
+20 5 D
+10 4 D
+10 1 D
+10 3 D
+30 5 D
+10 0 D
+20 3 D
+50 1 D
+20 -3 D
+20 0 D
+20 -5 D
+20 0 D
+10 -4 D
+10 0 D
+10 -4 D
+20 -3 D
+20 -7 D
+10 -1 D
+10 -5 D
+20 -4 D
+10 -5 D
+20 -5 D
+10 -5 D
+20 -7 D
+10 -2 D
+20 -9 D
+10 -3 D
+20 -9 D
+10 -3 D
+50 -23 D
+20 -7 D
+40 -19 D
 10 -7 D
-12 -8 D
-2 0 D
-18 -12 D
-2 0 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -2 D
-2 0 D
-6 -5 D
-2 0 D
+90 -43 D
+90 -47 D
+20 -11 D
+10 -4 D
+20 -11 D
+10 -8 D
+30 -16 D
+30 -17 D
+10 -8 D
+20 -10 D
+10 -8 D
+20 -11 D
+10 -8 D
+20 -11 D
+10 -9 D
+10 -5 D
+40 -29 D
+10 -5 D
+10 -9 D
+10 -6 D
+30 -24 D
+10 -6 D
+20 -15 D
+10 -9 D
+20 -15 D
+10 -9 D
+20 -15 D
+20 -19 D
+10 -6 D
+30 -28 D
+20 -17 D
+10 -10 D
+30 -26 D
+60 -59 D
+10 -11 D
+10 -9 D
+10 -11 D
+20 -19 D
+S
+0.249 0.0157 0.613 C
+200 927 M
+50 95 D
+60 101 D
+60 88 D
+50 64 D
+20 22 D
+10 14 D
+50 51 D
+30 28 D
+40 33 D
+10 7 D
+10 9 D
+10 6 D
+10 8 D
+10 5 D
+20 14 D
+70 34 D
+10 3 D
+10 5 D
+20 4 D
+10 5 D
+40 10 D
+30 4 D
+10 2 D
+50 2 D
+50 0 D
+50 -7 D
+50 -8 D
+10 -3 D
+10 -1 D
+10 -4 D
+10 -1 D
+10 -4 D
+80 -23 D
+80 -28 D
+30 -14 D
+10 -2 D
+20 -9 D
+10 -3 D
+20 -11 D
+30 -13 D
+90 -41 D
+90 -46 D
+10 -4 D
+50 -27 D
+30 -19 D
+20 -10 D
+10 -8 D
+30 -16 D
+10 -8 D
+30 -19 D
+10 -5 D
+10 -8 D
+20 -12 D
+90 -64 D
+10 -10 D
+10 -6 D
+50 -39 D
+30 -26 D
+10 -7 D
+20 -19 D
+50 -43 D
+10 -10 D
+20 -17 D
+50 -48 D
+10 -11 D
+10 -9 D
+20 -22 D
+20 -20 D
 S
 PSL_cliprestore
+U
 %%EndObject
 0 A
 FQ
@@ -2632,7 +1567,8 @@ O0
 1 setlinejoin
 3.32550952342 setmiterlimit
 25 W
-/PSL_slant_y 0 def
+0 A
+/PSL_slant_y 0 def /PSL_slant_x 0 def
 2 setlinecap
 N 0 2400 M 0 -2400 D S
 /PSL_A0_y 83 def
@@ -2742,6 +1678,7 @@ N 2200 0 M 0 83 D S
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
 0 -2400 T
 0 setlinecap
+0 A
 %%EndObject
 0 A
 FQ
@@ -2755,7 +1692,8 @@ O0
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -2763,12 +1701,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/medium/G_z_lin.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/medium/G_z_lin.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_14
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -2779,24 +1718,20 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-200 920 M
-102 -22 D
-96 -18 D
-98 -16 D
-108 -15 D
-106 -12 D
-94 -9 D
-104 -8 D
-98 -6 D
-82 -4 D
-102 -4 D
-104 -3 D
-98 -2 D
-142 -2 D
-378 -2 D
-286 0 D
+200 919 M
+180 -37 D
+130 -21 D
+130 -17 D
+160 -17 D
+150 -11 D
+230 -11 D
+210 -5 D
+150 -2 D
+390 -2 D
+260 0 D
 S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -2805,12 +1740,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/medium/G_z.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/medium/G_z.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_15
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 clipsave
 0 0 M
@@ -2819,90 +1755,68 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-0.992 0.698 0.184 C
-200 853 M
-78 5 D
-164 16 D
-152 19 D
-158 23 D
-254 41 D
-598 103 D
-398 66 D
-196 32 D
+0.996 0.734 0.169 C
+200 1209 M
+180 -17 D
+240 -16 D
+230 -11 D
+210 -8 D
+200 -6 D
+230 -5 D
+150 -2 D
+330 -1 D
+220 5 D
 S
-0.876 0.386 0.388 C
-200 731 M
-52 11 D
-98 25 D
-78 23 D
-100 33 D
-150 53 D
-194 69 D
-186 62 D
-148 46 D
-138 40 D
-140 38 D
-118 30 D
-146 35 D
-152 34 D
-158 33 D
-140 28 D
+0.928 0.471 0.327 C
+200 1250 M
+130 -12 D
+220 -14 D
+280 -12 D
+220 -7 D
+270 -6 D
+190 -2 D
+260 -1 D
+250 4 D
+170 6 D
 S
-0.639 0.117 0.604 C
-200 566 M
-38 17 D
-72 35 D
-58 34 D
-114 76 D
-108 73 D
-74 48 D
-60 37 D
-56 33 D
-46 26 D
-50 27 D
-132 67 D
-88 40 D
-100 42 D
-104 40 D
-110 39 D
-120 39 D
-114 34 D
-124 34 D
-186 46 D
-134 30 D
-108 23 D
-2 1 D
+0.773 0.251 0.494 C
+200 1289 M
+170 -13 D
+250 -12 D
+170 -6 D
+270 -7 D
+200 -3 D
+270 -2 D
+240 2 D
+240 6 D
+180 8 D
 S
-0.288 0.0118 0.629 C
-200 388 M
-66 50 D
-38 34 D
-66 67 D
-50 55 D
-36 40 D
-70 73 D
-68 67 D
-64 58 D
-72 60 D
-58 45 D
-70 50 D
-68 45 D
-50 31 D
-62 36 D
-64 35 D
-78 40 D
-100 46 D
-98 41 D
-114 43 D
-124 42 D
-118 36 D
-108 30 D
-178 44 D
-122 27 D
-54 12 D
-2 1 D
+0.544 0.0379 0.647 C
+200 1327 M
+170 -11 D
+240 -10 D
+260 -7 D
+170 -3 D
+190 -2 D
+190 -1 D
+270 3 D
+270 8 D
+230 11 D
+S
+0.249 0.0157 0.613 C
+200 1364 M
+160 -9 D
+210 -8 D
+260 -6 D
+260 -3 D
+160 -1 D
+310 3 D
+260 7 D
+250 11 D
+120 7 D
 S
 PSL_cliprestore
+U
 %%EndObject
 0 A
 FQ
@@ -2934,20 +1848,20 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica-Bold,black -N -D0i/0.22i -O -K
+%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica,black+jCB+cCT -N -D0i/0.16i -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_17
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-PSL_font_encode 1 get 0 eq {Standard+_Encoding /Helvetica-Bold /Helvetica-Bold PSL_reencode PSL_font_encode 1 1 put} if
-1200 2664 M 183 F1
-PSL_font_encode 3 get 0 eq {Standard+_Encoding /Helvetica-BoldOblique /Helvetica-BoldOblique PSL_reencode PSL_font_encode 3 1 put} if
-V MU 0 0 M 183 F3 (P) FP 183 F1 ( = ) FP 183 F3 (T) FP 0 -46 G 128 F3 (eq) FP 0 46 G pathbbox N 4 1 roll exch pop add exch U -2 div exch -2 div exch G
-183 F3 (P) Z
-183 F1 ( = ) Z
-183 F3 (T) Z
-0 -46 G 128 F3 (eq) Z
+1200 2592 M PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
+183 F0
+PSL_font_encode 2 get 0 eq {Standard+_Encoding /Helvetica-Oblique /Helvetica-Oblique PSL_reencode PSL_font_encode 2 1 put} if
+V MU 0 0 M 183 F2 (P) FP 183 F0 ( = ) FP 183 F2 (T) FP 0 -46 G 128 F2 (eq) FP 0 46 G pathbbox N pop exch pop add U -2 div 0 G
+183 F2 (P) Z
+183 F0 ( = ) Z
+183 F2 (T) Z
+0 -46 G 128 F2 (eq) Z
 0 46 G %%EndObject
 0 A
 FQ
@@ -2962,7 +1876,8 @@ O0
 1 setlinejoin
 3.32550952342 setmiterlimit
 25 W
-/PSL_slant_y 0 def
+0 A
+/PSL_slant_y 0 def /PSL_slant_x 0 def
 2 setlinecap
 N 0 2400 M 0 -2400 D S
 /PSL_A0_y 83 def
@@ -3016,6 +1931,7 @@ N 2200 0 M 0 83 D S
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
 0 -2400 T
 0 setlinecap
+0 A
 %%EndObject
 0 A
 FQ
@@ -3029,7 +1945,8 @@ O0
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -3037,12 +1954,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/medium/Lag_z_lin.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p,dimgrey,4_4 -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/medium/Lag_z_lin.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
 %%BeginObject PSL_Layer_20
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -3054,31 +1972,27 @@ clipsave
 P
 PSL_clip N
 200 857 M
-64 42 D
-92 59 D
-122 76 D
-78 47 D
-82 48 D
-78 44 D
-70 38 D
-78 41 D
-138 68 D
-96 43 D
-112 46 D
-102 38 D
-106 35 D
-92 27 D
-102 26 D
-82 18 D
-86 16 D
-80 12 D
-74 9 D
-64 6 D
-58 4 D
-64 3 D
-78 2 D
+70 46 D
+110 70 D
+110 68 D
+160 95 D
+150 82 D
+110 57 D
+140 66 D
+130 55 D
+90 35 D
+110 38 D
+120 37 D
+130 33 D
+130 27 D
+90 14 D
+90 11 D
+110 10 D
+100 4 D
+40 1 D
 S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -3087,12 +2001,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/medium/Lag_z.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p -Cp.cpt -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/medium/Lag_z.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p -Cp.cpt -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
 %%BeginObject PSL_Layer_21
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 clipsave
 0 0 M
@@ -3101,1247 +2016,366 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-0.992 0.698 0.184 C
-200 1184 M
-2 1 D
-2 3 D
-4 3 D
-2 3 D
-4 1 D
-2 4 D
-4 0 D
-2 3 D
-6 2 D
-2 3 D
-6 2 D
-4 4 D
-6 1 D
-6 4 D
-8 1 D
-6 4 D
-12 1 D
-8 3 D
-64 1 D
-22 -1 D
-4 -3 D
-24 -2 D
-4 -3 D
-14 -1 D
-4 -1 D
-2 -2 D
+0.996 0.734 0.169 C
+200 827 M
+20 7 D
+40 19 D
+10 3 D
+10 5 D
+10 2 D
+30 14 D
+30 10 D
+20 8 D
+10 2 D
+20 8 D
+10 2 D
+20 8 D
+10 2 D
+40 14 D
+40 10 D
+10 4 D
+120 30 D
+10 0 D
+10 4 D
+10 1 D
+40 10 D
+10 0 D
+10 4 D
+30 5 D
+10 0 D
+20 5 D
+10 0 D
+20 5 D
+10 0 D
+20 5 D
+10 0 D
+30 5 D
+10 0 D
+10 3 D
+30 2 D
+30 4 D
+20 1 D
+30 4 D
+30 1 D
+10 2 D
+10 0 D
+10 2 D
+50 1 D
+10 2 D
+20 0 D
+10 2 D
+240 -1 D
+60 -4 D
+30 -1 D
+50 -4 D
+30 -2 D
+10 -3 D
+30 -1 D
+10 -1 D
+10 -3 D
+20 0 D
 20 -4 D
-10 -3 D
-10 -3 D
+20 -1 D
+50 -7 D
 10 -2 D
-2 0 D
-6 -4 D
+10 0 D
+60 -10 D
+10 0 D
+10 -3 D
+130 -23 D
+10 -3 D
+20 -3 D
+10 -3 D
 10 -1 D
-4 -3 D
-12 -2 D
-4 -3 D
-10 -2 D
+10 -3 D
+10 -1 D
 10 -4 D
-16 -5 D
-2 0 D
-6 -4 D
-8 -1 D
-4 -3 D
-10 -2 D
-2 -2 D
-14 -4 D
-2 -2 D
-12 -3 D
-2 -2 D
-8 -1 D
-6 -4 D
-8 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-14 -4 D
-2 -2 D
-10 -3 D
-2 -2 D
-10 -2 D
-4 -3 D
-8 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-14 -4 D
-2 -2 D
-10 -3 D
-2 -2 D
-10 -2 D
-4 -3 D
-8 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-10 -2 D
-2 -2 D
-2 0 D
-2 -2 D
-10 -3 D
-2 -2 D
-10 -2 D
-4 -3 D
-8 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-10 -2 D
-2 -2 D
-2 0 D
-2 -2 D
-10 -3 D
-8 -3 D
-6 -2 D
-2 -2 D
-8 -1 D
-4 -3 D
-8 -1 D
-4 -3 D
-14 -4 D
-4 -3 D
-6 -1 D
-10 -4 D
-6 -2 D
-2 -2 D
-8 -1 D
-4 -3 D
-8 -1 D
-4 -3 D
-26 -9 D
-8 -3 D
-4 0 D
-6 -4 D
-6 0 D
-6 -4 D
-8 -1 D
-4 -3 D
-30 -10 D
-2 -2 D
-8 -1 D
-8 -3 D
-14 -5 D
-10 -3 D
-2 -2 D
-6 -1 D
-22 -8 D
-10 -3 D
-6 -2 D
-4 0 D
-6 -4 D
-8 -1 D
-4 -3 D
-4 0 D
-2 -2 D
-6 -1 D
-6 -2 D
-2 -2 D
-8 -1 D
-6 -2 D
-2 -2 D
-6 -1 D
-10 -3 D
-14 -5 D
-4 0 D
-4 -3 D
-4 0 D
-2 -2 D
-4 0 D
-2 -2 D
-6 -1 D
-2 -2 D
-8 -1 D
-6 -2 D
-2 -2 D
-10 -2 D
-6 -2 D
-4 0 D
-6 -4 D
 10 -1 D
-4 -3 D
-4 0 D
-2 -2 D
-4 0 D
-2 -2 D
-18 -4 D
-2 -2 D
-14 -4 D
-10 -2 D
-2 0 D
-6 -4 D
-10 -2 D
-6 -2 D
-2 0 D
-2 -2 D
-6 -1 D
-8 -2 D
-2 -2 D
-10 -2 D
-10 -3 D
-14 -4 D
-12 -4 D
-8 -1 D
-2 -2 D
-14 -3 D
-2 -2 D
-18 -4 D
-2 -2 D
-6 -1 D
-10 -3 D
-10 -2 D
-2 0 D
-2 -2 D
-2 0 D
-2 -2 D
-10 -1 D
-2 -2 D
-10 -2 D
-26 -7 D
-2 -2 D
-6 -1 D
-10 -2 D
-2 -2 D
-12 -2 D
-4 -3 D
-10 -1 D
-40 -11 D
-2 0 D
-2 -2 D
-14 -3 D
-10 -3 D
-6 -1 D
-8 -3 D
-6 -1 D
-14 -4 D
-18 -5 D
-30 -8 D
-18 -5 D
-12 -2 D
-14 -4 D
-18 -5 D
-4 0 D
-2 -2 D
-6 -1 D
-16 -3 D
-4 -3 D
-16 -3 D
-6 -2 D
-6 0 D
-2 -2 D
-4 0 D
-2 -2 D
-12 -1 D
-2 -2 D
-14 -3 D
-18 -5 D
-10 -1 D
-2 -2 D
-10 -2 D
-10 -3 D
-12 -2 D
-4 -1 D
-2 -2 D
-14 -2 D
-14 -4 D
-6 -1 D
-14 -4 D
-10 -1 D
-2 -2 D
-10 -2 D
-8 -1 D
-2 -2 D
-14 -2 D
-4 -1 D
-2 -2 D
-16 -2 D
-6 -2 D
-2 0 D
-2 -2 D
-10 -1 D
-8 -2 D
-2 -2 D
-14 -2 D
-4 -1 D
-2 -2 D
-8 0 D
+90 -21 D
+20 -5 D
 S
-0.876 0.386 0.388 C
-200 1379 M
-10 11 D
-2 1 D
-2 3 D
-4 1 D
-2 3 D
-6 2 D
-6 4 D
-26 4 D
-24 -5 D
-10 -4 D
-2 0 D
-6 -4 D
-4 0 D
-2 -3 D
-8 -2 D
-2 -3 D
-6 -2 D
-6 -5 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 -1 D
-6 -5 D
-2 0 D
-2 -3 D
-6 -4 D
-10 -8 D
-2 0 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-6 -3 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-18 -15 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -3 D
-4 -1 D
-2 -3 D
-10 -7 D
-22 -18 D
-2 0 D
-2 -3 D
-6 -4 D
-22 -17 D
-2 0 D
-2 -3 D
-18 -12 D
-6 -5 D
-14 -9 D
-2 -3 D
-6 -4 D
-2 0 D
-10 -8 D
-6 -4 D
-2 0 D
-2 -3 D
-14 -9 D
-40 -26 D
-12 -8 D
-2 -2 D
-2 0 D
-8 -5 D
-2 -3 D
-6 -2 D
-2 -2 D
-2 0 D
-6 -5 D
-2 0 D
-10 -7 D
-2 0 D
-2 -3 D
-6 -2 D
-2 -3 D
-6 -2 D
-2 -2 D
-2 0 D
-6 -5 D
-2 0 D
-10 -7 D
-4 -1 D
-4 -3 D
-2 0 D
-4 -4 D
-4 -1 D
-4 -3 D
-2 0 D
-20 -12 D
-2 0 D
-6 -4 D
-2 0 D
-4 -4 D
-4 -1 D
-4 -3 D
-2 0 D
-2 -2 D
-2 0 D
-16 -10 D
-4 -1 D
-4 -3 D
-6 -2 D
-2 -2 D
-4 -1 D
-4 -3 D
-6 -2 D
-2 -2 D
-4 -1 D
-2 -2 D
-6 -2 D
-4 -3 D
-6 -2 D
-2 -2 D
-4 0 D
-22 -12 D
-2 0 D
-4 -3 D
-6 -2 D
-4 -3 D
-6 -2 D
-2 -2 D
-4 0 D
-6 -4 D
-4 -1 D
-4 -3 D
-12 -4 D
-4 -3 D
-14 -5 D
-2 -2 D
-2 0 D
-2 -2 D
-4 0 D
-6 -4 D
-6 -2 D
-2 -2 D
-8 -2 D
-2 -2 D
-4 0 D
-6 -4 D
-4 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-4 0 D
-4 -3 D
-8 -2 D
-4 -3 D
-12 -4 D
-2 0 D
-6 -4 D
-6 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-4 0 D
-4 -3 D
-8 -2 D
-4 -3 D
-4 0 D
-2 -2 D
-2 0 D
-2 -2 D
-6 -1 D
-2 -2 D
-10 -3 D
-34 -13 D
-6 -1 D
-2 -2 D
-12 -3 D
-2 -2 D
-10 -3 D
-2 -2 D
-6 -1 D
-22 -8 D
-10 -3 D
-2 0 D
-2 -2 D
-12 -3 D
-2 -2 D
-12 -3 D
-2 -2 D
-6 -1 D
-20 -7 D
-14 -4 D
-2 0 D
-2 -2 D
-16 -5 D
-6 -1 D
-2 -2 D
-14 -4 D
-14 -4 D
-2 -2 D
-8 -1 D
-24 -8 D
-10 -3 D
-14 -4 D
-4 -1 D
-2 -2 D
-14 -3 D
-2 -2 D
-8 0 D
-2 -2 D
-14 -3 D
-2 -2 D
-14 -3 D
-2 -2 D
-6 0 D
-2 -2 D
-14 -3 D
-2 -2 D
-16 -3 D
-2 -2 D
-8 -1 D
-10 -3 D
-6 -1 D
-2 -2 D
-16 -3 D
-2 -2 D
-6 -1 D
-18 -5 D
-18 -5 D
-10 -2 D
-10 -3 D
-46 -12 D
-4 0 D
-2 -2 D
-10 -2 D
-6 -1 D
-8 -3 D
-12 -2 D
-2 -2 D
-18 -3 D
-14 -4 D
-14 -4 D
-10 -1 D
-2 -2 D
-10 -2 D
-8 -1 D
-2 -2 D
-10 -2 D
-8 -1 D
-2 -2 D
-18 -3 D
-2 -2 D
-18 -2 D
-2 -2 D
-4 0 D
-2 -2 D
-14 -2 D
-10 -3 D
-12 -2 D
-4 -1 D
-2 -2 D
-12 0 D
-4 -3 D
-18 -2 D
-4 -3 D
-18 -3 D
-6 -1 D
-2 -2 D
-16 -2 D
-4 -1 D
-2 -2 D
-16 -2 D
-4 -1 D
-2 -2 D
-14 -1 D
-10 -3 D
-14 -2 D
-2 -2 D
+0.928 0.471 0.327 C
+200 816 M
+10 3 D
+30 15 D
+30 10 D
+20 9 D
+30 10 D
+80 27 D
+30 8 D
+10 4 D
+90 24 D
+10 1 D
+10 4 D
+10 1 D
+60 15 D
+10 0 D
+10 4 D
+10 0 D
+40 9 D
+50 8 D
+10 3 D
+10 0 D
+20 4 D
+10 0 D
+30 5 D
+10 0 D
+10 3 D
+30 2 D
+30 5 D
+20 1 D
+10 2 D
+10 0 D
+10 2 D
+30 1 D
+10 2 D
+70 3 D
+10 2 D
+190 2 D
+120 -2 D
+30 -4 D
+50 -1 D
 20 -3 D
-14 -4 D
-10 -1 D
-S
-0.639 0.117 0.604 C
-200 1656 M
-12 15 D
-8 5 D
-12 1 D
-6 -1 D
-12 -8 D
-2 -2 D
-2 0 D
-12 -13 D
-2 -1 D
-2 -4 D
-2 -1 D
-16 -23 D
-2 -1 D
-16 -25 D
-22 -36 D
-2 -5 D
-2 -1 D
-12 -22 D
-2 -1 D
-6 -11 D
-12 -22 D
-2 -1 D
-12 -21 D
-50 -82 D
-38 -55 D
-14 -21 D
-2 -1 D
-12 -18 D
-2 -1 D
-8 -11 D
-16 -21 D
-2 -1 D
-2 -4 D
-2 -1 D
-6 -9 D
-2 -1 D
-2 -4 D
-2 -1 D
-2 -4 D
-2 0 D
-2 -4 D
-2 -1 D
-14 -18 D
-2 -1 D
-2 -4 D
-2 -1 D
-2 -3 D
-2 -1 D
-8 -10 D
-2 -1 D
-2 -3 D
-2 -1 D
-2 -4 D
-2 -1 D
-2 -3 D
-2 -1 D
-2 -3 D
-2 -1 D
-8 -10 D
-2 -1 D
-2 -4 D
-2 0 D
-8 -9 D
-2 -1 D
-2 -4 D
-2 0 D
-4 -5 D
-2 -1 D
-2 -4 D
-2 0 D
-8 -9 D
-2 0 D
-8 -10 D
-2 0 D
-4 -5 D
-2 0 D
-2 -4 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-2 -5 D
-4 -1 D
-2 -4 D
-2 0 D
-4 -4 D
-2 0 D
-2 -4 D
-4 -1 D
-2 -5 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -4 D
-2 0 D
-4 -4 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -4 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -4 D
-4 0 D
-4 -5 D
-2 0 D
-4 -4 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -4 D
-4 0 D
-4 -5 D
-4 -1 D
-2 -4 D
-4 0 D
-2 -3 D
-4 -1 D
-4 -5 D
-4 0 D
-4 -5 D
-2 0 D
-4 -5 D
-4 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 0 D
-4 -5 D
-4 0 D
-4 -5 D
-2 0 D
-6 -5 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 0 D
-4 -5 D
-4 0 D
-4 -5 D
-4 0 D
-6 -5 D
-4 -1 D
-2 -3 D
-6 -2 D
-2 -3 D
-4 0 D
-6 -5 D
-2 0 D
-6 -5 D
-2 0 D
-2 -2 D
-2 0 D
-12 -8 D
-4 -1 D
-2 -3 D
-4 0 D
-16 -10 D
-2 0 D
-2 -2 D
-2 0 D
-6 -4 D
-2 0 D
-2 -3 D
-8 -3 D
-2 -2 D
-6 -2 D
-2 -2 D
-8 -3 D
-2 -2 D
-4 -1 D
-2 -2 D
-2 0 D
-2 -2 D
-8 -3 D
-4 -3 D
-6 -2 D
-2 -2 D
-6 -2 D
-2 -2 D
-14 -5 D
-4 -3 D
-2 0 D
-2 -2 D
-2 0 D
-2 -2 D
-4 -1 D
-2 -2 D
-8 -2 D
-2 -3 D
-6 -1 D
-4 -3 D
-4 0 D
-8 -5 D
-2 0 D
-4 -3 D
-2 0 D
-2 -2 D
-4 0 D
-2 -2 D
-2 0 D
-4 -3 D
-8 -2 D
-2 -3 D
-6 -1 D
-4 -3 D
-6 -1 D
-2 -2 D
-8 -2 D
-4 -3 D
-2 0 D
-2 -2 D
-4 0 D
-2 -2 D
-4 -1 D
-2 -2 D
-6 -1 D
-6 -4 D
-6 -1 D
-4 -3 D
-6 -1 D
-10 -4 D
-2 0 D
-4 -3 D
-2 0 D
-2 -2 D
-6 -1 D
-4 -1 D
-4 -3 D
-8 -2 D
-4 -3 D
-4 0 D
-2 -2 D
-2 0 D
-2 -2 D
-8 -1 D
-2 -2 D
-10 -3 D
-2 -2 D
-16 -4 D
-4 -3 D
-10 -3 D
-6 -2 D
-46 -16 D
-2 0 D
-2 -2 D
-14 -4 D
-6 -2 D
-12 -4 D
-8 -2 D
-2 -2 D
-6 -1 D
-34 -11 D
-4 0 D
-6 -4 D
-10 -2 D
-14 -4 D
-2 -2 D
-6 -1 D
-16 -5 D
-16 -5 D
-10 -2 D
-8 -3 D
-8 -1 D
-4 -3 D
-12 -2 D
-2 -2 D
-6 -1 D
-16 -4 D
-2 -2 D
-12 -2 D
-10 -4 D
-6 0 D
-2 -2 D
-2 0 D
-2 -2 D
-12 -1 D
-2 -2 D
-16 -3 D
-2 -2 D
+30 0 D
+30 -5 D
+30 -1 D
 20 -4 D
-2 -2 D
-16 -3 D
-2 -2 D
-14 -1 D
-6 -4 D
-12 -1 D
-8 -3 D
-12 -2 D
-2 -2 D
+40 -3 D
+50 -7 D
+10 0 D
 20 -4 D
+20 -1 D
 10 -3 D
-10 -2 D
+30 -4 D
+30 -4 D
 10 -3 D
-8 0 D
-6 -4 D
-14 -1 D
-4 -3 D
-18 -2 D
-2 -2 D
-16 -3 D
-2 0 D
-2 -2 D
-16 -3 D
-4 0 D
-2 -2 D
-10 -2 D
-10 -1 D
-2 -2 D
-20 -3 D
-2 -2 D
-20 -3 D
-10 -3 D
-12 -2 D
-10 -3 D
-14 -2 D
-4 -1 D
-2 -2 D
-16 -1 D
-8 -3 D
-16 -2 D
-2 -2 D
-22 -3 D
-4 -1 D
-2 -2 D
-22 -3 D
-2 -2 D
 20 -2 D
-8 -3 D
-16 -1 D
-8 -3 D
-4 -1 D
-S
-0.288 0.0118 0.629 C
-200 2036 M
-6 12 D
-6 6 D
-8 -1 D
-10 -9 D
-10 -19 D
-18 -45 D
-50 -158 D
-36 -114 D
-36 -98 D
-30 -76 D
-52 -110 D
-42 -76 D
-2 -1 D
-18 -31 D
-2 -1 D
-4 -8 D
-8 -12 D
-2 -4 D
-2 -1 D
-14 -21 D
-14 -21 D
-2 -1 D
-8 -12 D
-10 -12 D
-8 -12 D
-12 -15 D
-2 -1 D
-2 -4 D
-2 -1 D
-14 -18 D
-2 -1 D
-2 -4 D
-2 -1 D
-14 -18 D
-2 -1 D
-2 -4 D
-2 0 D
-2 -4 D
-2 0 D
-2 -4 D
-2 -1 D
-8 -10 D
-2 -1 D
-2 -4 D
-2 0 D
-2 -4 D
-2 0 D
-4 -5 D
-2 -1 D
-2 -4 D
-2 -1 D
-2 -4 D
-2 0 D
-4 -5 D
-2 0 D
-2 -4 D
-2 0 D
-2 -5 D
-2 0 D
-4 -5 D
-2 -1 D
-2 -4 D
-4 -1 D
-2 -4 D
-2 0 D
-2 -4 D
-2 0 D
-4 -5 D
-2 -1 D
-2 -4 D
-2 0 D
-4 -5 D
-2 0 D
-2 -4 D
-4 -1 D
-2 -4 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 -1 D
-2 -4 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-2 0 D
-2 -4 D
-4 -2 D
-2 -3 D
-4 -2 D
-2 -4 D
-4 -1 D
-2 -4 D
-4 -1 D
-2 -3 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-4 -2 D
-2 -3 D
-2 0 D
-12 -10 D
-2 0 D
-4 -5 D
-2 0 D
-4 -5 D
-4 -1 D
-2 -3 D
-2 0 D
-6 -5 D
-2 0 D
-2 -3 D
-6 -4 D
-10 -8 D
-2 0 D
-4 -4 D
-2 0 D
-6 -5 D
-2 0 D
-2 -3 D
-14 -8 D
-2 -3 D
-4 -1 D
-2 -3 D
-4 -1 D
-4 -4 D
-4 -1 D
-6 -5 D
-22 -14 D
-2 0 D
-4 -4 D
-4 -1 D
-4 -4 D
-4 -1 D
-4 -4 D
-6 -2 D
-12 -8 D
-2 0 D
-4 -4 D
-4 0 D
-6 -5 D
-2 0 D
-6 -5 D
-6 -2 D
-2 -3 D
-4 0 D
-6 -5 D
-6 -2 D
-2 -2 D
-4 0 D
-2 -3 D
-6 -2 D
-6 -5 D
-4 0 D
-6 -5 D
-6 -2 D
-2 -3 D
-6 -1 D
-4 -3 D
-4 -1 D
-6 -4 D
-4 -1 D
-6 -4 D
-2 0 D
-2 -2 D
-2 0 D
-2 -3 D
-6 -1 D
-2 -1 D
-2 -3 D
-6 -1 D
-4 -3 D
-6 -1 D
-4 -4 D
-6 -1 D
-4 -4 D
-6 -1 D
-6 -4 D
-8 -3 D
-2 -2 D
-6 -1 D
-4 -3 D
-6 -1 D
-6 -4 D
-4 -1 D
-2 -2 D
-2 0 D
-2 -2 D
-6 -1 D
-6 -4 D
-6 -1 D
-4 -4 D
-6 0 D
-6 -4 D
-6 -1 D
-6 -4 D
-20 -7 D
-4 -3 D
-8 -2 D
-4 -3 D
-6 -1 D
-4 -3 D
-6 -1 D
-12 -5 D
-4 -1 D
-4 -3 D
-10 -2 D
-4 -3 D
-8 -1 D
-2 -3 D
-10 -2 D
-4 -3 D
-6 -1 D
-4 -1 D
-4 -3 D
-10 -2 D
-4 -3 D
-10 -2 D
-4 -3 D
-10 -1 D
-2 -3 D
-12 -3 D
-2 -2 D
-12 -2 D
-4 -3 D
-10 -2 D
-4 -3 D
-10 -2 D
-2 -2 D
-14 -3 D
-6 -4 D
-8 0 D
-6 -4 D
-10 -2 D
-2 -2 D
-14 -3 D
-8 -3 D
 10 -3 D
-6 -2 D
-8 -1 D
-6 -4 D
+10 0 D
+10 -3 D
+50 -8 D
+20 -5 D
 10 -1 D
-4 -3 D
+10 -3 D
 10 -1 D
+10 -3 D
+20 -3 D
+50 -12 D
+10 -1 D
+10 -3 D
+20 -3 D
+50 -13 D
+10 -1 D
+10 -4 D
+40 -10 D
+S
+0.773 0.251 0.494 C
+200 805 M
+30 13 D
+10 2 D
+20 9 D
+30 10 D
+70 23 D
+10 2 D
+30 10 D
+20 5 D
+10 4 D
+10 1 D
+50 14 D
+10 1 D
+10 4 D
+10 0 D
+10 4 D
+10 1 D
+60 14 D
+30 5 D
+10 0 D
+20 5 D
+10 0 D
+20 5 D
+10 0 D
+20 5 D
+20 1 D
+20 4 D
+10 0 D
+20 4 D
+20 0 D
+30 5 D
+40 3 D
+10 2 D
+30 1 D
+30 4 D
+60 1 D
+10 2 D
+50 2 D
+200 0 D
+10 -2 D
+30 -1 D
+50 -2 D
+10 0 D
+10 -2 D
+50 -3 D
+10 0 D
+10 -2 D
+20 -1 D
+10 -2 D
+30 -1 D
+20 -4 D
+20 0 D
+20 -4 D
+20 -1 D
+90 -11 D
+10 -3 D
+50 -6 D
+10 -3 D
+10 0 D
+120 -21 D
+10 -3 D
+10 -1 D
+10 -3 D
+50 -9 D
+10 -3 D
+10 -1 D
+10 -3 D
+10 -1 D
+40 -10 D
+10 -1 D
+10 -4 D
+10 -1 D
+10 -3 D
+10 -1 D
+40 -10 D
+10 -4 D
+10 -1 D
+10 -4 D
+10 0 D
 10 -4 D
 10 -2 D
-8 -3 D
-12 -3 D
-2 -2 D
-14 -2 D
-4 -3 D
-12 -1 D
-8 -3 D
-14 -4 D
-18 -4 D
-2 -2 D
-16 -2 D
-2 -3 D
-16 -2 D
-4 -3 D
-12 -1 D
-4 -1 D
-2 -2 D
-16 -3 D
-6 -2 D
-16 -3 D
-2 -2 D
-18 -3 D
-2 -2 D
-16 -1 D
-6 -4 D
-14 -1 D
-10 -4 D
-12 -1 D
-2 -2 D
-24 -4 D
-2 -2 D
+S
+0.544 0.0379 0.647 C
+200 794 M
+50 18 D
+30 11 D
+10 2 D
+40 13 D
+10 2 D
+30 10 D
+120 29 D
+40 9 D
+20 3 D
+10 3 D
+10 0 D
+20 5 D
+90 14 D
+10 0 D
+30 5 D
+20 1 D
+20 4 D
+20 0 D
+10 3 D
+40 2 D
+20 3 D
+50 2 D
+10 2 D
+140 4 D
+90 1 D
+140 -4 D
+60 -4 D
+30 -1 D
+30 -4 D
+30 -1 D
 20 -3 D
-2 -2 D
-16 -1 D
-2 -2 D
-2 0 D
-2 -2 D
-16 -1 D
-2 -2 D
-6 -1 D
-16 -3 D
-18 -4 D
+20 0 D
+30 -5 D
+20 -1 D
+10 -2 D
+10 0 D
+10 -2 D
+10 0 D
+50 -7 D
+10 -3 D
+20 0 D
+10 -3 D
+30 -4 D
+10 -2 D
+10 0 D
+10 -3 D
+30 -4 D
+80 -13 D
+10 -3 D
+70 -12 D
+10 -3 D
 10 -1 D
-2 -2 D
-22 -3 D
-8 -3 D
-12 -1 D
-6 -1 D
-2 -2 D
-18 -2 D
-6 -1 D
-2 -2 D
-18 -2 D
-6 -1 D
-2 -2 D
-24 -2 D
-2 -3 D
-14 -1 D
+20 -5 D
+20 -3 D
+10 -3 D
+10 -1 D
+10 -4 D
+10 -1 D
+180 -43 D
+10 -3 D
+S
+0.249 0.0157 0.613 C
+200 781 M
+70 25 D
+30 8 D
+10 4 D
+90 23 D
+60 14 D
+10 1 D
+10 3 D
+10 1 D
+20 5 D
+40 6 D
+10 3 D
+50 7 D
+20 3 D
+10 0 D
+30 5 D
+40 5 D
+20 1 D
+30 4 D
+20 0 D
+30 4 D
+40 1 D
+10 2 D
+110 3 D
+10 2 D
+140 0 D
+10 -2 D
+100 -2 D
+20 -1 D
+10 -2 D
+60 -2 D
+20 -3 D
+30 -1 D
+20 -3 D
+30 -1 D
+40 -5 D
+10 0 D
+30 -5 D
+20 -1 D
+20 -4 D
+20 -1 D
+20 -3 D
+10 0 D
+30 -5 D
+50 -7 D
+10 -3 D
+10 0 D
+120 -20 D
+10 -3 D
+40 -6 D
+10 -3 D
+50 -9 D
+30 -7 D
+10 -1 D
+80 -19 D
+10 -1 D
+140 -34 D
 S
 PSL_cliprestore
+U
 %%EndObject
 0 A
 FQ
@@ -4380,7 +2414,8 @@ O0
 1 setlinejoin
 3.32550952342 setmiterlimit
 25 W
-/PSL_slant_y 0 def
+0 A
+/PSL_slant_y 0 def /PSL_slant_x 0 def
 2 setlinecap
 N 0 2400 M 0 -2400 D S
 /PSL_A0_y 83 def
@@ -4459,6 +2494,7 @@ N 2200 0 M 0 83 D S
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
 0 -2400 T
 0 setlinecap
+0 A
 %%EndObject
 0 A
 FQ
@@ -4472,7 +2508,8 @@ O0
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -4480,12 +2517,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/slow/G_z_lin.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/slow/G_z_lin.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_25
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -4497,11 +2535,12 @@ clipsave
 P
 PSL_clip N
 200 1864 M
-454 -2 D
-1022 -2 D
-522 0 D
+390 -2 D
+870 -2 D
+730 0 D
 S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -4510,12 +2549,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/slow/G_z.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/slow/G_z.dg -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_26
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 clipsave
 0 0 M
@@ -4524,56 +2564,30 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-0.992 0.698 0.184 C
-200 1873 M
-560 1 D
-1432 8 D
-6 1 D
+0.996 0.734 0.169 C
+200 1900 M
+1990 -1 D
 S
-0.876 0.386 0.388 C
-200 1860 M
-294 2 D
-682 9 D
-244 3 D
-266 3 D
-296 3 D
-214 3 D
-2 1 D
+0.928 0.471 0.327 C
+200 1902 M
+1870 -1 D
+120 1 D
 S
-0.639 0.117 0.604 C
-200 1832 M
-184 4 D
-430 15 D
-156 5 D
-138 4 D
-154 4 D
-174 4 D
-146 3 D
-218 4 D
-262 4 D
-134 3 D
-2 1 D
+0.773 0.251 0.494 C
+200 1904 M
+1990 0 D
 S
-0.288 0.0118 0.629 C
-200 1773 M
-112 6 D
-162 15 D
-138 14 D
-110 10 D
-112 9 D
-114 8 D
-98 6 D
-130 7 D
-156 7 D
-158 6 D
-124 4 D
-138 4 D
-164 4 D
-186 4 D
-94 3 D
-2 1 D
+0.544 0.0379 0.647 C
+200 1906 M
+1580 -1 D
+410 1 D
+S
+0.249 0.0157 0.613 C
+200 1907 M
+1990 0 D
 S
 PSL_cliprestore
+U
 %%EndObject
 0 A
 FQ
@@ -4605,21 +2619,21 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica-Bold,black -N -D0i/0.22i -O -K
+%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica,black+jCB+cCT -N -D0i/0.16i -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
 %%BeginObject PSL_Layer_28
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-PSL_font_encode 1 get 0 eq {Standard+_Encoding /Helvetica-Bold /Helvetica-Bold PSL_reencode PSL_font_encode 1 1 put} if
-1200 2664 M 183 F1
-PSL_font_encode 3 get 0 eq {Standard+_Encoding /Helvetica-BoldOblique /Helvetica-BoldOblique PSL_reencode PSL_font_encode 3 1 put} if
-V MU 0 0 M 183 F3 (P) FP 183 F1 ( = ) FP 183 F3 (T) FP 0 -46 G 128 F3 (eq) FP 0 46 G 183 F1 ( x 10) FP pathbbox N 4 1 roll exch pop add exch U -2 div exch -2 div exch G
-183 F3 (P) Z
-183 F1 ( = ) Z
-183 F3 (T) Z
-0 -46 G 128 F3 (eq) Z
-0 46 G 183 F1 ( x 10) Z
+1200 2592 M PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
+183 F0
+PSL_font_encode 2 get 0 eq {Standard+_Encoding /Helvetica-Oblique /Helvetica-Oblique PSL_reencode PSL_font_encode 2 1 put} if
+V MU 0 0 M 183 F2 (P) FP 183 F0 ( = ) FP 183 F2 (T) FP 0 -46 G 128 F2 (eq) FP 0 46 G 183 F0 ( x 10) FP pathbbox N pop exch pop add U -2 div 0 G
+183 F2 (P) Z
+183 F0 ( = ) Z
+183 F2 (T) Z
+0 -46 G 128 F2 (eq) Z
+0 46 G 183 F0 ( x 10) Z
 %%EndObject
 0 A
 FQ
@@ -4634,7 +2648,8 @@ O0
 1 setlinejoin
 3.32550952342 setmiterlimit
 25 W
-/PSL_slant_y 0 def
+0 A
+/PSL_slant_y 0 def /PSL_slant_x 0 def
 2 setlinecap
 N 0 2400 M 0 -2400 D S
 /PSL_A0_y 83 def
@@ -4688,41 +2703,7 @@ N 2200 0 M 0 83 D S
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
 0 -2400 T
 0 setlinecap
-%%EndObject
 0 A
-FQ
-O0
-0 0 TM
-
-% PostScript produced by:
-%@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
-%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
-%%BeginObject PSL_Layer_30
-0 setlinecap
-1 setlinejoin
-3.32550952342 setmiterlimit
-13 W
-clipsave
-0 0 M
-2400 0 D
-0 2400 D
--2400 0 D
-P
-PSL_clip N
-0.992 0.698 0.184 C
-1870 200 M
-82 0 D
-S
-1952 200 M
-82 0 D
-S
-2034 200 M
-82 0 D
-S
-2116 200 M
-84 0 D
-S
-PSL_cliprestore
 %%EndObject
 0 A
 FQ
@@ -4732,10 +2713,11 @@ O0
 % PostScript produced by:
 %@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
-%%BeginObject PSL_Layer_31
+%%BeginObject PSL_Layer_30
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -4746,10 +2728,11 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-1870 380 M
-330 0 D
+2280 300 M
+-330 0 D
 S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -4758,9 +2741,9 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f7p,Helvetica,black+jRM -D-0.05i/0i -O -K
+%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f6p+jRM -D-0.02i/0i -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
-%%BeginObject PSL_Layer_32
+%%BeginObject PSL_Layer_31
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
@@ -4771,10 +2754,173 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-1810 380 M PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
-117 F0
+1926 300 M PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
+100 F0
 (Upstream supply) mr Z
-1810 200 M (Continuous supply) mr Z
+PSL_cliprestore
+%%EndObject
+0 A
+FQ
+O0
+0 0 TM
+
+% PostScript produced by:
+%@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
+%%BeginObject PSL_Layer_32
+0 setlinecap
+1 setlinejoin
+3.32550952342 setmiterlimit
+V
+13 W
+clipsave
+0 0 M
+2400 0 D
+0 2400 D
+-2400 0 D
+P
+PSL_clip N
+0.996 0.734 0.169 C
+2280 140 M
+-66 0 D
+S
+PSL_cliprestore
+U
+%%EndObject
+0 A
+FQ
+O0
+0 0 TM
+
+% PostScript produced by:
+%@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
+%%BeginObject PSL_Layer_33
+0 setlinecap
+1 setlinejoin
+3.32550952342 setmiterlimit
+V
+13 W
+clipsave
+0 0 M
+2400 0 D
+0 2400 D
+-2400 0 D
+P
+PSL_clip N
+0.928 0.471 0.327 C
+2214 140 M
+-66 0 D
+S
+PSL_cliprestore
+U
+%%EndObject
+0 A
+FQ
+O0
+0 0 TM
+
+% PostScript produced by:
+%@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
+%%BeginObject PSL_Layer_34
+0 setlinecap
+1 setlinejoin
+3.32550952342 setmiterlimit
+V
+13 W
+clipsave
+0 0 M
+2400 0 D
+0 2400 D
+-2400 0 D
+P
+PSL_clip N
+0.773 0.251 0.494 C
+2148 140 M
+-66 0 D
+S
+PSL_cliprestore
+U
+%%EndObject
+0 A
+FQ
+O0
+0 0 TM
+
+% PostScript produced by:
+%@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
+%%BeginObject PSL_Layer_35
+0 setlinecap
+1 setlinejoin
+3.32550952342 setmiterlimit
+V
+13 W
+clipsave
+0 0 M
+2400 0 D
+0 2400 D
+-2400 0 D
+P
+PSL_clip N
+0.544 0.0379 0.647 C
+2082 140 M
+-66 0 D
+S
+PSL_cliprestore
+U
+%%EndObject
+0 A
+FQ
+O0
+0 0 TM
+
+% PostScript produced by:
+%@GMT: gmt psxy -R-10/110/-0.1/1.1 -JX2i -W0.8p -Cp.cpt -O -K
+%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
+%%BeginObject PSL_Layer_36
+0 setlinecap
+1 setlinejoin
+3.32550952342 setmiterlimit
+V
+13 W
+clipsave
+0 0 M
+2400 0 D
+0 2400 D
+-2400 0 D
+P
+PSL_clip N
+0.249 0.0157 0.613 C
+2016 140 M
+-66 0 D
+S
+PSL_cliprestore
+U
+%%EndObject
+0 A
+FQ
+O0
+0 0 TM
+
+% PostScript produced by:
+%@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f6p+jRM -D-0.02i/0i -O -K
+%@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
+%%BeginObject PSL_Layer_37
+0 setlinecap
+1 setlinejoin
+3.32550952342 setmiterlimit
+clipsave
+0 0 M
+2400 0 D
+0 2400 D
+-2400 0 D
+P
+PSL_clip N
+1926 140 M PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
+100 F0
+(Continuous supply) mr Z
 PSL_cliprestore
 %%EndObject
 0 A
@@ -4785,11 +2931,12 @@ O0
 % PostScript produced by:
 %@GMT: gmt psbasemap -R-10/110/-0.05/0.45 -JX2i -B+n -Y-2.2i -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
-%%BeginObject PSL_Layer_33
+%%BeginObject PSL_Layer_38
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 0 A
 FQ
@@ -4797,12 +2944,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/slow/Lag_z_lin.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p,dimgrey,4_4 -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/slow/Lag_z_lin.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p,dimgrey,4_4 -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
-%%BeginObject PSL_Layer_34
+%%BeginObject PSL_Layer_39
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 [67 67] 0 B
 0.412 A
@@ -4813,22 +2961,17 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-200 396 M
-156 12 D
-170 12 D
-174 11 D
-122 7 D
-152 8 D
-200 9 D
-132 5 D
-88 3 D
-134 4 D
-124 3 D
-154 3 D
-162 2 D
-230 1 D
+200 397 M
+330 24 D
+280 17 D
+350 17 D
+250 9 D
+310 8 D
+290 4 D
+180 1 D
 S
 PSL_cliprestore
+U
 [] 0 B
 %%EndObject
 0 A
@@ -4837,12 +2980,13 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psxy ../../output/continuous/spatial/slow/Lag_z.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p -Cp.cpt -O -K
+%@GMT: gmt psxy ../../output/continuous/spatial_var_B/slow/Lag_z.dl -R-10/110/-0.05/0.45 -JX2i -W0.8p -Cp.cpt -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
-%%BeginObject PSL_Layer_35
+%%BeginObject PSL_Layer_40
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
+V
 13 W
 clipsave
 0 0 M
@@ -4851,340 +2995,109 @@ clipsave
 -2400 0 D
 P
 PSL_clip N
-0.992 0.698 0.184 C
-200 417 M
-28 2 D
-62 2 D
-132 -1 D
-26 -2 D
-76 -2 D
-74 -3 D
-38 -2 D
-52 -2 D
-46 -2 D
-58 -3 D
-106 -5 D
-54 -2 D
-38 -2 D
-58 -2 D
-40 -3 D
-58 -1 D
-18 -2 D
-98 -4 D
-82 -3 D
-60 -3 D
-50 -2 D
-72 -3 D
-38 -2 D
-54 -1 D
-30 -2 D
-74 -2 D
-30 -2 D
-62 -2 D
-30 -1 D
-64 -2 D
-2 -2 D
-66 -1 D
-68 -3 D
-104 -3 D
-50 -3 D
-S
-0.876 0.386 0.388 C
-200 457 M
-26 2 D
-80 -1 D
-6 -2 D
-14 -1 D
-40 -2 D
-10 -2 D
-34 -2 D
-20 -3 D
-30 -2 D
-6 -2 D
-54 -4 D
-2 -2 D
-48 -4 D
-26 -2 D
-10 -1 D
-20 -3 D
-32 -2 D
-10 -2 D
-18 -1 D
-52 -5 D
-54 -5 D
-28 -2 D
-50 -4 D
-18 -2 D
-28 -2 D
-38 -3 D
-22 -2 D
-34 -2 D
-14 -1 D
-16 -2 D
-50 -3 D
-30 -2 D
-40 -3 D
-50 -3 D
-46 -3 D
-18 -2 D
-48 -2 D
-18 -2 D
-58 -2 D
-6 -2 D
-60 -2 D
-22 -2 D
-46 -2 D
-22 -1 D
-38 -2 D
-22 -2 D
-36 -1 D
-50 -3 D
-78 -3 D
-18 -2 D
-68 -2 D
-26 -2 D
-82 -2 D
-2 -2 D
-84 -2 D
-34 -2 D
-106 -4 D
-S
-0.639 0.117 0.604 C
-200 525 M
-50 1 D
-20 -4 D
-16 -2 D
-24 -4 D
-2 -2 D
-28 -5 D
-10 -2 D
-22 -5 D
-10 -2 D
-6 -2 D
-10 -1 D
-4 -1 D
-2 -2 D
-14 -1 D
-2 -2 D
-8 -1 D
-2 -2 D
-10 0 D
-2 -2 D
-10 -2 D
-16 -3 D
-10 -3 D
-10 -1 D
-10 -3 D
-12 -1 D
-10 -3 D
-14 -2 D
-2 -2 D
-28 -4 D
-2 -2 D
-10 -1 D
-14 -2 D
-2 -2 D
-20 -2 D
-10 -3 D
-16 -2 D
-10 -2 D
-8 -1 D
-28 -5 D
-28 -4 D
-2 -2 D
-14 0 D
-2 -2 D
-32 -4 D
-40 -6 D
-10 -1 D
-10 -2 D
-20 -2 D
-14 -3 D
-20 -1 D
-6 -2 D
-34 -3 D
-2 -2 D
-50 -5 D
-18 -2 D
-26 -3 D
-14 -2 D
-20 -1 D
-10 -2 D
-30 -2 D
-10 -2 D
-26 -2 D
-10 0 D
-2 -2 D
-24 -1 D
-2 -2 D
-24 0 D
-2 -2 D
-26 -2 D
-42 -3 D
-26 -3 D
-28 -1 D
-22 -3 D
-32 -1 D
-14 -2 D
-38 -2 D
-18 -2 D
-46 -3 D
-40 -2 D
-2 -2 D
-70 -3 D
-10 -2 D
-54 -2 D
-34 -3 D
-42 -1 D
-34 -3 D
-32 -1 D
-56 -3 D
-36 -2 D
-92 -4 D
-14 -2 D
-44 -1 D
-114 -5 D
-46 -2 D
-S
-0.288 0.0118 0.629 C
-200 638 M
+0.996 0.734 0.169 C
+200 335 M
+30 2 D
+60 1 D
 10 2 D
-16 -1 D
-12 -2 D
-10 -3 D
-18 -6 D
-2 -2 D
-4 0 D
-4 -3 D
-18 -7 D
-2 -2 D
-20 -8 D
-6 -4 D
-4 -1 D
-4 -3 D
-4 0 D
-4 -4 D
-24 -10 D
-2 -2 D
-2 0 D
-4 -3 D
-4 -1 D
-6 -4 D
-12 -4 D
-2 -2 D
-2 0 D
-4 -3 D
-8 -3 D
-2 -2 D
-4 0 D
-8 -5 D
-8 -3 D
-2 -2 D
-6 -1 D
-4 -3 D
-6 -1 D
-4 -3 D
-8 -2 D
-2 -2 D
-12 -4 D
-2 -2 D
-10 -3 D
-2 -2 D
-8 -1 D
-6 -4 D
-6 -1 D
-14 -5 D
-2 -2 D
-6 -1 D
-2 -2 D
-12 -3 D
-2 -2 D
-6 -1 D
-22 -8 D
-6 -1 D
-2 -2 D
-6 0 D
-4 -3 D
-10 -2 D
-2 -2 D
-14 -3 D
-2 -2 D
-8 -1 D
-38 -11 D
-14 -4 D
-6 -1 D
-8 -3 D
-10 -1 D
-2 -2 D
-16 -3 D
-2 -2 D
-24 -4 D
-2 -2 D
-20 -4 D
-10 -2 D
-6 -1 D
-10 -3 D
-10 -1 D
-10 -3 D
-14 -2 D
-18 -4 D
-6 -1 D
-18 -4 D
-14 -2 D
-10 -3 D
-16 -1 D
-2 -2 D
-18 -1 D
-2 -2 D
-6 0 D
-2 -2 D
-20 -2 D
-16 -3 D
-16 -2 D
-22 -4 D
-18 -2 D
-14 -3 D
-16 -1 D
-14 -3 D
-18 -1 D
-16 -3 D
-24 -3 D
-28 -3 D
-22 -3 D
-42 -5 D
-26 -2 D
-8 -1 D
-12 -2 D
-36 -3 D
-18 -2 D
-32 -3 D
-34 -3 D
-46 -4 D
-18 -2 D
-18 -1 D
-26 -2 D
-36 -3 D
-26 -2 D
-38 -2 D
-2 -2 D
-32 0 D
-2 -2 D
-70 -3 D
-6 -2 D
-70 -3 D
-14 -2 D
-36 -1 D
-52 -3 D
-58 -3 D
-38 -2 D
-62 -3 D
-40 -2 D
-54 -2 D
-26 -1 D
+20 0 D
+10 2 D
+90 1 D
+10 2 D
+110 2 D
+80 3 D
+130 2 D
+70 2 D
+170 2 D
+410 2 D
+380 -3 D
+110 -2 D
+70 -2 D
+140 -2 D
+50 -2 D
+40 -1 D
+S
+0.928 0.471 0.327 C
+200 329 M
+70 3 D
+30 1 D
+90 4 D
+90 2 D
+40 1 D
+10 2 D
+150 1 D
+30 2 D
+250 2 D
+270 2 D
+270 -1 D
+110 -2 D
+200 -1 D
 30 -2 D
-4 -1 D
+170 -1 D
+10 -2 D
+50 -1 D
+110 -2 D
+10 0 D
+S
+0.773 0.251 0.494 C
+200 323 M
+10 2 D
+110 3 D
+50 2 D
+70 2 D
+40 1 D
+110 3 D
+230 3 D
+140 2 D
+420 1 D
+10 -2 D
+140 0 D
+10 -2 D
+260 -2 D
+140 -3 D
+110 -2 D
+140 -4 D
+S
+0.544 0.0379 0.647 C
+200 318 M
+10 2 D
+20 0 D
+10 2 D
+90 1 D
+70 3 D
+120 2 D
+70 2 D
+60 1 D
+220 2 D
+470 1 D
+90 -2 D
+190 -1 D
+160 -3 D
+190 -3 D
+50 -2 D
+120 -2 D
+40 -1 D
+10 -2 D
+S
+0.249 0.0157 0.613 C
+200 315 M
+20 0 D
+10 2 D
+110 2 D
+50 2 D
+150 2 D
+70 2 D
+230 2 D
+670 -1 D
+140 -3 D
+170 -2 D
+60 -2 D
+160 -2 D
+10 -2 D
+140 -3 D
 S
 PSL_cliprestore
+U
 %%EndObject
 0 A
 FQ
@@ -5194,7 +3107,7 @@ O0
 % PostScript produced by:
 %@GMT: gmt pstext -R-10/110/-0.1/1.1 -JX2i -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
-%%BeginObject PSL_Layer_36
+%%BeginObject PSL_Layer_41
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
@@ -5218,12 +3131,13 @@ O0
 % PostScript produced by:
 %@GMT: gmt psbasemap -R-10/110/-0.05/0.45 -JX2i -BnSew '-Bx20+lDownstream distance [km]' '-By0.1+lLag, @~\152@~@%2%@-z@-@%% / @%2%P@%%' -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.05000000 0.45000000 -10.000 110.000 -0.050 0.450 +xy
-%%BeginObject PSL_Layer_37
+%%BeginObject PSL_Layer_42
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
 25 W
-/PSL_slant_y 0 def
+0 A
+/PSL_slant_y 0 def /PSL_slant_x 0 def
 2 setlinecap
 N 0 2400 M 0 -2400 D S
 /PSL_A0_y 83 def
@@ -5302,6 +3216,7 @@ N 2200 0 M 0 83 D S
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
 0 -2400 T
 0 setlinecap
+0 A
 %%EndObject
 0 A
 FQ
@@ -5309,61 +3224,69 @@ O0
 0 0 TM
 
 % PostScript produced by:
-%@GMT: gmt psscale -R-10/110/-0.1/1.1 -JX2i -Dx1.45i/1.85i+w0.8i/0.08i+jMC+h '-Bx0.4+1+l@%2%p@-x,Qw@-     p@-x,Qs@-@%%' -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K
+%@GMT: gmt psscale -R-10/110/-0.1/1.1 -JX2i -Dx1.35i/1.85i+w1i/0.07i+jMC+h '-Bx0.2+1+l@%2%p@-x,Qw@-     p@-x,Qs@-@%%' -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
-%%BeginObject PSL_Layer_38
+%%BeginObject PSL_Layer_43
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-1260 2172 T
+1020 2178 T
 0 setlinejoin
-25 W
-V N 0 0 T 960 96 scale /DeviceRGB setcolorspace
-<< /ImageType 1 /Decode [0 1 0 1 0 1] /Width 4 /Height 1 /BitsPerComponent 8
-   /ImageMatrix [4 0 0 -1 0 1] /DataSource currentfile /ASCII85Decode filter
->> image
-rN\*6@Ul/SRS![T~>
-U
+10 W
+{0.996 0.734 0.169 C} FS
+84 240 0 0 Sb
+{0.928 0.471 0.327 C} FS
+84 240 240 0 Sb
+{0.773 0.251 0.494 C} FS
+84 240 480 0 Sb
+{0.544 0.0379 0.647 C} FS
+84 240 720 0 Sb
+{0.249 0.0157 0.613 C} FS
+84 240 960 0 Sb
 2 setlinecap
-N 0 96 M 960 0 D S
-N 0 0 M 0 96 D S
-N 960 0 M 0 96 D S
-N 0 0 M 960 0 D S
-/PSL_A0_y 83 def
+N 0 84 M 1200 0 D S
+N 0 0 M 0 84 D S
+N 1200 0 M 0 84 D S
+N 0 0 M 1200 0 D S
+/PSL_A0_y 34 def
 /PSL_A1_y 0 def
-8 W
-N 120 0 M 0 -83 D S
-N 360 0 M 0 -83 D S
-N 600 0 M 0 -83 D S
-N 840 0 M 0 -83 D S
+3 W
+N 120 0 M 0 -34 D S
+N 360 0 M 0 -34 D S
+N 600 0 M 0 -34 D S
+N 840 0 M 0 -34 D S
+N 1080 0 M 0 -34 D S
 /MM {neg M} def
 /PSL_AH0 0
 PSL_font_encode 0 get 0 eq {Standard+_Encoding /Helvetica /Helvetica PSL_reencode PSL_font_encode 0 1 put} if
-117 F0
+48 F0
 (1.4) sh mx
+(1.6) sh mx
 (1.8) sh mx
+(2.0) sh mx
 (2.2) sh mx
-(2.6) sh mx
 def
-/PSL_A0_y PSL_A0_y 33 add PSL_AH0 add def
+/PSL_A0_y PSL_A0_y 14 add PSL_AH0 add def
 120 PSL_A0_y MM
 (1.4) bc Z
 360 PSL_A0_y MM
-(1.8) bc Z
+(1.6) bc Z
 600 PSL_A0_y MM
-(2.2) bc Z
+(1.8) bc Z
 840 PSL_A0_y MM
-(2.6) bc Z
+(2.0) bc Z
+1080 PSL_A0_y MM
+(2.2) bc Z
 /PSL_LH 0 def /PSL_L_y PSL_A0_y PSL_A1_y mx def
-480 -260 M PSL_font_encode 2 get 0 eq {Standard+_Encoding /Helvetica-Oblique /Helvetica-Oblique PSL_reencode PSL_font_encode 2 1 put} if
-V MU 0 0 M 117 F2 (p) FP 0 -29 G 82 F2 (x,Qw) FP 0 29 G 117 F2 (     p) FP 0 -29 G 82 F2 (x,Qs) FP 0 29 G pathbbox N 4 1 roll exch pop add exch U neg exch -2 div exch G
-117 F2 (p) Z
-0 -29 G 82 F2 (x,Qw) Z
-0 29 G 117 F2 (     p) Z
-0 -29 G 82 F2 (x,Qs) Z
-0 29 G 0 setlinecap
+600 -156 M PSL_font_encode 2 get 0 eq {Standard+_Encoding /Helvetica-Oblique /Helvetica-Oblique PSL_reencode PSL_font_encode 2 1 put} if
+V MU 0 0 M 48 F2 (p) FP 0 -12 G 34 F2 (x,Qw) FP 0 12 G 48 F2 (     p) FP 0 -12 G 34 F2 (x,Qs) FP 0 12 G pathbbox N 4 1 roll exch pop add exch U neg exch -2 div exch G
+48 F2 (p) Z
+0 -12 G 34 F2 (x,Qw) Z
+0 12 G 48 F2 (     p) Z
+0 -12 G 34 F2 (x,Qs) Z
+0 12 G 0 setlinecap
 1 setlinejoin
--1260 -2172 T
+-1020 -2178 T
 %%EndObject
 0 A
 FQ
@@ -5373,11 +3296,12 @@ O0
 % PostScript produced by:
 %@GMT: gmt psbasemap -R-10/110/-0.1/1.1 -JX2i -B+n -O
 %@PROJ: xy -10.00000000 110.00000000 -0.10000000 1.10000000 -10.000 110.000 -0.100 1.100 +xy
-%%BeginObject PSL_Layer_39
+%%BeginObject PSL_Layer_44
 0 setlinecap
 1 setlinejoin
 3.32550952342 setmiterlimit
-25 W
+0 A
+0 A
 %%EndObject
 
 grestore

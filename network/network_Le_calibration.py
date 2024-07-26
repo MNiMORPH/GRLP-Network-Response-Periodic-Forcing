@@ -1,60 +1,48 @@
-from grlp import *
-from grlp_extras import *
+import numpy as np
+import matplotlib.pyplot as plt
 from copy import deepcopy
 
+import grlp
+import grlp_extras as grlpx
+
+output_gmt = True
+
 # ---- Linear part
+x0 = 50.e3
 L = 100.e3
-mean_Q = 10.
-mean_Qs = 0.001
-B = 98.1202038813591
-S0 = (mean_Qs / (0.040987384904837776 * mean_Q))**(6./7.)
-lp = LongProfile()
-lp.basic_constants()
-lp.bedload_lumped_constants()
-lp.set_hydrologic_constants()
-dx = 1.e3
-x = [np.arange(0., L, dx)]
-S0 = [(mean_Qs/(lp.k_Qs*mean_Q))**(6./7.)]
-upstream_segment_IDs = [[]]
-downstream_segment_IDs = [[]]
-z = [(x[0].max()-x[0])*S0]
-Q = [np.full(len(x),mean_Q)]
-B = [np.full(len(x),B)]
-net = Network()
-net.initialize(
-    config_file = None,
-    x_bl =L,
-    z_bl = 0.,
-    S0 = S0,
-    upstream_segment_IDs = upstream_segment_IDs,
-    downstream_segment_IDs = downstream_segment_IDs,
-    x = x,
-    z = z,
-    Q = Q,
-    B = B,
-    overwrite = False
+Q_mean = 26.
+Qs_mean = Q_mean * 1.e-4
+B_mean = 254.
+net = grlpx.set_up_long_profile(
+    L=L,
+    Q_mean=Q_mean,
+    Qs_mean=Qs_mean,
+    B_mean=B_mean,
+    p_Q=0,
+    p_Qs=0,
+    p_B=0,
+    x0=x0,
+    dx=5.e2,
+    evolve=True
     )
-net.set_niter(3)
-net.get_z_lengths()
-diff = (7./6.) * lp.k_Qs * mean_Q * (S0[0]**(1./6.)) / (B[0] * (1. - lp.lambda_p))
 lp = net.list_of_LongProfile_objects[0]
 lp.compute_equilibration_time()
 
-# indirs = {
-#     "m40": "./glic/output_081123/",
-#     "m2-100": "./glic/output_101123/",
-#     "m40_w_int": "../output/network/m40_fix_seg_length_w_internal/",
-#     "m2-100_w_int": "../output/network/m2-100_fix_seg_length_w_internal/",
-#     "m40_var_no_int": "../output/network/m40_rnd_seg_length_no_internal/",
-#     "m40_var": "../output/network/m40_rnd_seg_length/",
-#     "m2-100_var": "../output/network/m2-100_rnd_seg_length/"
-#     }
-indirs = {"m40": "./glic/test/"}
+indirs = {
+    "m40_no_int": "../output/network/m40_fix_seg_length_no_internal/",
+    "m40_w_int": "../output/network/m40_fix_seg_length_w_internal/",
+    "m40_rnd_no_int": "../output/network/m40_rnd_seg_length_no_internal/",
+    "m40_rnd_w_int": "../output/network/m40_rnd_seg_length_w_internal/",
+    "m40_no_int_var_width": "../output/network/m40_fix_seg_length_no_internal_var_width/",
+    "m40_w_int_var_width": "../output/network/m40_fix_seg_length_w_internal_var_width/",
+    "m40_rnd_no_int_var_width": "../output/network/m40_rnd_seg_length_no_internal_var_width/",
+    "m40_rnd_w_int_var_width": "../output/network/m40_rnd_seg_length_w_internal_var_width/"
+    }
 nets = {}
 hacks = {}
 gains = {}
 for sweep in indirs.keys():
-    sweep_nets, sweep_hacks, sweep_gains, sweep_lags = read_sweep(indirs[sweep])
+    sweep_nets, sweep_hacks, sweep_gains, sweep_lags = grlpx.read_sweep(indirs[sweep])
     nets[sweep] = sweep_nets
     hacks[sweep] = sweep_hacks
     gains[sweep] = sweep_gains
@@ -64,19 +52,29 @@ lin_periods = np.logspace(-2.5, 2.5, 81) * lp.equilibration_time
 lin_gain_Qs = [lp.compute_Qs_gain(p, A_Qs=0.2)[-1] for p in lin_periods]
 lin_gain_Qs_Qw = [lp.compute_Qs_gain(p, A_Q=0.2)[-1] for p in lin_periods]
 
-# # ---- Continuous Gain
-# continuous_gains = {}
-# continuous_ps = [0.5, 1.]
-# continuous_periods = np.logspace(-2.5, 2.5, 21) * lp.equilibration_time
-# for i,p in enumerate(continuous_ps):
-#     net = set_up_long_profile(L, mean_Q, mean_Qs, 1/p, B[0], dx=1.e3, evolve=True)
-#     gs = []
-#     for period in continuous_periods:
-#         print(p,period)
-#         z, Qs, time, scale = evolve_network_periodic(deepcopy(net), period, 0.2, 0.)
-#         Qs_gain = compute_network_Qs_gain(net, Qs, 0.2, 0., [q[0,:] for q in Qs])
-#         gs.append(Qs_gain[0][-1])
-#     continuous_gains[p] = gs
+# ---- Continuous Gain
+continuous_gains = {}
+continuous_ps = [1.4, 2.2]
+continuous_periods = np.logspace(-2.5, 2.5, 29) * lp.equilibration_time
+for i,p in enumerate(continuous_ps):
+    net = grlpx.set_up_long_profile(
+        L=L,
+        Q_mean=Q_mean,
+        Qs_mean=Qs_mean,
+        B_mean=B_mean,
+        p_Q=p,
+        p_Qs=p,
+        p_B=0,
+        x0=x0,
+        dx=5.e2,
+        evolve=True
+        )
+    gs = []
+    for period in continuous_periods:
+        print(p,period)
+        periodic = grlpx.evolve_network_periodic(deepcopy(net), period, 0.2, 0.)
+        gs.append(periodic['G_Qs'][0][-1])
+    continuous_gains[p] = gs
 
 
 # ---- Teq_max_L
@@ -106,21 +104,15 @@ for i,sweep in enumerate(indirs.keys()):
             arr = np.vstack(( arr, combine ))
         stacks[sweep] = arr
 
-fig, axs = plt.subplots(max(2,len(indirs.keys())),2,sharex=True,sharey=True)
+fig, axs = plt.subplots(max(2,len(indirs.keys())),3,sharex='col')
 
 for axs_i in axs:
-    for ax_ij in axs_i:
+    for ax_ij in axs_i[:2]:
         # ax_ij.fill(
         #     np.hstack(( continuous_periods, continuous_periods[::-1] ))/lp.equilibration_time,
-        #     np.hstack(( continuous_gains[0.5], continuous_gains[1][::-1] )),
+        #     np.hstack(( continuous_gains[1.4], continuous_gains[2.2][::-1] )),
         #     c="lightgrey"
         #     )
-        # ax_ij.plot(
-        #     continuous_periods/lp.equilibration_time,
-        #     continuous_gains[0.5], "--", c="grey")
-        # ax_ij.plot(
-        #     continuous_periods/lp.equilibration_time,
-        #     continuous_gains[1], "--", c="grey")
         ax_ij.plot(lin_periods/lp.equilibration_time, lin_gain_Qs, c="black")        
 
 for k,sweep in enumerate(indirs.keys()):
@@ -131,50 +123,63 @@ for k,sweep in enumerate(indirs.keys()):
             stacks[sweep][:,0],
             stacks[sweep][:,2],
             c="red",
-            # alpha=0.01
+            alpha=0.01
             )
         axs[k,1].scatter(
             stacks[sweep][:,1],
             stacks[sweep][:,2],
             c="red",
-            # alpha=0.01
+            alpha=0.01
             )
+            
+    Teqs = [g['Teq_Qs']/3.154e10 for g in gains[sweep]]
+    axs[k,2].hist(Teqs)
+    
+    print(min(Teqs), max(Teqs))
 
 axs[0,0].set_xscale("log")
+axs[0,1].set_xscale("log")
 
 plt.show()
 
-import sys
-sys.exit()
+if output_gmt:
 
-# ---- Save
+    # ---- Save
 
-basedir = "../output/network/calibration/"
+    basedir = "../output/network/calibration/"
 
-with open(basedir + "linear_gain.pg", "wb") as f:
-    arr = np.column_stack(( lin_periods/lp.equilibration_time, lin_gain_Qs ))
-    np.savetxt(f, arr)
-    
-with open(basedir + "continuous_gain.pg", "wb") as f:
-    arr = np.column_stack(( 
-        np.hstack(( continuous_periods, continuous_periods[::-1] ))/lp.equilibration_time,
-        np.hstack(( continuous_gains[0.5], continuous_gains[1][::-1] ))
-        ))
-    np.savetxt(f, arr)
-    
-outdirs = {
-    "m20": "m20_fix_seg_length/",
-    "m40": "m40_fix_seg_length/",
-    "m2-100": "m2-100_fix_seg_length/",
-    "m40_var": "m40_rnd_seg_length/"
-    }
-
-for i,sweep in enumerate(indirs.keys()):
-    
-    with open(basedir + outdirs[sweep] + "gain_L.pg", "wb") as f:
-        arr = np.column_stack(( stacks[sweep][:,0], stacks[sweep][:,2], stacks[sweep][:,3] ))
+    with open(basedir + "linear_gain.pg", "wb") as f:
+        arr = np.column_stack(( lin_periods/lp.equilibration_time, lin_gain_Qs ))
         np.savetxt(f, arr)
         
-    with open(basedir + outdirs[sweep] + "gain_Le.pg", "wb") as f:
-        arr = np.column_stack(( stacks[sweep][:,1], stacks[sweep][:,2], stacks[sweep][:,3] ))
+    with open(basedir + "continuous_gain.pg", "wb") as f:
+        arr = np.column_stack(( 
+            np.hstack(( continuous_periods, continuous_periods[::-1] ))/lp.equilibration_time,
+            np.hstack(( continuous_gains[1.4], continuous_gains[2.2][::-1] ))
+            ))
         np.savetxt(f, arr)
+        
+    outdirs = {
+        "m40_no_int": "m40_fix_seg_length_no_internal/",
+        "m40_w_int": "m40_fix_seg_length_w_internal/",
+        "m40_rnd_no_int": "m40_rnd_seg_length_no_internal/",
+        "m40_rnd_w_int": "m40_rnd_seg_length_w_internal/",
+        "m40_no_int_var_width": "m40_fix_seg_length_no_internal_var_width/",
+        "m40_w_int_var_width": "m40_fix_seg_length_w_internal_var_width/",
+        "m40_rnd_no_int_var_width": "m40_rnd_seg_length_no_internal_var_width/",
+        "m40_rnd_w_int_var_width": "m40_rnd_seg_length_w_internal_var_width/",
+        }
+
+    for i,sweep in enumerate(indirs.keys()):
+        
+        with open(basedir + outdirs[sweep] + "gain_L.pg", "wb") as f:
+            arr = np.column_stack(( stacks[sweep][:,0], stacks[sweep][:,2], stacks[sweep][:,3] ))
+            np.savetxt(f, arr)
+            
+        with open(basedir + outdirs[sweep] + "gain_Le.pg", "wb") as f:
+            arr = np.column_stack(( stacks[sweep][:,1], stacks[sweep][:,2], stacks[sweep][:,3] ))
+            np.savetxt(f, arr)
+            
+        with open(basedir + outdirs[sweep] + "Teq.t", "wb") as f:
+            arr = [g['Teq_Qs']/3.154e10 for g in gains[sweep]]
+            np.savetxt(f, arr)
