@@ -1,14 +1,36 @@
+"""
+This script performs the analysis presented in Figure 5 of McNab et al. (2024,
+EGUsphere); produces a rough version of the Figure; and, optionally, generates
+output files for plotting the final Figure in GMT.
+
+The purpose of the script/figure is to explore how gain and lag vary along
+stream for the single segment case with along stream sediment and water supply.
+We compare the results with analytical solutions derived by McNab et al. (2023,
+GRL) for the upstream supply case.
+"""
+
+# ---- Import functions
+
+# External packages
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
-
 import grlp
+
+# Local packages
 import grlp_extras as grlpx
 
-# ---- Output?
-output_gmt = True
 
-# ---- River properties
+# ---- Output?
+output_gmt = False
+
+
+# ---- Valley properties
+# Define properties to use when constructing the single segment valleys.
+# Correspond to precipitation rate of c. 1 m/yr for a catchment with Hack
+# exponent of 1.8 and runoff coefficent of 0.4; and an equilibration time of
+# 100 kyr.
+# See ../Compute_River_Properties.py for details.
 x0 = 50.e3
 L = 100.e3
 Q_mean = 26.
@@ -17,43 +39,40 @@ B_mean = 254.
 ps = np.array([1.4, 1.6, 1.8, 2., 2.2])
 
 
-# ---- Loop over ps
-periods = np.array([10., 100., 1000.]) * 3.154e10
+# ---- Scaled periods to test
+periods = np.array([0.1, 1., 10.])
+
+
+# ---- Analysis
+
+# Set up lists for output
 G_zs = [[] for p in ps]
 lag_zs = [[] for p in ps]
 
+# Loop over Hack exponents
 for i,p in enumerate(ps):
+    print("Hack exponent, p = %.1f." % p)
     
-    print(p)
-
-    # net = grlpx.set_up_long_profile(
-    #     L=L,
-    #     Q_mean=Q_mean,
-    #     Qs_mean=Qs_mean,
-    #     B_mean=B_mean,
-    #     p_Q=p,
-    #     p_Qs=p,
-    #     p_B=0,
-    #     x0=x0,
-    #     dx=5.e2,
-    #     evolve=True
-    #     )
-    net = grlpx.set_up_long_profile(
+    # Set up network object
+    net = grlpx.generate_single_segment_network(
         L=L,
         Q_mean=Q_mean,
         Qs_mean=Qs_mean,
         B_mean=B_mean,
         p_Q=p,
         p_Qs=p,
-        p_B=p,
+        p_B=0,
         x0=x0,
         dx=5.e2,
         evolve=True
         )
-        
+    
+    # Loop over periods
     for period in periods:
+        period *= net.list_of_LongProfile_objects[0].equilibration_time        
+        print(u"  \u2022 Period = %e kyr" % (period/3.154e10))
 
-        # ---- Evolve
+        # Evolve
         periodic = grlpx.evolve_network_periodic(
             net=copy.deepcopy(net),
             period=period,
@@ -62,11 +81,15 @@ for i,p in enumerate(ps):
             )
         G_zs[i].append(periodic['G_z'][0])
         lag_zs[i].append(periodic['lag_z'][0])
+        
+    print()
     
 # ---- Plot
+print("Plotting.")
 fig, axs = plt.subplots(2,3,sharex=True,sharey="row")
 
 for i,period in enumerate(periods):
+    period *= net.list_of_LongProfile_objects[0].equilibration_time
     axs[0,i].plot(
         net.list_of_LongProfile_objects[0].x/1000., 
         net.list_of_LongProfile_objects[0].compute_z_gain(period),
@@ -77,7 +100,6 @@ for i,period in enumerate(periods):
         "--")
 
 for i,p in enumerate(ps):
-
     for j,period in enumerate(periods):
         axs[0,j].plot(net.list_of_LongProfile_objects[0].x/1000., G_zs[i][j])
         axs[1,j].plot(net.list_of_LongProfile_objects[0].x/1000., lag_zs[i][j])
@@ -99,9 +121,11 @@ if output_gmt:
 
     dirs = ["fast/", "medium/", "slow/"]
     for i,period in enumerate(periods):
+        period *= net.list_of_LongProfile_objects[0].equilibration_time
 
-        # out_dir = "../output/continuous/spatial/" + dirs[i]
-        out_dir = "../output/continuous/spatial_var_B/" + dirs[i]
+        out_dir = \
+            "../../Output/SingleSegment/Figure_5_SingleSegment_Spatial/" + \
+            dirs[i]
 
         with open(out_dir + "G_z_lin.dg", "wb") as f:
             arr = np.column_stack((
