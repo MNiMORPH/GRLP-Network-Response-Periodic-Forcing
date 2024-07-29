@@ -1,16 +1,36 @@
+"""
+This script performs the analysis presented in Figure 6 of McNab et al. (2024,
+EGUsphere); produces a rough version of the Figure; and, optionally, generates
+output files for plotting the final Figure in GMT.
+
+The purpose of the script/figure is to explore how gain and lag vary as
+functions of the forcing period for the single segment case with along stream
+sediment and water supply. We compare the results with analytical solutions
+derived by McNab et al. (2023, GRL) for the upstream supply case.
+"""
+
+
+# ---- Import functions
+
+# External packages
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
-
 import grlp
+
+# Local packages
 import grlp_extras as grlpx
 
 
 # ---- Output?
-output_gmt = True
+output_gmt = False
 
-
-# ---- River properties
+# ---- Valley properties
+# Define properties to use when constructing the single segment valleys.
+# Correspond to precipitation rate of c. 1 m/yr for a catchment with Hack
+# exponent of 1.8 and runoff coefficent of 0.4; and an equilibration time of
+# 100 kyr.
+# See ../Compute_River_Properties.py for details.
 x0 = 50.e3
 L = 100.e3
 Q_mean = 26.
@@ -19,59 +39,85 @@ B_mean = 254.
 ps = np.array([1.4, 1.6, 1.8, 2., 2.2])
 
 
-# ---- Loop over periods
-periods = np.logspace(-2., 2., 29) * 3.154e12
+# ---- Scaled periods to test
+periods = np.logspace(-2., 2., 3)
+
+
+# ---- Along stream sediment and water supply
+
+# Set up lists for output
 periodics_Qs = [[] for p in ps]
-periodics_Qw = [[] for p in ps]
+periodics_Q = [[] for p in ps]
+
+# Loop over hack exponents
 for i,p in enumerate(ps):
-    print(p)
+    print("Hack exponent, p = %.1f." % p)
     
-    # net = grlpx.set_up_long_profile(
-    #     L=L,
-    #     Q_mean=Q_mean,
-    #     Qs_mean=Qs_mean,
-    #     B_mean=B_mean,
-    #     p_Q=p,
-    #     p_Qs=p,
-    #     p_B=0,
-    #     x0=x0,
-    #     dx=5.e2,
-    #     evolve=True
-    #     )
-    net = grlpx.set_up_long_profile(
+    # Set up the network object.
+    net = grlpx.generate_single_segment_network(
         L=L,
         Q_mean=Q_mean,
         Qs_mean=Qs_mean,
         B_mean=B_mean,
         p_Q=p,
         p_Qs=p,
-        p_B=p,
+        p_B=0,
         x0=x0,
         dx=5.e2,
         evolve=True
         )
 
-    for period in periods:
+    # Loop over periods.
+    for j,period in enumerate(periods):
+        period *= net.list_of_LongProfile_objects[0].equilibration_time
         
+        # Sediment supply.
+        print(
+            "\r" + 
+            u"\u25AE"*int(np.round((j*2)/(len(periods)*2)*50)) + 
+            u"\u25AF"*int(np.round(50 - (j*2)/(len(periods)*2)*50)) + 
+            " " + 
+            str(int((j*2)/(len(periods)*2)*100)).rjust(3) + "%. " + 
+            "Period = %e kyr." % (period/3.154e10),
+            end=""
+            )
         periodic_Qs = grlpx.evolve_network_periodic(
             net=copy.deepcopy(net),
             period=period,
             A_Qs=0.2, 
             A_Q=0.
             )
-        periodic_Qw = grlpx.evolve_network_periodic(
+
+        # Water supply.
+        print(
+            "\r" + 
+            u"\u25AE"*int(np.round((j*2+1)/(len(periods)*2)*50)) + 
+            u"\u25AF"*int(np.round(50 - (j*2+1)/(len(periods)*2)*50)) + 
+            " " + 
+            str(int((j*2+1)/(len(periods)*2)*100)).rjust(3) + "%. " + 
+            "Period = %e kyr." % (period/3.154e10),
+            end=""
+            )
+        periodic_Q = grlpx.evolve_network_periodic(
             net=copy.deepcopy(net),
             period=period,
             A_Qs=0., 
             A_Q=0.2
             )
         periodics_Qs[i].append(periodic_Qs)
-        periodics_Qw[i].append(periodic_Qw)
+        periodics_Q[i].append(periodic_Q)
 
-    
-# ---- Linear
+    print(
+        "\r" + 
+        u"\u25AE"*50 + 
+        " 100%%. Period = %e kyr." % (period/3.154e10)
+        )
+    print()
+
+
+# ---- Upstream sediment and water supply
 lp = net.list_of_LongProfile_objects[0]
-lin_periods = np.logspace(-2., 2., 81) * lp.equilibration_time
+lin_periods = np.logspace(-2.5, 2.5, 81) * lp.equilibration_time
 lin_gain = np.zeros((len(lin_periods), len(lp.x)))
 lin_lag = np.zeros((len(lin_periods), len(lp.x)))
 lin_gain_Qs = np.zeros((len(lin_periods), len(lp.x)))
@@ -91,6 +137,7 @@ for i,p in enumerate(lin_periods):
     lin_lag_Qs_Qw[i,:] = lp.compute_Qs_lag(p, A_Q=0.2) / p
     
 # ---- Plot
+print("Plotting.")
 fig, axs = plt.subplots(2,3,sharex=True)
 
 axs[0,0].fill(
@@ -115,48 +162,48 @@ axs[1,2].plot(lin_periods/lp.equilibration_time, lin_lag_Qs_Qw[:,-1], "0.6")
 for i in range(len(ps)):
 
     axs[0,0].plot(
-        periods/lp.equilibration_time, 
+        periods, 
         [periodic['G_z'][0][-1] for periodic in periodics_Qs[i]]
         )
     axs[0,0].plot(
-        periods/lp.equilibration_time, 
+        periods, 
         [periodic['G_z'][0][0] for periodic in periodics_Qs[i]],
         "--"
         )
         
     axs[1,0].plot(
-        periods/lp.equilibration_time, 
+        periods, 
         [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Qs[i])]
         )
     axs[1,0].plot(
-        periods/lp.equilibration_time, 
+        periods, 
         [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Qs[i])],
         "--"
         )
     axs[1,0].plot(
-        periods/lp.equilibration_time, 
+        periods, 
         [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
         ":"
         )
 
     axs[0,1].plot(
-        periods/lp.equilibration_time, 
+        periods, 
         [periodic['G_Qs'][0][-1] for periodic in periodics_Qs[i]]
         )
 
     axs[1,1].plot(
-        periods/lp.equilibration_time, 
-        [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qs[i])]
+        periods, 
+        [periodic['lag_Qs'] for i,periodic in enumerate(periodics_Qs[i])]
         )
 
     axs[0,2].plot(
-        periods/lp.equilibration_time, 
-        [periodic['G_Qs'][0][-1] for periodic in periodics_Qw[i]]
+        periods, 
+        [periodic['G_Qs'][0][-1] for periodic in periodics_Q[i]]
         )
 
     axs[1,2].plot(
-        periods/lp.equilibration_time, 
-        [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qw[i])]
+        periods, 
+        [periodic['lag_Qs'] for i,periodic in enumerate(periodics_Q[i])]
         )
 
 axs[1,0].set_ylim(0., 0.4)
@@ -177,8 +224,7 @@ plt.show()
 
 if output_gmt:
 
-    # out_dir = "../output/continuous/periods/"
-    out_dir = "../output/continuous/periods_var_width/"
+    out_dir = "../../Output/SingleSegment/Figure_6_SingleSegment_Periods/"
 
     with open(out_dir + "G_z_out_lin.pg", "wb") as f:
         arr = np.column_stack((
@@ -199,7 +245,7 @@ if output_gmt:
             hdr = b"> -Z%f\n" % p
             f.write(hdr)
             arr = np.column_stack((
-                periods/lp.equilibration_time, 
+                periods, 
                 [periodic['G_z'][0][0] for periodic in periodics_Qs[i]],
                 [periodic['G_z'][0][-1] for periodic in periodics_Qs[i]],
                 ))
@@ -224,7 +270,7 @@ if output_gmt:
             hdr = b"> -Z%f\n" % p
             f.write(hdr)
             arr = np.column_stack((
-                periods/lp.equilibration_time, 
+                periods, 
                 [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Qs[i])],
                 [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Qs[i])],
                 [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
@@ -243,7 +289,7 @@ if output_gmt:
             hdr = b"> -Z%f\n" % p
             f.write(hdr)
             arr = np.column_stack((
-                periods/lp.equilibration_time, 
+                periods, 
                 [periodic['G_Qs'][0][-1] for periodic in periodics_Qs[i]]
                 ))
             np.savetxt(f, arr)
@@ -260,8 +306,8 @@ if output_gmt:
             hdr = b"> -Z%f\n" % p
             f.write(hdr)
             arr = np.column_stack((
-                periods/lp.equilibration_time, 
-                [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qs[i])]
+                periods, 
+                [periodic['lag_Qs'] for i,periodic in enumerate(periodics_Qs[i])]
                 ))
             np.savetxt(f, arr)
             
@@ -277,8 +323,8 @@ if output_gmt:
             hdr = b"> -Z%f\n" % p
             f.write(hdr)
             arr = np.column_stack((
-                periods/lp.equilibration_time, 
-                [periodic['G_Qs'][0][-1] for periodic in periodics_Qw[i]]
+                periods, 
+                [periodic['G_Qs'][0][-1] for periodic in periodics_Q[i]]
                 ))
             np.savetxt(f, arr)
 
@@ -294,7 +340,7 @@ if output_gmt:
             hdr = b"> -Z%f\n" % p
             f.write(hdr)
             arr = np.column_stack((
-                periods/lp.equilibration_time, 
-                [periodic['lag_Qs']/periods[i] for i,periodic in enumerate(periodics_Qw[i])]
+                periods, 
+                [periodic['lag_Qs'] for i,periodic in enumerate(periodics_Q[i])]
                 ))
             np.savetxt(f, arr)
