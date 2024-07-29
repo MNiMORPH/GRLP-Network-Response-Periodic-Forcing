@@ -7,9 +7,8 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
-# basedir="../../output/continuous/periods"
-basedir="../../output/continuous/periods_var_width"
-out="periods"
+basedir="../../Output/SingleSegment/Figure_6_SingleSegment_Periods"
+out="../../Figures/Figure_5_SingleSegment_Periods"
 
 # ---- Variables
 proj=-JX2il/2i
@@ -95,3 +94,4 @@ gmt psbasemap $rgn $proj -BnSEw -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By
 # ---- Show
 gmt psconvert -A -E400 -Tj $out.ps
 eog $out.jpg &
+rm $out.ps *.cpt

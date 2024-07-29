@@ -8,9 +8,8 @@ gmt_extras::set_gmt_defaults
 
 
 # ---- Inputs / Output
-basedir="../../output/continuous/spatial"
-basedir="../../output/continuous/spatial_var_B"
-out="spatial"
+basedir="../../Output/SingleSegment/Figure_5_SingleSegment_Spatial"
+out="../../Figures/Figure_5_SingleSegment_Spatial"
 
 # ---- Variables
 proj=-JX2i
@@ -69,6 +68,6 @@ done
 
 # ---- Show
 gmt psbasemap $rgn $proj -B+n -O >> $out.ps
-# gv $out.ps &
 gmt psconvert -A -E400 -Tj $out.ps
 eog $out.jpg &
+rm $out.ps *.cpt
