@@ -7,8 +7,8 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Variables
-out=example
-indir=../../output/continuous/example
+out=../../Figures/Figure_4_SingleSegment_Examples
+indir=../../Output/SingleSegment/Figure_4_SingleSegment_Examples
 periods=("fast" "medium" "slow")
 min_times=(-2.5 -25 -250)
 max_times=(32.5 325 3250)
@@ -131,3 +131,4 @@ gmt psbasemap -R -J -B+n -O >> $out.ps
 # ---- Show
 gmt psconvert -A -E400 -Tj $out.ps
 eog $out.jpg &
+rm $out.ps *.cpt
