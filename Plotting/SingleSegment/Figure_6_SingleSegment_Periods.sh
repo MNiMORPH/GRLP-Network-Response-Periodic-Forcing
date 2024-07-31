@@ -7,7 +7,7 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
-basedir="../../Output/SingleSegment/Figure_6_SingleSegment_Periods"
+basedir="../../Output/SingleSegment/Figure_6_S3_SingleSegment_Periods"
 out="../../Figures/Figure_5_SingleSegment_Periods"
 
 # ---- Variables

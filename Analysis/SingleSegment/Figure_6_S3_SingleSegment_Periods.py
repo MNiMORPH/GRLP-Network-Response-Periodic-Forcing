@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 6 of McNab et al. (2024,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures 6 and S3 of McNab et al.
+(2024, EGUsphere); produces a rough version of the Figure; and, optionally,
+generates output files for plotting the final Figure in GMT.
 
 The purpose of the script/figure is to explore how gain and lag vary as
 functions of the forcing period for the single segment case with along stream
@@ -224,7 +224,7 @@ plt.show()
 
 if output_gmt:
 
-    out_dir = "../../Output/SingleSegment/Figure_6_SingleSegment_Periods/"
+    out_dir = "../../Output/SingleSegment/Figure_6_S3_SingleSegment_Periods/"
 
     with open(out_dir + "G_z_out_lin.pg", "wb") as f:
         arr = np.column_stack((
@@ -248,6 +248,17 @@ if output_gmt:
                 periods, 
                 [periodic['G_z'][0][0] for periodic in periodics_Qs[i]],
                 [periodic['G_z'][0][-1] for periodic in periodics_Qs[i]],
+                ))
+            np.savetxt(f, arr)
+
+    with open(out_dir + "G_z_num_Qw.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods, 
+                [periodic['G_z'][0][0] for periodic in periodics_Q[i]],
+                [periodic['G_z'][0][-1] for periodic in periodics_Q[i]],
                 ))
             np.savetxt(f, arr)
             
@@ -276,7 +287,19 @@ if output_gmt:
                 [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
                 ))
             np.savetxt(f, arr)
-            
+
+    with open(out_dir + "lag_z_num_Qw.pg", "wb") as f:
+        for i,p in enumerate(ps):
+            hdr = b"> -Z%f\n" % p
+            f.write(hdr)
+            arr = np.column_stack((
+                periods, 
+                [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Q[i])],
+                [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Q[i])],
+                [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Q[i])],
+                ))
+            np.savetxt(f, arr)
+
     with open(out_dir + "G_Qs_out_lin.pg", "wb") as f:
         arr = np.column_stack((
             lin_periods/lp.equilibration_time,
