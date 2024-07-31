@@ -8,7 +8,7 @@ gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
 basedir="../../Output/SingleSegment/Figure_6_S3_SingleSegment_Periods"
-out="../../Figures/Figure_5_SingleSegment_Periods"
+out="../../Figures/Figure_6_SingleSegment_Periods"
 
 # ---- Variables
 proj=-JX2il/2i
