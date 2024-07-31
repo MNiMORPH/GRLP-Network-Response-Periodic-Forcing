@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 4 of McNab et al. (2024,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures 4 and S1 of McNab et al.
+(2024, EGUsphere); produces a rough version of the Figure; and, optionally,
+generates output files for plotting the final Figure in GMT.
 
 The purpose of the script/figure is to illustrate how a valley's long profile
 and sediment output vary in response to sinusoidal variations in sediment or
@@ -280,7 +280,7 @@ plt.show()
 
 if output_gmt:
     
-    basedir = "../../Output/SingleSegment/Figure_4_SingleSegment_Examples/"
+    basedir = "../../Output/SingleSegment/Figure_4_S1_SingleSegment_Examples/"
 
     labels = ["fast/", "medium/", "slow/"]
 
