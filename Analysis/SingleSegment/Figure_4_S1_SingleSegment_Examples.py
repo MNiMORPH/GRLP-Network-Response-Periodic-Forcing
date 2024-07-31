@@ -429,3 +429,60 @@ if output_gmt:
                 ))
             np.savetxt(f, arr)
         
+        xs = [0, 40, 80, 120, 160]
+        with open(outdir + "Qw_profile.te", "wb") as f:
+            for x in xs:
+                hdr = b"> -Z%.f\n" % (
+                    net.list_of_LongProfile_objects[0].x[x]/1.e3
+                    )
+                f.write(hdr)
+                arr = np.column_stack((
+                    np.hstack((
+                        spinups_Qw[i]['time'],
+                        evolutions_Qw[i]['time']
+                        )) / 3.15e10,
+                    np.hstack((
+                        spinups_Qw[i]['z'][0][:,x],
+                        evolutions_Qw[i]['z'][0][:,x]
+                        ))
+                    ))
+                np.savetxt(f, arr)
+
+        with open(outdir + "Qw_ref_profile.te", "wb") as f:
+            for x in xs:
+                hdr = b"> -Z%.f\n" % (
+                    net.list_of_LongProfile_objects[0].x[x]/1.e3
+                    )
+                f.write(hdr)
+                arr = np.column_stack((
+                    np.hstack((
+                        ref_spinups_Qw[i]['time'],
+                        ref_evolutions_Qw[i]['time']
+                        )) / 3.15e10,
+                    np.hstack((
+                        ref_spinups_Qw[i]['z'][0][:,x],
+                        ref_evolutions_Qw[i]['z'][0][:,x]
+                        ))
+                    ))
+                np.savetxt(f, arr)
+
+        ts = np.linspace(2000, 2250, 5).astype(int)
+        with open(outdir + "Qw_profile.de", "wb") as f:
+            for t in ts:
+                hdr = b"> -Z%.f\n" % t
+                f.write(hdr)
+                arr = np.column_stack((
+                    net.list_of_LongProfile_objects[0].x/1.e3,
+                    evolutions_Qw[i]['z'][0][t,:]
+                    ))
+                np.savetxt(f, arr)
+                
+        with open(outdir + "Qw_profile_pert.de", "wb") as f:
+            for t in ts:
+                hdr = b"> -Z%.f\n" % t
+                f.write(hdr)
+                arr = np.column_stack((
+                    net.list_of_LongProfile_objects[0].x/1.e3,
+                    evolutions_Qw[i]['z'][0][t,:]-evolutions_Qw[i]['z'][0][0,:]
+                    ))
+                np.savetxt(f, arr)
