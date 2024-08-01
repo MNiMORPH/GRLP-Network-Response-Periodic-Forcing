@@ -1,290 +1,243 @@
-from grlp import *
-from scipy.signal import find_peaks
+# ---- Import packages
+import numpy as np
+import scipy.signal as sig
 import os
 import pickle
+import grlp
+from scipy.optimize import minimize
 
-def find_lag_time_single(val, time, scale, threshold=0., can_lead=False):
+# ---- Functions
+
+def find_lag_time(forcing, response, time, period, can_lead=False):
+    """
+    Find lag time between a forcing and a response (quasi-sinusoidal) time
+    series.
     
-    scl_peaks, __ = find_peaks(scale)
-    scl_troughs, __ = find_peaks(-scale)
-    scl_tps = np.sort( np.hstack(( scl_peaks, scl_troughs )) )
-
-    obs_peaks, __ = find_peaks(val)
-    obs_troughs, __ = find_peaks(-val)
-    obs_tps = np.sort( np.hstack(( obs_peaks, obs_troughs )) )
-    if not can_lead:
-        obs_tps = obs_tps[ np.where( obs_tps >= scl_tps[0] ) ]
+    Pairs peaks and troughs in the two time series and measures average time
+    between them. If one or fewer pairs are identified, nan is returned. 
+    Negative lag (i.e. leading of the response over the forcing) is allowed,
+    but nan is returned if the measured lag is below negative one quarter of the
+    specified period; this result implies peaks/troughs in the response time
+    series before the beginning of the time series, usually meaning something
+    has gone wrong (e.g. too many response peaks/troughs identified).
     
-    obs_tps_attached = np.zeros( len(obs_tps), dtype=int )
-    obs_lag_time = np.zeros( len(obs_tps), dtype=int )
+    Parameters
+    ----------
+    forcing : np.ndarray
+        Values for the forcing time series.
+    response : np.ndarray
+        Values for the response time series.
+    time : np.ndarray
+        Time array for the two time series.
+    period : np.ndarray
+        The period of the two (quasi-sinusoidal) time series.
+        
+    Returns
+    -------
+    lag_time : float
+        The measured lag time.
+    """
+    
+    # ---- Identify peaks and troughs in forcing
+    # Use scipy's find_peaks function to find peaks and troughs separately,
+    # then combine to give all turning points.
+    forcing_peaks, __ = sig.find_peaks(forcing)
+    forcing_troughs, __ = sig.find_peaks(-forcing)
+    forcing_tps = np.sort( np.hstack(( forcing_peaks, forcing_troughs )) )
 
-    for j,tp in enumerate(obs_tps):
-        if j > len(scl_tps)-1:
+    # ---- Identify peaks and troughs in response
+    # Use scipy's find_peaks function to find peaks and troughs separately,
+    # then combine to give all turning points.
+    response_peaks, __ = sig.find_peaks(response)
+    response_troughs, __ = sig.find_peaks(-response)
+    response_tps = np.sort( np.hstack(( response_peaks, response_troughs )) )
+    # if not can_lead:
+    #     obs_tps = obs_tps[ np.where( obs_tps >= scl_tps[0] ) ]
+    
+
+    # ---- Attach response TPs to forcing TPs, measure lag
+    # Loop over turning points, compare turning point i in forcing to turning
+    # point i in response; measure time difference.
+    lag_times = np.zeros( len(response_tps), dtype=int )
+    for i,tp in enumerate(response_tps):
+        if i > len(forcing_tps)-1:
             continue
-        obs_tps_attached[j] = scl_tps[j]
-        obs_lag_time[j] = time[tp] - time[scl_tps[j]]
+        lag_times[i] = time[tp] - time[forcing_tps[i]]
         
-    peak_lags_i = []
-    trough_lags_i = []
-
-    for k,tp in enumerate(obs_tps_attached):
-
-        if obs_lag_time[k] != 0.:
-            if any(scl_peaks == tp):
-                peak_lags_i.append( obs_lag_time[k].copy() )
-            else:
-                trough_lags_i.append( obs_lag_time[k].copy() )
-
-    if len(peak_lags_i) > 1:
-        peak_lags = np.array(peak_lags_i[1:]).mean()
+    # ---- Average the lag times
+    # We ignore the first turning point, it can be influenced by transient
+    # parts of the response. So we need more than point; otherwise we return
+    # nan.
+    if len(lag_times) > 1:
+        lag_time = np.array(lag_times[1:]).mean()
     else:
-        peak_lags = np.nan
+        lag_time = np.nan
+    
+    # ---- Check the lag time is physically plausible
+    # Assuming the forcing is (quasi-)sinusoidal, a lag time less than negative
+    # one quarter of the forcing period implies peaks/troughs before the
+    # start of the time series. This usually points to something going wrong,
+    # e.g. noise in the response being picked up as peaks and troughs. So
+    # we also return nan in that case.
+    if lag_time < -0.25*period:
+        lag_time = np.nan
+    
+    return lag_time
 
-    if len(trough_lags_i) > 1:
-        trough_lags = np.array(trough_lags_i[1:]).mean()
-    else:
-        trough_lags = np.nan
+def find_along_stream_lag_times(forcing, response, time, period, can_lead=False):
+    """
+    Find lag time between a forcing and a set of response (quasi-sinusoidal)
+    time series along stream.
+    
+    Uses fing_lag_times() to measure lag times for the individual time series.
+    Then looks for cycle skipping along stream. Jumps of more than half a
+    period between nodes are assumed to be cycle skipping. In this case,
+    lag times are adjusted by one period at a time until jumps do not exceed
+    half a period.
+    
+    Parameters
+    ----------
+    forcing : np.ndarray
+        Values for the forcing time series.
+    response : np.ndarray
+        Values for the response time series. Dimensions expected to be
+        (len(time), N), for N points along stream.
+    time : np.ndarray
+        Time array for the two time series.
+    period : np.ndarray
+        The period of the two (quasi-sinusoidal) time series.
         
-    average_lag = (peak_lags + trough_lags)/2.
-    if average_lag < -0.25:
-        average_lag = np.nan
+    Returns
+    -------
+    lag_times : np.ndarray
+        Lag times for each point along stream.
+    """
     
-    return average_lag
-
-
-# def compute_coeff_internal_external(lp, A_Q=0., A_Qs=0., A_Qs_i=0.):
-# 
-#     internal = A_Qs_i * (lp.Q_s[-1] - lp.Q_s[0])/lp.L
-#     internal += A_Q*lp.k_Qs*((lp.Q[-1]-lp.Q[0])/lp.L)*((lp.z[0]-lp.z[-1])/lp.L)**(7./6.)
-#     internal *= lp.L
-# 
-#     external = lp.k_Qs * lp.Q.mean() * (lp.S.mean()**(7./6.)) * abs(A_Q - A_Qs)
-# 
-#     coeff = internal / external 
-# 
-#     return coeff
-# 
-# def find_lag_times_x_corr(val, scale, time, period):
-#     lags = np.zeros(val.shape[1])
-#     dt = np.linspace(-time[-1], time[-1], 2*len(time)-1)
-#     for i in range(val.shape[1]):
-#         x_corr = np.correlate(
-#             (scale - scale.mean())/scale.std(), 
-#             (val[:,i] - val[:,i].mean())/val[:,i].std(),
-#             "full")
-#         lags[i] = -dt[x_corr.argmax()]
-# 
-#     for i in range(1,len(val[0,:])):
-#         if (lags[i] - lags[i-1]) > 0.5*period:
-#             lags[i:] -= period
-#     for i in range(len(val[0,:])-2,0,-1):
-#         if (lags[i] - lags[i+1]) > 0.5*period:
-#             lags[:i+1] -= period
-# 
-#     if abs(lags[0])/period > 0.5:
-#         lags -= np.sign(lags[0])*period
-# 
-#     return lags
-
-def find_lag_times(val, time, scale, threshold=0., can_lead=False, period=False):
-
-
-    # peak_lags = np.zeros( len(val[0,:]) )
-    # trough_lags = np.zeros( len(val[0,:]) )
-    # 
-    # tps = []
-    # 
-    # scl_peaks, __ = find_peaks(scale)
-    # scl_troughs, __ = find_peaks(-scale)
-    # scl_tps = np.sort( np.hstack(( scl_peaks, scl_troughs )) )
-    # 
-    # for i in range(len(val[0,:])):
-    # 
-    #     if ( val[:,i].max() - val[:,i].min() ) < threshold:
-    #         peak_lags[i] = np.nan
-    #         trough_lags[i] = np.nan
-    #         continue
-    # 
-    #     obs_peaks, __ = find_peaks(val[:,i])
-    #     obs_troughs, __ = find_peaks(-val[:,i])
-    #     obs_tps = np.sort( np.hstack(( obs_peaks, obs_troughs )) )
-    #     if not can_lead:
-    #         obs_tps = obs_tps[ np.where( obs_tps >= scl_tps[0] ) ]
-    # 
-    #     obs_tps_attached = np.zeros( len(obs_tps), dtype=int )
-    #     obs_lag_time = np.zeros( len(obs_tps), dtype=int )
-    # 
-    #     for j,tp in enumerate(obs_tps):
-    #         if j > len(scl_tps)-1:
-    #             continue
-    #         obs_tps_attached[j] = scl_tps[j]
-    #         obs_lag_time[j] = time[tp] - time[scl_tps[j]]
-    # 
-    #     peak_lags_i = []
-    #     trough_lags_i = []
-    # 
-    #     for k,tp in enumerate(obs_tps_attached):
-    # 
-    #         if obs_lag_time[k] != 0.:
-    #             if any(scl_peaks == tp):
-    #                 peak_lags_i.append( obs_lag_time[k].copy() )
-    #             else:
-    #                 trough_lags_i.append( obs_lag_time[k].copy() )
-    # 
-    #     if len(peak_lags_i) > 1:
-    #         peak_lags[i] = np.array(peak_lags_i[1:]).mean()
-    #     else:
-    #         peak_lags[i] = np.nan
-    # 
-    #     if len(trough_lags_i) > 1:
-    #         trough_lags[i] = np.array(trough_lags_i[1:]).mean()
-    #     else:
-    #         trough_lags[i] = np.nan
-    # 
-    #     tps.append( obs_tps )
-    # 
-    # if period:
-    #     for i in range(1,len(val[0,:])):
-    #         while (peak_lags[i] - peak_lags[i-1]) > 0.5*period:
-    #             peak_lags[i] -= period
-    #         while (trough_lags[i] - trough_lags[i-1]) > 0.5*period:
-    #             trough_lags[i] -= period
-    #     for i in range(len(val[0,:])-2,0,-1):
-    #         while (peak_lags[i] - peak_lags[i+1]) > 0.5*period:
-    #             peak_lags[i] -= period
-    #         while (trough_lags[i] - trough_lags[i+1]) > 0.5*period:
-    #             trough_lags[i] -= period
-    # 
-    # if full:
-    #     return {'plags': peak_lags, 'tlags': trough_lags, 'obs_tps': tps, 'scl_tps': scl_tps, 'scl_p': scl_peaks, 'scl_t': scl_troughs}
-    # else:
-    #     return (peak_lags + trough_lags)/2.
-    
-    lags = np.zeros( len(val[0,:]) )
-    for i in range(len(val[0,:])):
-        lags[i] = find_lag_time_single(
-            val[:,i],
+    # ---- Measure lags for each point along stream
+    lag_times = np.zeros( len(response[0,:]) )
+    for i in range(len(response[0,:])):
+        lag_times[i] = find_lag_time(
+            forcing,
+            response[:,i],
             time,
-            scale,
-            threshold=threshold,
+            period,
             can_lead=can_lead)
     
+    # ---- Check for cycle skipping
+    # Move from upstream end downstream, then from downstream end upstream,
+    # looking for jumps in lag time of more than half a period. If identified,
+    # correct by subtracting period until jump is removed.
     if period:
-        for i in range(1,len(val[0,:])):
-            while (lags[i] - lags[i-1]) > 0.5*period:
-                lags[i] -= period
-        for i in range(len(val[0,:])-2,0,-1):
-            while (lags[i] - lags[i+1]) > 0.5*period:
-                lags[i] -= period
+        for i in range(1,len(response[0,:])):
+            while (lag_times[i] - lag_times[i-1]) > 0.5*period:
+                lag_times[i] -= period
+        for i in range(len(response[0,:])-2,0,-1):
+            while (lag_times[i] - lag_times[i+1]) > 0.5*period:
+                lag_times[i] -= period
                 
-    return lags
-    
-
-# def find_lag_times(val, time, scale, threshold=0., can_lead=False, period=False, full=False):
-# 
-# 
-#     peak_lags = np.zeros( len(val[0,:]) )
-#     trough_lags = np.zeros( len(val[0,:]) )
-# 
-#     tps = []
-# 
-#     scl_peaks, __ = find_peaks(scale)
-#     scl_troughs, __ = find_peaks(-scale)
-#     scl_tps = np.sort( np.hstack(( scl_peaks, scl_troughs )) )
-# 
-#     for i in range(len(val[0,:])):
-# 
-#         if ( val[:,i].max() - val[:,i].min() ) < threshold:
-#             peak_lags[i] = np.nan
-#             trough_lags[i] = np.nan
-#             continue
-# 
-#         obs_peaks, __ = find_peaks(val[:,i])
-#         obs_troughs, __ = find_peaks(-val[:,i])
-#         obs_tps = np.sort( np.hstack(( obs_peaks, obs_troughs )) )
-#         if not can_lead:
-#             obs_tps = obs_tps[ np.where( obs_tps >= scl_tps[0] ) ]
-# 
-#         obs_tps_attached = np.zeros( len(obs_tps), dtype=int )
-#         obs_lag_time = np.zeros( len(obs_tps), dtype=int )
-# 
-#         for j,tp in enumerate(obs_tps):
-#             if j > len(scl_tps)-1:
-#                 continue
-#             obs_tps_attached[j] = scl_tps[j]
-#             obs_lag_time[j] = time[tp] - time[scl_tps[j]]
-# 
-#         peak_lags_i = []
-#         trough_lags_i = []
-# 
-#         for k,tp in enumerate(obs_tps_attached):
-# 
-#             if obs_lag_time[k] != 0.:
-#                 if any(scl_peaks == tp):
-#                     peak_lags_i.append( obs_lag_time[k].copy() )
-#                 else:
-#                     trough_lags_i.append( obs_lag_time[k].copy() )
-# 
-#         if len(peak_lags_i) > 1:
-#             peak_lags[i] = np.array(peak_lags_i[1:]).mean()
-#         else:
-#             peak_lags[i] = np.nan
-# 
-#         if len(trough_lags_i) > 1:
-#             trough_lags[i] = np.array(trough_lags_i[1:]).mean()
-#         else:
-#             trough_lags[i] = np.nan
-# 
-#         tps.append( obs_tps )
-# 
-#     if period:
-#         for i in range(1,len(val[0,:])):
-#             while (peak_lags[i] - peak_lags[i-1]) > 0.5*period:
-#                 peak_lags[i] -= period
-#             while (trough_lags[i] - trough_lags[i-1]) > 0.5*period:
-#                 trough_lags[i] -= period
-#         for i in range(len(val[0,:])-2,0,-1):
-#             while (peak_lags[i] - peak_lags[i+1]) > 0.5*period:
-#                 peak_lags[i] -= period
-#             while (trough_lags[i] - trough_lags[i+1]) > 0.5*period:
-#                 trough_lags[i] -= period
-# 
-#     if full:
-#         return {'plags': peak_lags, 'tlags': trough_lags, 'obs_tps': tps, 'scl_tps': scl_tps, 'scl_p': scl_peaks, 'scl_t': scl_troughs}
-#     else:
-#         return (peak_lags + trough_lags)/2.
-
+    return lag_times
 
 def compute_power_law_coefficient(mean, p, L, x0):
+    """
+    Compute power law coefficient needed to obtain specified mean for given
+    exponent, length, and intial value.
+    
+    Parameters
+    ----------
+    mean : float
+        The desired mean value of the power law.
+    p : float
+        The power law exponent.
+    L : float
+        The length of the domain.
+    x0 : float
+        The initial value of the domain.
+        
+    Returns
+    -------
+    The coefficient value.
+    """
     return mean * L * (p+1.) / ((L+x0)**(p+1.) - x0**(p+1.))
 
-def set_up_long_profile(L, Q_mean, Qs_mean, B_mean, p_Q, p_Qs, p_B, x0=10.e3, dx=1.e3, evolve=True):
+def generate_single_segment_network(L, Q_mean, Qs_mean, B_mean, p_Q, p_B,
+    x0=10.e3, dx=1.e3, evolve=True):
+    """
+    Set up a single segment GRLP network.
     
-    # initial set up
-    lp = LongProfile()
+    Uses power laws to set variation in water discharge and valley width.
+    Sediment discharge is set to vary along stream to balance variation in
+    water discharge. Specify desired mean values and power-law exponent.
+    Optionally evolve the network for a while, aiming for steady state.
+    
+    Parameters
+    ----------
+    L : float
+        Desired segment length.
+    Q_mean : float
+        Desired mean water discharge.
+    Qs_mean : float
+        Desired mean sediment discharge.
+    B_mean : float
+        Desired mean valley width.
+    p_Q : float
+        Desired power-exponent for water discharge.
+    p_B : float
+        Desired power-exponent for valley width.
+    x_0 : float
+        Distance downstream at the value inlet. Only used to set inlet water,
+        sediment and width values; the x-domain of the network object starts at
+        0.
+    dx : float
+        Desired spatial node spacing.
+    evolve : bool
+        If true, evolve the network for a while, aiming for steady state.
+        
+    Returns
+    -------
+    net : grlp.Network
+        The network object.
+    """
+    
+    # ---- Set up a basic long profile object to access constants
+    lp = grlp.LongProfile()
     lp.basic_constants()
     lp.bedload_lumped_constants()
     lp.set_hydrologic_constants()
     
-    # x
+    # ---- Set up the x domain
+    # x_ext needed to set SSD term (see below).
     x = np.arange(0,L,dx)
-    
-    # Qw
-    k_x_Qw = compute_power_law_coefficient(Q_mean, p_Q, L, x0)
-    Qw = k_x_Qw*((x+x0)**p_Q)
+    x_ext = np.arange(-dx,L+dx,dx)
 
-    # B
+    # ---- Set up water discharge
+    # Q_ext is needed to set SSD term (see below). We set outer nodes of Q_ext
+    # to the same values of the inlet/outlet nodes, to avoid artefacts from
+    # outside the domain.
+    k_x_Q = compute_power_law_coefficient(Q_mean, p_Q, L, x0)
+    Q = k_x_Q * ((x+x0)**p_Q)
+    Q_ext = k_x_Q * ((x_ext+x0)**p_Q)
+    Q_ext[0] = Q_ext[1]
+    Q_ext[-1] = Q_ext[-2]
+    
+    # ---- Set up valley width
     k_x_B = compute_power_law_coefficient(B_mean, p_B, L, x0)
     B = k_x_B*((x+x0)**p_B)
 
-    # Qs
-    k_x_Qs = compute_power_law_coefficient(Qs_mean, p_Qs, L, x0)
-    ssd = p_Qs * k_x_Qs * (x+x0)**(p_Qs-1.) / (B * (1. - lp.lambda_p))
+    # ---- Set up source-sink-distributed term.
+    # Internal source of sediment. Sediment supply per unit distance along
+    # stream and per unit valley width. To balance effects of variation in
+    # water discharge, set to derivative of water discharge.
+    ssd = (
+        (Q_ext[2:] - Q_ext[:-2])/(x_ext[2:] - x_ext[:-2]) / 
+        (B * (1.-lp.lambda_p)) / 
+        (Q_mean/Qs_mean)
+        )
 
-    # z
+    # ---- Set initial slope
     S0=(Qs_mean/(lp.k_Qs * Q_mean))**(6./7.)
 
-    net = Network()
+    # ---- Initialize the Network object
+    net = grlp.Network()
     net.initialize(
         config_file = None,
         x_bl = L,
@@ -294,7 +247,7 @@ def set_up_long_profile(L, Q_mean, Qs_mean, B_mean, p_Q, p_Qs, p_B, x0=10.e3, dx
         downstream_segment_IDs = [[]],
         x = [x],
         z = [(L-x)*S0],
-        Q = [Qw],
+        Q = [Q],
         B = [B],
         overwrite = False
         )
@@ -302,18 +255,50 @@ def set_up_long_profile(L, Q_mean, Qs_mean, B_mean, p_Q, p_Qs, p_B, x0=10.e3, dx
     net.get_z_lengths()
     net.list_of_LongProfile_objects[0].set_source_sink_distributed(ssd)
 
+
+    # ---- Optionally evolve for a while, aiming for steady state
     if evolve:
         net.evolve_threshold_width_river_network(nt=100, dt=3.15e11)
     
-    
-    # properties
+    # ---- Compute Qs (hence slope), and estimate equilibration_time
     for seg in net.list_of_LongProfile_objects:
         seg.compute_Q_s()
     net.list_of_LongProfile_objects[0].compute_equilibration_time()
     
     return net
 
-def evolve_network(net, time, dt, Qs_scale, Q_scale, S_scale):
+def evolve_network(net, time, Qs_scale, Q_scale, S_scale):
+    """
+    Evolve a network object through time.
+    
+    Takes time series of scaling factors for sediment supply, water supply and
+    inlet slope, and evolves the network accordingly. Returns time series of
+    elevation and sediment discharge.
+    
+    Parameters
+    ----------
+    net : grlp.Network
+        Network object to evolve.
+    time : np.ndarray
+        Time array.
+    Qs_scale : nd.array
+        Values by which to scale the initial sediment supply through time.
+    Q_scale : nd.array
+        Values by which to scale the initial water supply through time.
+    S_scale : nd.array
+        Values by which to scale the initial inlet slope through time.
+        
+    Returns
+    -------
+    z : list of np.ndarrays
+        List of arrays of elevation through time and space, one for each
+        segment, each with dimensions (len(time), N), where N is number of
+        spatial nodes in the segment.
+    Qs : list of np.ndarrays
+        List of arrays of sediment discharge through time and space, one for
+        each segment, each with dimensions (len(time), N), where N is number of
+        spatial nodes in the segment.
+    """
     
     # ---- Set up arrays for output
     z = [np.zeros(( len(time), len(seg.z) ))
@@ -322,36 +307,52 @@ def evolve_network(net, time, dt, Qs_scale, Q_scale, S_scale):
             for seg in net.list_of_LongProfile_objects]
 
     # ---- Initial sediment and water supplies
-    S0 = net.list_of_LongProfile_objects[net.list_of_channel_head_segment_IDs[0]].S0
+    S0 = net.list_of_LongProfile_objects[
+        net.list_of_channel_head_segment_IDs[0]
+        ].S0
     Q0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
     for seg in net.list_of_LongProfile_objects:
         Q0[seg.ID] = seg.Q.copy()
     ssd0 = [seg.ssd.copy() for seg in net.list_of_LongProfile_objects]
 
-    # ---- Evolve
+    # ---- Loop over time, evolve the network and record its state
     for i,t in enumerate(time):
-        for seg in net.list_of_LongProfile_objects:
-            seg.set_source_sink_distributed(ssd0[seg.ID] * Qs_scale[i])
-        #     seg.set_Q(Qw0[seg.ID] * (1. + A_Q*s))
-        #     if seg.ID in net.list_of_channel_head_segment_IDs:
-                # seg.set_Qs_input_upstream(S0 * ((1. + A_Qs*s)**(6./7.)))
+        
+        # Skip the first entry
+        if i > 1:
+            
+            # Time step
+            dt = time[i] - time[i-1]
+        
+            # Update the source-sink-distributed term
+            for seg in net.list_of_LongProfile_objects:
+                seg.set_source_sink_distributed(ssd0[seg.ID] * Qs_scale[i])
 
-        new_Q = [Q0[j]*Q_scale[i] for j in range(len(net.list_of_LongProfile_objects))]
-        net.update_Q(new_Q)
-        net.create_Q_ext_lists()
-        net.update_Q_ext_from_Q()
-        net.update_Q_ext_internal()
-        net.update_Q_ext_external_upstream()  # b.c., Q_ext[0] = Q[0]
-        net.update_Q_ext_external_downstream()   # b.c., Q_ext[-1] = Q[-1]
-        net.update_dQ_ext_2cell()
+            # Update the water discharges
+            new_Q = [
+                Q0[j] * Q_scale[i]
+                for j in range(len(net.list_of_LongProfile_objects))
+                ]
+            net.update_Q(new_Q)
+            net.create_Q_ext_lists()
+            net.update_Q_ext_from_Q()
+            net.update_Q_ext_internal()
+            net.update_Q_ext_external_upstream()
+            net.update_Q_ext_external_downstream()
+            net.update_dQ_ext_2cell()
 
-        net.update_z_ext_external_upstream(
-            S0 = np.full(
-                len(net.list_of_channel_head_segment_IDs), 
-                S0 * S_scale[i]
-                ) 
-            )
-        net.evolve_threshold_width_river_network(nt=1, dt=dt)
+            # Update the sediment supplies
+            net.update_z_ext_external_upstream(
+                S0 = np.full(
+                    len(net.list_of_channel_head_segment_IDs), 
+                    S0 * S_scale[i]
+                    ) 
+                )
+            
+            # Evolve the network
+            net.evolve_threshold_width_river_network(nt=1, dt=dt)
+        
+        # Save elevations and sediment discharges
         for seg in net.list_of_LongProfile_objects:
             z[seg.ID][i,:] = seg.z.copy()
             seg.compute_Q_s()
@@ -360,114 +361,245 @@ def evolve_network(net, time, dt, Qs_scale, Q_scale, S_scale):
     return z, Qs
 
 def evolve_network_periodic(net, period, A_Qs, A_Q, nperiods=4):
+    """
+    Evolve a network with periodic variation in sediment and/or water supply.
+    
+    Given a forcing period, number of periods for which to evolve, and scaling
+    amplitudes for sediment and water supply, evolves the network using
+    evolve_network(). Also computes elevation gain and lag throughout the
+    network, and sediment-discharge gain and lag at the network outlet.
+    
+    Parameters
+    ----------
+    net : grlp.Network
+        Network object to evolve.
+    period : float
+        The forcing period to use.
+    A_Qs : float
+        The scaling amplitude for sediment supply. Should be a value between
+        0 and 1.
+    A_Q : float
+        The scaling amplitude for water supply. Should be a value between
+        0 and 1.
+    nperiods : int
+        The number of periods for which to evolve.
+        
+    Returns
+    -------
+    A dictionary containing: 'z' and 'Qs', lists of arrays containing time
+    series of elevation and sediment discharge for each network segment; 'time',
+    an array of times at which elevation and sediment discharge are recorded;
+    'Qs_scale', 'Q_scale' and 'S_scale', time series of scaling factors for
+    sediment supply, water supply and inlet slope; 'G_z' and 'lag_z', lists of
+    arrays of elevation gain and lag for each network segment; 'G_Qs' and
+    'lag_Qs', values of sediment-discharge gain and lag at the network outlet.
+    """
     
     # ---- Set up time domain
-    time, dt = np.linspace(0., period*nperiods, 1000*nperiods, retstep=True)
+    time = np.linspace(0., period*nperiods, 1000*nperiods)
     Qs_scale = 1 + A_Qs*np.sin(2. * np.pi * time / period)
     Q_scale = 1 + A_Q*np.sin(2. * np.pi * time / period)
     S_scale = (Qs_scale/Q_scale)**(6./7.)
     
     # ---- Evolve
-    z, Qs = evolve_network(net, time, dt, Qs_scale, Q_scale, S_scale)
+    z, Qs = evolve_network(net, time, Qs_scale, Q_scale, S_scale)
     
-    if A_Q > 0:
-        Qs_can_lead = True
-    else:
-        Qs_can_lead = False
+    # ---- Compute gains
+    # To avoid transient effects, we focus on the second half of the time
+    # series.
+    G_z = compute_network_gain([zi[2000:,:] for zi in z], max([A_Qs, A_Q]))
+    G_Qs = compute_network_gain([Qsi[2000:,:] for Qsi in Qs], max([A_Qs, A_Q]))
     
-    return {
-        'z': z, 
-        'Qs': Qs, 
-        'time': time,
-        'Qs_scale': Qs_scale,
-        'Q_scale': Q_scale,
-        'S_scale': S_scale,
-        'G_z': compute_network_gain(z, max([A_Qs, A_Q])),
-        'G_Qs': compute_network_gain(Qs, max([A_Qs, A_Q])),
-        'lag_z': find_network_lag(net, z, time, S_scale, period)/period,
-        'lag_Qs': find_lag_time_single(
-            Qs[0][:,-1], time, S_scale, period, can_lead=Qs_can_lead)/period
-        }
+    # ---- Compute lags
+    # We scale the lag time by the forcing period before returning.
+    lag_z = [l/period for l in find_network_lag(net, z, time, S_scale, period)]
+    lag_Qs = find_lag_time(Qs[0][:,-1], time, S_scale, period)/period
 
-def compute_network_gain(prop, force_amplitude):
+    return {'z': z, 'Qs': Qs, 'time': time, 'Qs_scale': Qs_scale,
+        'Q_scale': Q_scale, 'S_scale': S_scale, 'G_z': G_z, 'G_Qs': G_Qs, 
+        'lag_z': lag_z, 'lag_Qs': lag_Qs}
+
+def compute_network_gain(prop, A_forcing):
+    """
+    Compute gain for a network property (e.g. elevation or sediment discharge).
+    
+    Gain is defined as the ampltitude of the property time series divided by
+    the imposed forcing amplitude and the property mean.
+    
+    Properties
+    ----------
+    prop : list of np.ndarrays
+        List of arrays of property time series for each segment. Arrays should
+        have dimensions (len(time), N), where N is number of spatial nodes in
+        the segment.
+    A_forcing : float
+        The imposed forcing amplitude.
+        
+    Returns
+    -------
+    gain : list of np.ndarrays
+        List of arrays of gain for each segment. Arrays will have length N.
+    """
+    
+    # ---- Set up the list to save gain results
     gain = [np.zeros(len(p[:,0])) for p in prop]
+    
+    # ---- Loop over segments, compute gain
     for i,propi in enumerate(prop):
-        amp = (
-            propi[2000:,:].max(axis=0) - 
-            propi[2000:,:].min(axis=0)
-            )
-        gain[i] = amp / (2.*force_amplitude*propi[2000:,:].mean(axis=0))
+        A_prop = (propi.max(axis=0) - propi.min(axis=0)) / 2.
+        gain[i] = A_prop / (A_forcing*propi.mean(axis=0))
+        
     return gain
 
-def find_network_lag(net, prop, time, scale, period, can_lead=False):
+def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
+    """
+    Compute lag for a network property (e.g. elevation or sediment discharge).
     
-    # Initial attempt
-    lag = [np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects]
+    Uses the function find_along_stream_lag_times() to compute lag along each
+    of the network segments. Then additionally looks for cycle skipping at
+    the junctions between segments. Jumps of more than half a period between
+    segments are assumed to be cycle skipping. In this case, lag times are
+    adjusted by one period at a time until jumps do not exceed half a period.
+    
+    Parameters
+    ----------
+    net : grlp.Network
+        Network object to evolve.
+    prop : list of np.ndarrays
+        List of arrays of property time series for each segment. Arrays should
+        have dimensions (len(time), N), where N is number of spatial nodes in
+        the segment.
+    time : np.ndarray
+        The times corresponding to property time series.
+    forcing : np.ndarray
+        The forcing time series to compare with.
+    period : np.ndarray
+        The forcing period.
+        
+    Returns
+    -------
+    lag_times : list of np.ndarrays
+        List of arrays of lag for each segment. Arrays will have length N.
+    """
+    
+    # ---- First attempt to compute lag times along each segment
+    lag_times = [
+        np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects
+        ]
     for seg in net.list_of_LongProfile_objects:
-        lag[seg.ID] = find_lag_times(prop[seg.ID], time, scale, period=period, can_lead=can_lead)
+        lag_times[seg.ID] = find_along_stream_lag_times(
+            forcing,
+            prop[seg.ID],
+            time,
+            period,
+            can_lead=can_lead
+            )
     
-    # Check for cycle-skipped segment
+    # ---- Check for cycle skipping between segments
+    # Move from downstream from each of the channel heads looking for jumps in
+    # lag time between segments of more than half a period. If identified,
+    # correct by subtracting period until jump is removed.
     completed_segs = []
     for segID in net.list_of_channel_head_segment_IDs:
         while net.list_of_LongProfile_objects[segID].downstream_segment_IDs:
-            down_segID = net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
+            down_segID = (
+                net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
+                )
             if down_segID not in completed_segs:
-                if (lag[down_segID][0] - lag[segID][-1]) > 0.5*period:
+                if (lag_times[down_segID][0]-lag_times[segID][-1]) > 0.5*period:
                     lag[down_segID] -= period
                 completed_segs.append(down_segID)
             segID = down_segID
     
-    return lag
+    return lag_times
     
-def find_network_equilibration_time(net_gain, net_periods, lin_net):
+def find_network_equilibration_time(net_gain, periods, single_seg_net):
+    """
+    Estimate a network's equilibration time.
     
-    def gain_misfit(scaled_Teq, net_gain, net_periods, lin_net):
-        Teq = scaled_Teq * lin_net.list_of_LongProfile_objects[0].equilibration_time
+    Works by comparing the network's outlet sediment-discharge gain as a
+    function of forcing period to that predicted for a single segment network.
+    We seek the network equilibration time that minimises the difference
+    between gains for the network and the single as a function, once period has
+    been scaled by their respective equilibration times.
+    
+    Parameters
+    ----------
+    net_gain : np.ndarray
+        Sediment-discharge gain at the network outlet as a function of forcing
+        period.
+    periods : np.ndarray
+        The periods at which gain is calculated.
+    single_seg_net : grlp.Network
+        Single segment network object to compare against.
+        
+    Returns
+    -------
+    net_Teq : float
+        The estimated network equilibration time.
+    """
+    
+    # ---- Define a misfit function
+    # The function takes an estimate of a scaling between the single segment
+    # equilibration time and network equilibration time; computes the
+    # corresponding gain for the single segment case; and calculates a
+    # root-mean-square misfit between the network and single segment gain.
+    
+    def gain_misfit(Teq_scale, net_gain, periods, single_seg_net):
+        
+        # Get the equilibration time of the single segment network
+        lp = single_seg_net.list_of_LongProfile_objects[0]
+        
+        # Scale to get the estimate of network equilibration time to test
+        net_Teq = Teq_scale * lp.equilibration_time
+        
+        # Compute the gain for the single segment case.
+        # We compute gain at a set of periods such that the scaled periods
+        # (period/equilibraton time) match the scaled network periods for this
+        # estimate of network equilibration time.
         lin_gain = [
-            lin_net.list_of_LongProfile_objects[0].compute_z_gain(p)[-1]
-            for p in net_periods / lin_net.list_of_LongProfile_objects[0].equilibration_time * Teq
+            lp.compute_Qs_gain(p, A_Qs=0.2)[-1]
+            for p in periods / lp.equilibration_time * net_Teq
             ]
-        misfit = np.sqrt( (1./len(net_gain)) * sum((np.array(net_gain) - lin_gain)**2.) )
+        
+        # Compute the RMS misfit between the network and single segment gains.
+        misfit = np.sqrt(
+            (1./len(net_gain)) * sum((np.array(net_gain) - lin_gain)**2.)
+            )
         return misfit
     
+    # ---- Optimize the misfit function
+    # Gives us the scaling between the single segment and network equilibration
+    # times. Initial guess (1) that the two have the same equilibration time.
     fit = minimize(
         fun=gain_misfit, 
         x0=1.,
-        args=(net_gain,net_periods,lin_net,))
+        args=(net_gain,periods,single_seg_net,)
+        )
+    
+    # ---- Unscale the result
+    # Use the optmized result to scale the single segment equilibration time to
+    # the network equilibration time.
+    net_Teq = (
+        single_seg_net.list_of_LongProfile_objects[0].equilibration_time /
+        fit.x[0]
+        )
         
-    return lin_net.list_of_LongProfile_objects[0].equilibration_time / fit.x
-    
-def find_network_equilibration_time_Qs(net_gain, net_periods, lin_net):
-    
-    def gain_misfit(scaled_Teq, net_gain, net_periods, lin_net):
-        Teq = scaled_Teq * lin_net.list_of_LongProfile_objects[0].equilibration_time
-        lin_gain = [
-            lin_net.list_of_LongProfile_objects[0].compute_Qs_gain(p, A_Qs=0.2)[-1]
-            for p in net_periods / lin_net.list_of_LongProfile_objects[0].equilibration_time * Teq
-            ]
-        misfit = np.sqrt( (1./len(net_gain)) * sum((np.array(net_gain) - lin_gain)**2.) )
-        return misfit
-    
-    fit = minimize(
-        fun=gain_misfit, 
-        x0=1.,
-        args=(net_gain,net_periods,lin_net,))
-        
-    return lin_net.list_of_LongProfile_objects[0].equilibration_time / fit.x[0]
+    return net_Teq
 
 def read_sweep(indir):
-    
+
     netdirs = next(os.walk(indir))[1]
     nets = []
     hacks = []
     gains = []
     lags = []
     for netdir in netdirs:
-        
+
         with open(indir + netdir + "/hack.obj", "rb") as f:
             hack = pickle.load(f)
             hacks.append(hack)
-            
+
         with open(indir + netdir + "/props.obj", "rb") as f:
             prop = pickle.load(f)
             if 'mean_width' in prop.keys():
@@ -498,13 +630,13 @@ def read_sweep(indir):
                     )
             net.compute_network_properties()
             nets.append(net)
-            
+
         with open(indir + netdir + "/gain.obj", "rb") as f:
             gain = pickle.load(f)
             gains.append(gain)
-            
+
         with open(indir + netdir + "/lag.obj", "rb") as f:
             lag = pickle.load(f)
             lags.append(lag)
-            
+
     return nets, hacks, gains, lags
