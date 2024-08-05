@@ -412,7 +412,10 @@ def evolve_network_periodic(net, period, A_Qs, A_Q, nperiods=4):
     
     # ---- Compute lags
     # We scale the lag time by the forcing period before returning.
-    lag_z = [l/period for l in find_network_lag(net, z, time, S_scale, period)]
+    lag_z = [
+        l/period 
+        for l in find_network_lag_times(net, z, time, S_scale, period)
+        ]
     lag_Qs = find_lag_time(Qs[0][:,-1], time, S_scale, period)/period
 
     return {'z': z, 'Qs': Qs, 'time': time, 'Qs_scale': Qs_scale,
