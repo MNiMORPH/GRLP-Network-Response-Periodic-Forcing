@@ -1,10 +1,29 @@
+"""
+This script performs the analysis presented in Figures 7 of McNab et al. (2024,
+EGUsphere); produces a rough version of the Figure; and, optionally, generates
+output files for plotting the final Figure in GMT.
+
+The purpose of the script/figure is to illustrate the different network cases
+we analyse. We use uniform vs. non-uniform segment lengths, and upstream only
+vs. along stream supply of sediment and water, combining to give four different
+setups. We show the different combinations for a single network topology.
+"""
+
+
+# ---- Import functions
+
+# External packages
 import numpy as np
 import matplotlib.pyplot as plt
-
 import grlp
+
+# Local packages
 import grlp_extras as grlpx
 
-output_gmt = True
+
+# ---- Variables
+
+output_gmt = False
 
 indirs = {
     "m40_no_int": "../output/network/m40_fix_seg_length_no_internal/",
