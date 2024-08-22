@@ -347,7 +347,7 @@ if __name__ == "__main__":
     print("Starting: " + datetime.now().strftime("%H:%M:%S"))
     
     import multiprocessing as mp
-    with mp.Pool(processes=3) as pool:
+    with mp.Pool(processes=10) as pool:
         results = pool.map(
             analyse_network, 
             [(k, setup_file) for k in range(i,j+1)]
