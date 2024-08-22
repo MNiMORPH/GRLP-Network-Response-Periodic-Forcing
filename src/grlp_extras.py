@@ -510,7 +510,7 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                 )
             if down_segID not in completed_segs:
                 if (lag_times[down_segID][0]-lag_times[segID][-1]) > 0.5*period:
-                    lag[down_segID] -= period
+                    lag_times[down_segID] -= period
                 completed_segs.append(down_segID)
             segID = down_segID
     
@@ -606,7 +606,7 @@ def read_sweep(indir):
         with open(indir + netdir + "/props.obj", "rb") as f:
             prop = pickle.load(f)
             if 'mean_width' in prop.keys():
-                net, net_topo = generate_random_network(
+                net, net_topo = grlp.generate_random_network(
                     magnitude=None, 
                     segment_lengths=prop['lengths'],
                     mean_discharge=prop['mean_discharge'],
@@ -620,7 +620,7 @@ def read_sweep(indir):
                     topology=prop['topology']
                     )
             else:
-                net, net_topo = generate_random_network(
+                net, net_topo = grlp.generate_random_network(
                     magnitude=None, 
                     segment_lengths=prop['lengths'],
                     supply_discharges=prop['supply_discharges'],
