@@ -590,56 +590,132 @@ def find_network_equilibration_time(net_gain, periods, single_seg_net):
         
     return net_Teq
 
-def read_sweep(indir):
+# def read_sweep(indir):
+# 
+#     netdirs = next(os.walk(indir))[1]
+#     nets = []
+#     hacks = []
+#     gains = []
+#     lags = []
+#     for netdir in netdirs:
+# 
+#         with open(indir + netdir + "/hack.obj", "rb") as f:
+#             hack = pickle.load(f)
+#             hacks.append(hack)
+# 
+#         with open(indir + netdir + "/props.obj", "rb") as f:
+#             prop = pickle.load(f)
+#             if 'mean_width' in prop.keys():
+#                 net, net_topo = grlp.generate_random_network(
+#                     magnitude=None, 
+#                     segment_lengths=prop['lengths'],
+#                     mean_discharge=prop['mean_discharge'],
+#                     supply_discharges=prop['supply_discharges'],
+#                     internal_discharges=prop['internal_discharges'],
+#                     approx_dx=5.e2,
+#                     min_nxs=5,
+#                     sediment_discharge_ratio=prop['sediment_discharge_ratio'],
+#                     mean_width=prop['mean_width'],
+#                     variable_width=prop['variable_width'],
+#                     topology=prop['topology']
+#                     )
+#             else:
+#                 net, net_topo = grlp.generate_random_network(
+#                     magnitude=None, 
+#                     segment_lengths=prop['lengths'],
+#                     supply_discharges=prop['supply_discharges'],
+#                     internal_discharges=prop['internal_discharges'],
+#                     approx_dx=5.e2,
+#                     min_nxs=5,
+#                     sediment_discharge_ratio=prop['sediment_discharge_ratio'],
+#                     mean_width=98.1202038813591,
+#                     topology=prop['topology']
+#                     )
+#             net.compute_network_properties()
+#             nets.append(net)
+# 
+#         with open(indir + netdir + "/gain.obj", "rb") as f:
+#             gain = pickle.load(f)
+#             gains.append(gain)
+# 
+#         with open(indir + netdir + "/lag.obj", "rb") as f:
+#             lag = pickle.load(f)
+#             lags.append(lag)
+# 
+#     return nets, hacks, gains, lags
+    
+def read_MC(indir):
+    """
+    Read and unpack the results of a Monte Carlo simulation.
+    """
+    
+    # Get list of topology directories.
+    topodirs = next(os.walk(indir))[1]
 
-    netdirs = next(os.walk(indir))[1]
+    # Set up lists for output.
     nets = []
     hacks = []
     gains = []
     lags = []
-    for netdir in netdirs:
-
-        with open(indir + netdir + "/hack.obj", "rb") as f:
-            hack = pickle.load(f)
-            hacks.append(hack)
-
-        with open(indir + netdir + "/props.obj", "rb") as f:
-            prop = pickle.load(f)
-            if 'mean_width' in prop.keys():
-                net, net_topo = grlp.generate_random_network(
-                    magnitude=None, 
-                    segment_lengths=prop['lengths'],
-                    mean_discharge=prop['mean_discharge'],
-                    supply_discharges=prop['supply_discharges'],
-                    internal_discharges=prop['internal_discharges'],
-                    approx_dx=5.e2,
-                    min_nxs=5,
-                    sediment_discharge_ratio=prop['sediment_discharge_ratio'],
-                    mean_width=prop['mean_width'],
-                    variable_width=prop['variable_width'],
-                    topology=prop['topology']
+    
+    # Loop over topology directories.
+    for topodir in topodirs:
+        
+        # Get list of networks derived from the topology.
+        netdirs = next(os.walk(indir + topodir))[1]
+        
+        # Set up dictionaries to store results for each network.
+        topo_nets = {}
+        topo_hacks = {}
+        topo_gains = {}
+        topo_lags = {}
+        
+        # Loop over networks.
+        for netdir in netdirs:
+            
+            # Read the Hack object.
+            with open(indir + topodir + "/" + netdir + "/hack.obj", "rb") as f:
+                topo_hacks[netdir] = pickle.load(f)
+            
+            # Read the network properties and create network instance.
+            with open(indir + topodir + "/" + netdir + "/props.obj", "rb") as f:
+                props = pickle.load(f)
+                topo_nets[netdir] = grlp.Network()
+                topo_nets[netdir].initialize(
+                    config_file = None,
+                    x_bl = props['x_bl'],
+                    z_bl = props['z_bl'],
+                    S0 = props['S0'],
+                    upstream_segment_IDs = props['upstream_segment_IDs'],
+                    downstream_segment_IDs = props['downstream_segment_IDs'],
+                    x = props['x_ls'],
+                    z = props['z_ls'],
+                    Q = props['Q_ls'],
+                    B = props['B_ls'],
+                    overwrite = False
                     )
-            else:
-                net, net_topo = grlp.generate_random_network(
-                    magnitude=None, 
-                    segment_lengths=prop['lengths'],
-                    supply_discharges=prop['supply_discharges'],
-                    internal_discharges=prop['internal_discharges'],
-                    approx_dx=5.e2,
-                    min_nxs=5,
-                    sediment_discharge_ratio=prop['sediment_discharge_ratio'],
-                    mean_width=98.1202038813591,
-                    topology=prop['topology']
-                    )
-            net.compute_network_properties()
-            nets.append(net)
+                topo_nets[netdir].set_niter(3)
+                topo_nets[netdir].get_z_lengths()
+                for i,seg in enumerate(
+                    topo_nets[netdir].list_of_LongProfile_objects
+                    ):
+                    seg.set_source_sink_distributed(props['ssd_ls'][i])
+                for seg in topo_nets[netdir].list_of_LongProfile_objects:
+                    seg.compute_Q_s()
+                topo_nets[netdir].compute_network_properties()
+            
+            # Read the gain object.
+            with open(indir + topodir + "/" + netdir + "/gain.obj", "rb") as f:
+                topo_gains[netdir] = pickle.load(f)
+            
+            # Read the lag object.
+            with open(indir + topodir + "/" + netdir + "/lag.obj", "rb") as f:
+                topo_lags[netdir] = pickle.load(f)
 
-        with open(indir + netdir + "/gain.obj", "rb") as f:
-            gain = pickle.load(f)
-            gains.append(gain)
-
-        with open(indir + netdir + "/lag.obj", "rb") as f:
-            lag = pickle.load(f)
-            lags.append(lag)
-
+        # Store the output.
+        nets.append(topo_nets)
+        hacks.append(topo_hacks)
+        gains.append(topo_gains)
+        lags.append(topo_lags)
+        
     return nets, hacks, gains, lags
