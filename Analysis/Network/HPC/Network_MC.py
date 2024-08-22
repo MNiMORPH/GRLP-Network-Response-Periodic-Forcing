@@ -16,7 +16,7 @@ def analyse_network(iter):
     i = iter[0]
     setup_file = iter[1]    
     
-    with open('test.yaml', 'r') as f:
+    with open(setup_file, 'r') as f:
         props = yaml.safe_load(f)
 
     # ---- Valley properties
