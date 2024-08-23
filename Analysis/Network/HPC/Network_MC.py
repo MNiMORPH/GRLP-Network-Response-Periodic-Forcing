@@ -14,7 +14,8 @@ import grlp_extras as grlpx
 def analyse_network(iter):
     
     i = iter[0]
-    setup_file = iter[1]    
+    setup_file = iter[1]
+    print("Working on network " + str(i) + ".")
     
     with open(setup_file, 'r') as f:
         props = yaml.safe_load(f)
@@ -48,8 +49,6 @@ def analyse_network(iter):
         )
     T_eq = lin_net.list_of_LongProfile_objects[0].equilibration_time
 
-
-    # N1 = 10
     try:
         min_N1 = props['N1'][0]
         max_N1 = props['N1'][1]
@@ -59,8 +58,6 @@ def analyse_network(iter):
         N1 = int(random.choice(N1_choices))
     except TypeError:
         N1 = props['N1']
-    print(N1)
-
 
     nets = {}
 
@@ -130,78 +127,78 @@ def analyse_network(iter):
     net.compute_network_properties()
     nets['NAU'] = {'net': net, 'topo': topo}
 
-    # --------Variable width
-
-    # ---- Base network
-    net, topo = grlp.generate_random_network(
-        magnitude=N1,
-        max_length=L,
-        approx_dx=5.e2,
-        min_nxs=5,
-        mean_discharge=Q_mean,
-        sediment_discharge_ratio=1.e4,
-        mean_width=B_mean,
-        variable_width=True,
-        topology=nets['UUU']['topo'].links,
-        evolve=True
-        )
-    net.compute_network_properties()
-    nets['UUN'] = {'net': net, 'topo': topo}
-
-    # ---- Along stream supply
-    net, topo = grlp.generate_random_network(
-        magnitude=N1,
-        max_length=L,
-        segment_length_area_ratio=segment_length_area_ratio,
-        supply_area=supply_area,
-        approx_dx=5.e2,
-        min_nxs=5,
-        mean_discharge=Q_mean,
-        sediment_discharge_ratio=1.e4,
-        mean_width=B_mean,
-        variable_width=True,
-        topology=nets['UUU']['topo'].links,
-        evolve=True
-        )
-    net.compute_network_properties()
-    nets['UAN'] = {'net': net, 'topo': topo}
-
-    # ---- Random segment lengths
-    segment_length = sts.gamma(2., scale=1./2.)
-    net, topo = grlp.generate_random_network(
-        magnitude=N1,
-        max_length=L,
-        segment_lengths=nets['NUU']['topo'].segment_lengths,
-        approx_dx=5.e2,
-        min_nxs=5,
-        mean_discharge=Q_mean,
-        sediment_discharge_ratio=1.e4,
-        mean_width=B_mean,
-        variable_width=True,
-        topology=nets['UUU']['topo'].links,
-        evolve=True
-        )
-    net.compute_network_properties()
-    nets['NUN'] = {'net': net, 'topo': topo}
-
-    # ---- Random segment lengths & Along stream supply
-    net, topo = grlp.generate_random_network(
-        magnitude=N1,
-        max_length=L,
-        segment_lengths=nets['NUU']['topo'].segment_lengths,
-        segment_length_area_ratio=segment_length_area_ratio,
-        supply_area=supply_area,
-        approx_dx=5.e2,
-        min_nxs=5,
-        mean_discharge=Q_mean,
-        sediment_discharge_ratio=1.e4,
-        mean_width=B_mean,
-        variable_width=True,
-        topology=nets['UUU']['topo'].links,
-        evolve=True
-        )
-    net.compute_network_properties()
-    nets['NAN'] = {'net': net, 'topo': topo}
+    # # --------Variable width
+    # 
+    # # ---- Base network
+    # net, topo = grlp.generate_random_network(
+    #     magnitude=N1,
+    #     max_length=L,
+    #     approx_dx=5.e2,
+    #     min_nxs=5,
+    #     mean_discharge=Q_mean,
+    #     sediment_discharge_ratio=1.e4,
+    #     mean_width=B_mean,
+    #     variable_width=True,
+    #     topology=nets['UUU']['topo'].links,
+    #     evolve=True
+    #     )
+    # net.compute_network_properties()
+    # nets['UUN'] = {'net': net, 'topo': topo}
+    # 
+    # # ---- Along stream supply
+    # net, topo = grlp.generate_random_network(
+    #     magnitude=N1,
+    #     max_length=L,
+    #     segment_length_area_ratio=segment_length_area_ratio,
+    #     supply_area=supply_area,
+    #     approx_dx=5.e2,
+    #     min_nxs=5,
+    #     mean_discharge=Q_mean,
+    #     sediment_discharge_ratio=1.e4,
+    #     mean_width=B_mean,
+    #     variable_width=True,
+    #     topology=nets['UUU']['topo'].links,
+    #     evolve=True
+    #     )
+    # net.compute_network_properties()
+    # nets['UAN'] = {'net': net, 'topo': topo}
+    # 
+    # # ---- Random segment lengths
+    # segment_length = sts.gamma(2., scale=1./2.)
+    # net, topo = grlp.generate_random_network(
+    #     magnitude=N1,
+    #     max_length=L,
+    #     segment_lengths=nets['NUU']['topo'].segment_lengths,
+    #     approx_dx=5.e2,
+    #     min_nxs=5,
+    #     mean_discharge=Q_mean,
+    #     sediment_discharge_ratio=1.e4,
+    #     mean_width=B_mean,
+    #     variable_width=True,
+    #     topology=nets['UUU']['topo'].links,
+    #     evolve=True
+    #     )
+    # net.compute_network_properties()
+    # nets['NUN'] = {'net': net, 'topo': topo}
+    # 
+    # # ---- Random segment lengths & Along stream supply
+    # net, topo = grlp.generate_random_network(
+    #     magnitude=N1,
+    #     max_length=L,
+    #     segment_lengths=nets['NUU']['topo'].segment_lengths,
+    #     segment_length_area_ratio=segment_length_area_ratio,
+    #     supply_area=supply_area,
+    #     approx_dx=5.e2,
+    #     min_nxs=5,
+    #     mean_discharge=Q_mean,
+    #     sediment_discharge_ratio=1.e4,
+    #     mean_width=B_mean,
+    #     variable_width=True,
+    #     topology=nets['UUU']['topo'].links,
+    #     evolve=True
+    #     )
+    # net.compute_network_properties()
+    # nets['NAN'] = {'net': net, 'topo': topo}
 
     # # ---- Plot
     # fig, axs = plt.subplots(4,8,sharex=True, sharey="row")
@@ -244,11 +241,9 @@ def analyse_network(iter):
     # sys.exit()
 
     # ---- Analyse
-    # for n in ['UUU', 'NUU', 'UAU', 'NAU', 'UUN', 'NUN', 'UAN', 'NAN']:
-    for n in ['UUU']:
-        print(n)
+    for n in ['UUU'] #, 'NUU', 'UAU', 'NAU'] #, 'UUN', 'NUN', 'UAN', 'NAN']:
 
-        periods = np.logspace(-2.,2.,3) * T_eq
+        periods = np.logspace(-2., 2., 3) * T_eq
         G_z = {'Qs': [], 'Qw': []}
         lag_z = {'Qs': [], 'Qw': []}
         G_Qs = {'Qs': [], 'Qw': []}

@@ -12,7 +12,7 @@ source /home/mcnab/network/bin/activate
 
 # Define parameters
 setup_file="./Setup_N1_40.yaml"
-nruns=10
+nruns=5
 nnets_per_run=10
 
 # Loop over runs, submitting jobs
