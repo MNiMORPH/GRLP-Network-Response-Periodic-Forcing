@@ -132,7 +132,7 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
             time,
             period,
             can_lead=can_lead)
-    
+
     # ---- Check for cycle skipping
     # Move from upstream end downstream, then from downstream end upstream,
     # looking for jumps in lag time of more than half a period. If identified,
@@ -140,11 +140,11 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
     if period:
         for i in range(1,len(response[0,:])):
             while (lag_times[i] - lag_times[i-1]) > 0.5*period:
-                lag_times[i] -= period
+                lag_times[i:] -= 0.5*period
         for i in range(len(response[0,:])-2,0,-1):
             while (lag_times[i] - lag_times[i+1]) > 0.5*period:
-                lag_times[i] -= period
-                
+                lag_times[:i+1] -= 0.5*period
+
     return lag_times
 
 def compute_power_law_coefficient(mean, p, L, x0):
@@ -512,7 +512,7 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
             period,
             can_lead=can_lead
             )
-    
+
     # ---- Check for cycle skipping between segments
     # Move from downstream from each of the channel heads looking for jumps in
     # lag time between segments of more than half a period. If identified,
@@ -524,8 +524,10 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                 net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
                 )
             if down_segID not in completed_segs:
-                if (lag_times[down_segID][0]-lag_times[segID][-1]) > 0.5*period:
-                    lag_times[down_segID] -= period
+                while (lag_times[down_segID][0]-lag_times[segID][-1]) > 0.5*period:
+                    lag_times[down_segID] -= 0.5*period
+                while (lag_times[down_segID][0]-lag_times[segID][-1]) < -0.5*period:
+                    lag_times[down_segID] += 0.5*period
                 completed_segs.append(down_segID)
             segID = down_segID
     
