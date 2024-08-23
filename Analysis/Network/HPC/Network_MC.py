@@ -241,9 +241,9 @@ def analyse_network(iter):
     # sys.exit()
 
     # ---- Analyse
-    for n in ['UUU']: #, 'NUU', 'UAU', 'NAU'] #, 'UUN', 'NUN', 'UAN', 'NAN']:
+    for n in ['UUU', 'NUU', 'UAU', 'NAU']: #, 'UUN', 'NUN', 'UAN', 'NAN']:
 
-        periods = np.logspace(-2., 2., 3) * T_eq
+        periods = np.logspace(-2., 2., 7) * T_eq
         G_z = {'Qs': [], 'Qw': []}
         lag_z = {'Qs': [], 'Qw': []}
         G_Qs = {'Qs': [], 'Qw': []}
