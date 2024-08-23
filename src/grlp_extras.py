@@ -31,6 +31,9 @@ def find_lag_time(forcing, response, time, period, can_lead=False):
         Time array for the two time series.
     period : np.ndarray
         The period of the two (quasi-sinusoidal) time series.
+    can_lead : bool
+        Whether or not the response should be allowed to lead the forcing
+        (i.e. whether negative lag times are allowed/expected).
         
     Returns
     -------
@@ -51,9 +54,16 @@ def find_lag_time(forcing, response, time, period, can_lead=False):
     response_peaks, __ = sig.find_peaks(response)
     response_troughs, __ = sig.find_peaks(-response)
     response_tps = np.sort( np.hstack(( response_peaks, response_troughs )) )
-    # if not can_lead:
-    #     obs_tps = obs_tps[ np.where( obs_tps >= scl_tps[0] ) ]
-    
+
+    # ---- Check whether turning points in response preceed those in forcing
+    # Sometimes we get turning points at the very beginning of the time series
+    # due to small numerical effects or transient parts of the response. These
+    # mess up our measurement. But sometimes we turning points in the response
+    # before those in the forcing that are real. This is difficult to deal with
+    # so we include the "can_lead" flag. For scenarios where the user does not
+    # expect the response to lead the forcing, they can impose that.
+    if not can_lead:
+        response_tps = response_tps[np.where( response_tps >= forcing_tps[0] )]    
 
     # ---- Attach response TPs to forcing TPs, measure lag
     # Loop over turning points, compare turning point i in forcing to turning
