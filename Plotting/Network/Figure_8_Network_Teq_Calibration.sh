@@ -7,19 +7,16 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # variables
-out=calibration
+out="../../Figures/Figure_8_Network_Teq_Calibration"
 rgn=-R0.003/300/-0.05/1.05
 proj=-JX1.5il/1.5i
 rgnx=-R0/100/0/100
 projx=-JX1.5i/1.5i
-basedir="../../output/network/calibration"
-sweepdirs=("m40_fix_seg_length_no_internal" "m40_rnd_seg_length_no_internal" "m40_fix_seg_length_w_internal" "m40_rnd_seg_length_w_internal")
+basedir="../../Output/Network/Figure_8_Network_Teq_Calibration"
+sweepdirs=("UUU" "NUU" "UAU" "NAU")
 L_labs=("a" "b" "c" "d")
 Le_labs=("e" "f" "g" "h")
 titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengths" "Random segment lengths")
-
-# CPT
-gmt makecpt -Cviridis -T0/100/1 -Z -D > mag.cpt
 
 # plot
 gmt psbasemap $rgn $proj -B+n -K > $out.ps
@@ -102,5 +99,5 @@ echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -G
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
 gmt psconvert -A -E400 -Tf $out.ps
 convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps
+rm $out.ps $out.pdf
 eog $out.jpg &
