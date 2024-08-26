@@ -141,7 +141,7 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
         for i in range(1,len(response[0,:])):
             while (lag_times[i] - lag_times[i-1]) > 0.5*period:
                 lag_times[i:] -= 0.5*period
-        for i in range(len(response[0,:])-2,0,-1):
+        for i in range(len(response[0,:])-2,-1,-1):
             while (lag_times[i] - lag_times[i+1]) > 0.5*period:
                 lag_times[:i+1] -= 0.5*period
 
@@ -524,9 +524,11 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                 net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
                 )
             if down_segID not in completed_segs:
-                while (lag_times[down_segID][0]-lag_times[segID][-1]) > 0.5*period:
+                while (lag_times[down_segID][0]-lag_times[segID][-1]) > \
+                    0.49*period:
                     lag_times[down_segID] -= 0.5*period
-                while (lag_times[down_segID][0]-lag_times[segID][-1]) < -0.5*period:
+                while (lag_times[down_segID][0]-lag_times[segID][-1]) < \
+                    -0.49*period:
                     lag_times[down_segID] += 0.5*period
                 completed_segs.append(down_segID)
             segID = down_segID
