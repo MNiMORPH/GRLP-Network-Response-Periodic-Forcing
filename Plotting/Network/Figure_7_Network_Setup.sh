@@ -10,15 +10,15 @@ gmt gmtset MAP_ANNOT_OFFSET_PRIMARY 2p
 gmt gmtset MAP_LABEL_OFFSET 3.5p
 
 # Variables
-basedir="../../output/network/examples"
-netdirs=("m40_fix_seg_length_no_int" "m40_rnd_seg_length_no_int" "m40_fix_seg_length_w_int" "m40_rnd_seg_length_w_int")
+basedir="../../Output/Network/Figure_7_Network_Setup"
+netdirs=("UUU" "NUU" "UAU" "NAU")
 plan_labs=("a" "b" "c" "d")
 discharge_labs=("e" "f" "g" "h")
 prof_labs=("i" "j" "k" "l")
 ratio_labs=("m" "n" "o" "p")
 hack_off=(0.32 0.38 0.37 0.37)
 titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengths" "Random segment lengths")
-out=examples
+out="../../Figures/Figure_7_Network_Setup"
 
 # CPT
 gmt makecpt -Cviridis -T0.5/4.5/1 -I > order.cpt
@@ -146,5 +146,5 @@ echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -G
 # Finalise, show
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
 gmt psconvert -A -E400 -Tj $out.ps
-rm $out.ps
+rm $out.ps *.cpt
 eog $out.jpg &
