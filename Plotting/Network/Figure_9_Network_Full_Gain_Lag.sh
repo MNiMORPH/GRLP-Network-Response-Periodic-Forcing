@@ -7,7 +7,7 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # variables
-out=sweep
+out="../../Figures/Figure_9_Network_Full_Gain_Lag"
 proj=-JX1.5il/1.5i
 basedir="../../Output/Network/Figure_9_Network_Full_Gain_Lag"
 sweepdirs=("UUU" "NUU" "UAU" "NAU")
@@ -19,9 +19,6 @@ G_Qs_Qw_labels=("q" "r" "s" "t")
 lag_Qs_Qw_labels=("u" "v" "w" "x")
 titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengths" "Random segment lengths")
 
-
-# CPT
-gmt makecpt -Cviridis -T0/100/1 -Z -D > mag.cpt
 
 gmt psbasemap -R1/10/1/10 $proj -B+n -X-1i -K > $out.ps
 
@@ -107,5 +104,5 @@ echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -G
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
 gmt psconvert -A -E400 -Tf $out.ps
 convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps
+rm $out.ps $out.pdf
 eog $out.jpg &
