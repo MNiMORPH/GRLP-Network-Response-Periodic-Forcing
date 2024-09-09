@@ -68,12 +68,12 @@ def find_lag_time(forcing, response, time, period, can_lead=False):
     # ---- Attach response TPs to forcing TPs, measure lag
     # Loop over turning points, compare turning point i in forcing to turning
     # point i in response; measure time difference.
-    lag_times = np.zeros( len(response_tps), dtype=int )
-    for i,tp in enumerate(response_tps):
-        if i > len(forcing_tps)-1:
-            continue
-        lag_times[i] = time[tp] - time[forcing_tps[i]]
-        
+    # We can only compute a lag time if we have both a forcing and a response
+    # peak.
+    lag_times = np.zeros( min(len(response_tps), len(forcing_tps)), dtype=int )
+    for i in range(len(lag_times)):
+        lag_times[i] = time[response_tps[i]] - time[forcing_tps[i]]
+    
     # ---- Average the lag times
     # We ignore the first turning point, it can be influenced by transient
     # parts of the response. So we need more than point; otherwise we return
@@ -88,8 +88,8 @@ def find_lag_time(forcing, response, time, period, can_lead=False):
     # one quarter of the forcing period implies peaks/troughs before the
     # start of the time series. This usually points to something going wrong,
     # e.g. noise in the response being picked up as peaks and troughs. So
-    # we also return nan in that case.
-    if lag_time < -0.25*period:
+    # we also return nan in that case, allowing a small amount of leeway.
+    if lag_time < -0.3*period:
         lag_time = np.nan
     
     return lag_time
@@ -135,14 +135,16 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
 
     # ---- Check for cycle skipping
     # Move from upstream end downstream, then from downstream end upstream,
-    # looking for jumps in lag time of more than half a period. If identified,
-    # correct by subtracting period until jump is removed.
+    # looking for jumps in lag time of more than half about half a period. We
+    # use 0.4*period as a threshold because some difference is expected from
+    # node to node. If identified, correct by subtracting period until jump is
+    # removed.
     if period:
         for i in range(1,len(response[0,:])):
-            while (lag_times[i] - lag_times[i-1]) > 0.5*period:
+            while (lag_times[i] - lag_times[i-1]) > 0.4*period:
                 lag_times[i:] -= 0.5*period
         for i in range(len(response[0,:])-2,-1,-1):
-            while (lag_times[i] - lag_times[i+1]) > 0.5*period:
+            while (lag_times[i] - lag_times[i+1]) > 0.4*period:
                 lag_times[:i+1] -= 0.5*period
 
     return lag_times
@@ -515,20 +517,30 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
 
     # ---- Check for cycle skipping between segments
     # Move from downstream from each of the channel heads looking for jumps in
-    # lag time between segments of more than half a period. If identified,
-    # correct by subtracting period until jump is removed.
+    # lag time between segments of more than about half a period. We use
+    # 0.4*period as a threshold since there is some natural difference across
+    # junctions that we need to project over. If jumps are identified, correct
+    # by subtracting period until jump is removed.
     completed_segs = []
     for segID in net.list_of_channel_head_segment_IDs:
+        
+        # First force all channel heads to have positive lag.
+        # Thinking mainly about z here.
+        # If applied with Qs, maybe negative lag is possible...
+        while (lag_times[segID] < 0.).any():
+            lag_times[segID] += 0.5*period
+            
+        # Now move downstream looking for jumps across junctions.
         while net.list_of_LongProfile_objects[segID].downstream_segment_IDs:
             down_segID = (
                 net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
                 )
             if down_segID not in completed_segs:
                 while (lag_times[down_segID][0]-lag_times[segID][-1]) > \
-                    0.49*period:
+                    0.4*period:
                     lag_times[down_segID] -= 0.5*period
                 while (lag_times[down_segID][0]-lag_times[segID][-1]) < \
-                    -0.49*period:
+                    -0.4*period:
                     lag_times[down_segID] += 0.5*period
                 completed_segs.append(down_segID)
             segID = down_segID
