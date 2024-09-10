@@ -7,9 +7,8 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
-# basedir="../../output/network/spatial"
-basedir="../../output/network/spatial"
-out="spatial"
+basedir="../../Output/Network/Figure_12_Network_Spatial_Gain_Lag"
+out="../../Figures/Figure_12_Network_Spatial_Gain_Lag"
 
 # ---- Variables
 proj=-JX1.5i
@@ -18,7 +17,8 @@ rgn=-R-10/110/0.1/0.8
 # rgn_lag=-R-10/110/0.075/0.325
 rgn_lag=-R-10/110/0.025/0.325
 # nets=("m40_fix_seg_length_no_internal" "m40_rnd_seg_length_no_internal" "m40_fix_seg_length_w_internal" "m40_rnd_seg_length_w_internal")
-nets=("m40_fix_seg_length_no_internal_var_width" "m40_rnd_seg_length_no_internal_var_width" "m40_fix_seg_length_w_internal_var_width" "m40_rnd_seg_length_w_internal_var_width")
+# nets=("m40_fix_seg_length_no_internal_var_width" "m40_rnd_seg_length_no_internal_var_width" "m40_fix_seg_length_w_internal_var_width" "m40_rnd_seg_length_w_internal_var_width")
+nets=("UUU" "NUU" "UAU" "NAU")
 axes=("eW" "ew" "ew" "ew")
 g_lab=("a" "b" "c" "d")
 l_lab=("e" "f" "g" "h")
@@ -36,8 +36,8 @@ for i in ${!nets[@]} ; do
 
   # ---- Gain_z
   gmt psbasemap $rgn $proj -B+n -X1.65i -Y1.65i -O -K >> $out.ps
-  gmt psxy $indir/lin_gain.dg $rgn $proj -W0.8p,black,3_2 -O -K >> $out.ps
-  gmt psxy $indir/cont_gain.dg $rgn $proj -W0.8p,dimgrey,3_3_0.8_3 -O -K >> $out.ps
+  gmt psxy $indir/single_seg_U_gain.dg $rgn $proj -W0.8p,black,3_2 -O -K >> $out.ps
+  gmt psxy $indir/single_seg_A_gain.dg $rgn $proj -W0.8p,dimgrey,3_3_0.8_3 -O -K >> $out.ps
   gmt psxy $indir/gain.dg $rgn $proj -W0.8p -Corder.cpt -O -K >> $out.ps
   echo ${g_lab[$i]} | \
     gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
@@ -85,8 +85,8 @@ for i in ${!nets[@]} ; do
 
   # ---- Lag_z
   gmt psbasemap $rgn_lag $proj -B+n -Y-1.65i -O -K >> $out.ps
-  gmt psxy $indir/lin_lag.dl $rgn_lag $proj -W0.8p,black,3_3 -O -K >> $out.ps
-  gmt psxy $indir/cont_lag.dl $rgn_lag $proj -W0.8p,dimgrey,3_3_0.8_3 -O -K >> $out.ps
+  gmt psxy $indir/single_seg_U_lag.dl $rgn_lag $proj -W0.8p,black,3_3 -O -K >> $out.ps
+  gmt psxy $indir/single_seg_A_lag.dl $rgn_lag $proj -W0.8p,dimgrey,3_3_0.8_3 -O -K >> $out.ps
   gmt psxy $indir/lag.dl $rgn_lag $proj -W0.8p -Corder.cpt -O -K >> $out.ps
   echo ${l_lab[$i]} | \
     gmt pstext $rgn_lag $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
@@ -117,4 +117,5 @@ echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -G
 gmt psbasemap $rgn $proj -B+n -O >> $out.ps
 # gv $out.ps &
 gmt psconvert -A -E400 -Tj $out.ps
+rm $out.ps order.cpt
 eog $out.jpg &
