@@ -123,11 +123,13 @@ def analyse_network2(iter):
 
 import sys
 i = int(sys.argv[1])
+N1 = int(sys.argv[2])
+outdir = str(sys.argv[3])
 # j = int(sys.argv[2])
-setup_file = sys.argv[2]
+# setup_file = sys.argv[2]
 
-with open(setup_file, 'r') as f:
-    props = yaml.safe_load(f)
+# with open(setup_file, 'r') as f:
+#     props = yaml.safe_load(f)
 
 
 print(str(i) + ": Starting: " + datetime.now().strftime("%H:%M:%S"))
@@ -162,15 +164,15 @@ lin_net = grlpx.generate_single_segment_network(
     )
 T_eq = lin_net.list_of_LongProfile_objects[0].equilibration_time
 
-try:
-    min_N1 = props['N1'][0]
-    max_N1 = props['N1'][1]
-    N1_choices = np.hstack(
-        [[N1]*np.log2(N1).astype(int) for N1 in range(min_N1,max_N1)]
-        )
-    N1 = int(random.choice(N1_choices))
-except TypeError:
-    N1 = props['N1']
+# try:
+#     min_N1 = props['N1'][0]
+#     max_N1 = props['N1'][1]
+#     N1_choices = np.hstack(
+#         [[N1]*np.log2(N1).astype(int) for N1 in range(min_N1,max_N1)]
+#         )
+#     N1 = int(random.choice(N1_choices))
+# except TypeError:
+#     N1 = props['N1']
 
 nets = {}
 
@@ -358,7 +360,7 @@ import multiprocessing as mp
 with mp.Pool(processes=4) as pool:
     results = pool.map(
         analyse_network2, 
-        [(case, nets, lin_net, props['outdir'] + str(i) + "/" + case + "/") for case in ['UUU', 'NUU', 'UAU', 'NAU']]
+        [(case, nets, lin_net, outdir + str(i) + "/" + case + "/") for case in ['UUU', 'NUU', 'UAU', 'NAU']]
         )
 
 
