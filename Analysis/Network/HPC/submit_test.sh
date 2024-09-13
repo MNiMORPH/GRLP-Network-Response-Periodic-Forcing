@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --nodes=2
+#SBATCH --nodes=1
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=4
 #SBATCH --time=4-00:0
@@ -25,7 +25,7 @@ nruns=4
 # done
 
 for i in $(seq $nruns) ; do
-  srun --ntasks=1 \
+  srun --exclusive --nnodes=1 --ntasks=1 --cpus-per-task=4 \
     python Network_MC_2.py \
     $i $setup_file &
 done
