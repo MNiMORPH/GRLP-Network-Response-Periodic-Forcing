@@ -25,7 +25,7 @@ nruns=4
 # done
 
 for i in $(seq $nruns) ; do
-  srun --exclusive --nnodes=1 --ntasks=1 --cpus-per-task=4 \
+  srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=4 \
     python Network_MC_2.py \
     $i $setup_file &
 done
