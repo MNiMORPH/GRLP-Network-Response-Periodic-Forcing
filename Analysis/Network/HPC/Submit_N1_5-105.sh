@@ -42,10 +42,10 @@ for N1_min in $(seq $min_N1_min 10 $max_N1_min) ; do
       srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=4 \
         python Network_MC_2.py \
         $i $N1 "/home/mcnab/grlp_network_analysis/Output/Network/MC_N1_5-105/" &
-      i=$[$i+1]
       if [ $i -eq 49 ] ; then
         wait
       fi
+      i=$[$i+1]
     done
     
   done
