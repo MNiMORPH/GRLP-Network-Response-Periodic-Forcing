@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks=10
+#SBATCH --nodes=5
+#SBATCH --ntasks=50
 #SBATCH --cpus-per-task=4
-#SBATCH --time=4-00:0
+#SBATCH --time=10-00:0
 
 # Load python
 module load Python
@@ -31,18 +31,21 @@ source /home/mcnab/network/bin/activate
 # done
 
 min_N1_min=5
-max_N1_min=5
+max_N1_min=95
 i=0
 
 for N1_min in $(seq $min_N1_min 10 $max_N1_min) ; do
 
-  for N1 in $(seq $N1_min $(echo $N1_min | awk ' {print $1 + 9} ')) ; do
+  for N1 in $(seq $N1_min 2 $(echo $N1_min | awk ' {print $1 + 8} ')) ; do
     
-    for j in 1 ; do #$(seq 0 3) ; do
+    for j in $(seq 0 1) ; do
       srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=4 \
         python Network_MC_2.py \
-        $i $N1 "./test/" &
+        $i $N1 "/home/mcnab/grlp_network_analysis/Output/Network/MC_N1_5-105/" &
       i=$[$i+1]
+      if [ $i -eq 49 ] ; then
+        wait
+      fi
     done
     
   done
