@@ -7,11 +7,11 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Variables
-out=magnitude
-rgn=-R-5/155/1/1.4
+out="../../Figures/Figure_11_Network_Effective_Length_N1"
+rgn=-R-5/155/1/1.6
 proj=-JX1.5i
-basedir="../../output/network/magnitude"
-grps=("no_int" "rnd_no_int" "w_int" "rnd_w_int")
+basedir="../../Output/Network/Figure_11_Network_Effective_Length_N1"
+cases=("UUU" "NUU" "UAU" "NAU")
 labels=("a" "b" "c" "d")
 titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengths" "Random segment lengths")
 
@@ -19,7 +19,7 @@ titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengt
 gmt psbasemap $rgn $proj -B+n -X-1i -K > $out.ps
 
 # ---- Plot
-for i in ${!grps[@]} ; do
+for i in ${!cases[@]} ; do
 
   if [ $i -eq 0 ] ; then
     W="W"
@@ -29,10 +29,9 @@ for i in ${!grps[@]} ; do
 
   gmt psbasemap $rgn $proj -B+n -X1.65i -O -K >> $out.ps
   # gmt psxy $basedir/${grps[$i]}_full.dat $rgn $proj -Sc3p -W0.8p,steelblue -t70 -O -K >> $out.ps
-  gmt psxy $basedir/m2-100_${grps[$i]}_full.dat $rgn $proj -Sc3p -W0.8p,tomato -t70 -O -K >> $out.ps
-  gmt psxy $basedir/m100-150_${grps[$i]}_full.dat $rgn $proj -Sc3p -W0.8p,tomato -t70 -O -K >> $out.ps
-  gmt psxy $basedir/m40_${grps[$i]}_full.dat $rgn $proj -Sc3p -W0.8p,steelblue -t70 -O -K >> $out.ps
-  gmt psxy $basedir/${grps[$i]}_bin.dat $rgn $proj -Sd3.5p -W1p,black -O -K >> $out.ps
+  gmt psxy $basedir/N1_2-102_${cases[$i]}_full.dat $rgn $proj -Sc3p -W0.8p,tomato -t70 -O -K >> $out.ps
+  gmt psxy $basedir/N1_40_${cases[$i]}_full.dat $rgn $proj -Sc3p -W0.8p,steelblue -t70 -O -K >> $out.ps
+  gmt psxy $basedir/N1_2-102_${cases[$i]}_bin.dat $rgn $proj -Sd3.5p -W1p,black -O -K >> $out.ps
   echo ${labels[$i]} | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   # gmt psbasemap $rgn $proj -BnSe${W} -Bx50+l"Number of inlet segments, @%2%N@%%@-1@- [-]" -By0.1+l"@%2%L@-e@-@%% / @~\341@~@%2%L@%%@~\361@~ [-]" -O -K >> $out.ps
   gmt psbasemap $rgn $proj -BnSe${W} -Bx50+l"Number of inlet segments, @%2%N@%%@-1@- [-]" -By0.1+l"@[\widehat{\textit{L}}@[ / @[\langle\textit{L}\rangle@[ [-]" -O -K >> $out.ps
@@ -67,5 +66,5 @@ echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -G
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
 gmt psconvert -A -E400 -Tf $out.ps
 convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps
+rm $out.ps $out.pdf
 eog $out.jpg &
