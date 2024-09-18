@@ -7,13 +7,11 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Variables
-out=controls
+out=../../Figures/Figure_10_Network_Effective_Length_Controls
 vars=("@%2%p@-d,Qw@-@%%" "@%2%R@-B@-@%%" "@%2%R@-L@-@%%" "@%2%R@-Q@-@%%" "@%2%K@%%" "@~\341@~@%2%L@%%@~\361@~" "@~\341@~@%2%L@%%@~\361@~@-50@-")
 # vars=("@[p_{d,Q_w}@[" "@[R_B@[" "@[R_L@[" "@[R_Q@[" "@[K@[" "@[\langle L \rangle@[" "@[\langle L \rangle_{50}@[")
-basedir="../../output/network/controls"
-corrfiles=("corr_m40_fix_seg_length_no_internal.dat" "corr_m40_rnd_seg_length_no_internal.dat" "corr_m40_fix_seg_length_w_internal.dat" "corr_m40_rnd_seg_length_w_internal.dat")
-sweepfiles=("m40_fix_seg_length_no_internal.dat" "m40_rnd_seg_length_no_internal.dat" "m40_fix_seg_length_w_internal.dat" "m40_rnd_seg_length_w_internal.dat")
-groups=("fix_seg_length_no_internal" "rnd_seg_length_no_internal" "fix_seg_length_w_internal" "rnd_seg_length_w_internal")
+basedir="../../Output/Network/Figure_10_Network_Effective_Length_Controls"
+cases=("UUU" "NUU" "UAU" "NAU")
 corr_labels=("a" "b" "c" "d")
 Le_labels=("e" "f" "g" "h")
 Le2_labels=("i" "j" "k" "l")
@@ -24,7 +22,7 @@ rgn=-R-0.5/6.5/-1.1/1.1
 proj=-JX1.5i
 gmt psbasemap $rgn $proj -B+n -Y2i -K > $out.ps
 
-for i in ${!groups[@]} ; do
+for i in ${!cases[@]} ; do
 echo $i
   if [ $i -eq 0 ] ; then
     W="W"
@@ -44,11 +42,11 @@ echo $i
     echo $j -0.5 "${vars[$j]}" | \
       gmt pstext $rgn $proj -F+f7p+jBC -D0i/-0.16i -N -O -K >> $out.ps
   done
-  for k in $(seq 0 1 $(wc -l $basedir/corr_m40_${groups[$i]}.dat | awk ' { print $1-1 } ')) ; do
+  for k in $(seq 0 1 $(wc -l $basedir/N1_40_${cases[$i]}_corr.dat | awk ' { print $1-1 } ')) ; do
     x1=$(echo $k | awk ' { print $1-0.3 } ')
     x2=$(echo $k | awk ' { print $1+0.3 } ')
-    y1=$(awk ' { if ($1=='$k') print $2 } ' $basedir/corr_m40_${groups[$i]}.dat)
-    y2=$(awk ' { if ($1=='$k') print $2 } ' $basedir/corr_m2-150_${groups[$i]}.dat)
+    y1=$(awk ' { if ($1=='$k') print $2 } ' $basedir/N1_40_${cases[$i]}_corr.dat)
+    y2=$(awk ' { if ($1=='$k') print $2 } ' $basedir/N1_2-102_${cases[$i]}_corr.dat)
     echo "$x1 0
 $x1 $y1
 $k $y1
@@ -65,9 +63,9 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
 
   rgn=-R35/105/35/115
   gmt psbasemap $rgn $proj -B+n -Y-2i -O -K >> $out.ps
-  awk ' { print $5, $7 } ' $basedir/m40_${groups[$i]}.dat | \
+  awk ' { print $5, $7 } ' $basedir/N1_40_${cases[$i]}.dat | \
     gmt psxy $rgn $proj -Sc2.5p -W0.8p,steelblue -t70 -O -K >> $out.ps
-  gmt psxy $basedir/fit_m40_${groups[$i]}.dat $rgn $proj -W1p,black,3p_3p -O -K >> $out.ps
+  gmt psxy $basedir/N1_40_${cases[$i]}_fit.dat $rgn $proj -W1p,black,3p_3p -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -Btsr${W} -Bpx10+l"Mean length, @%2%@~\341@~L@~\361@~@%% [km]" \
     -By10+l"Effective length, @[\widehat{\textit{L}}@[ [km]" \
@@ -76,7 +74,7 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
 
   proj_hist=-JX1.5i/0.3i
   rgn_hist=-R35/105/0/40
-  awk ' { print $5 } ' $basedir/m40_${groups[$i]}.dat | \
+  awk ' { print $5 } ' $basedir/N1_40_${cases[$i]}.dat | \
     gmt pshistogram $rgn_hist $proj_hist -Ggrey -T30+n -O -K >> $out.ps
   gmt psbasemap $rgn_hist $proj_hist -Bb${E} -By20 -O -K >> $out.ps
   if [ $i -eq 3 ] ; then
@@ -85,20 +83,18 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
     
   proj_hist2=-JX-0.3i/1.5i
   rgn_hist2=-R35/115/0/40
-  awk ' { print $7 } ' $basedir/m40_${groups[$i]}.dat | \
+  awk ' { print $7 } ' $basedir/N1_40_${cases[$i]}.dat | \
     gmt pshistogram $rgn_hist2 $proj_hist2 -Ggrey -T30+n -X1.2i -A -O -K >> $out.ps
   echo "Count:" | gmt pstext $rgn_hist2 $proj_hist2 -F+f7p+jBR+cTR -D-0.4i/0.08i -N -O -K >> $out.ps
   gmt psbasemap -R0/40/35/115 $proj_hist2 -BrN -Bx20 -O -K >> $out.ps
 
-
-
   rgn=-R35/105/35/115
   gmt psbasemap $rgn $proj -B+n -Y-1.8i -X-1.2i -O -K >> $out.ps
-  awk ' $8<40 { print $5, $7 } ' $basedir/m2-150_${groups[$i]}.dat | \
+  awk ' $8<40 { print $5, $7 } ' $basedir/N1_2-102_${cases[$i]}.dat | \
     gmt psxy $rgn $proj -Sc2.5p -W0.8p,dimgrey -t70 -O -K >> $out.ps
-  awk ' $8>=40 { print $5, $7 } ' $basedir/m2-150_${groups[$i]}.dat | \
+  awk ' $8>=40 { print $5, $7 } ' $basedir/N1_2-102_${cases[$i]}.dat | \
     gmt psxy $rgn $proj -Sc2.5p -W0.8p,tomato -t70 -O -K >> $out.ps
-  gmt psxy $basedir/fit_m2-150_${groups[$i]}.dat $rgn $proj -W1p,black,3p_3p -O -K >> $out.ps
+  gmt psxy $basedir/N1_2-102_${cases[$i]}_fit.dat $rgn $proj -W1p,black,3p_3p -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -BtSr${W} -Bpx10+l"Mean length, @~\341@~@%2%L@%%@~\361@~ [km]"\
     -By10+l"Effective length, @[\widehat{\textit{L}}@[ [km]" \
@@ -107,7 +103,7 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
 
   proj_hist=-JX1.5i/0.3i
   rgn_hist=-R35/105/0/120
-  awk ' { print $5 } ' $basedir/m2-150_${groups[$i]}.dat | \
+  awk ' { print $5 } ' $basedir/N1_2-102_${cases[$i]}.dat | \
     gmt pshistogram $rgn_hist $proj_hist -Ggrey -T30+n -O -K >> $out.ps
   gmt psbasemap $rgn_hist $proj_hist -Bb${E} -By60 -O -K >> $out.ps
   if [ $i -eq 3 ] ; then
@@ -116,7 +112,7 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
     
   proj_hist2=-JX-0.3i/1.5i
   rgn_hist2=-R35/115/0/120
-  awk ' { print $7 } ' $basedir/m2-150_${groups[$i]}.dat | \
+  awk ' { print $7 } ' $basedir/N1_2-102_${cases[$i]}.dat | \
     gmt pshistogram $rgn_hist2 $proj_hist2 -Ggrey -T30+n -X1.2i -A -O -K >> $out.ps
   echo "Count:" | gmt pstext $rgn_hist2 $proj_hist2 -F+f7p+jBR+cTR -D-0.4i/0.08i -N -O -K >> $out.ps
   gmt psbasemap -R0/120/35/115 $proj_hist2 -BrN -Bx60 -O -K >> $out.ps
@@ -145,5 +141,5 @@ echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -G
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
 gmt psconvert -A -E400 -Tf $out.ps
 convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps
+rm $out.ps $out.pdf
 eog $out.jpg &
