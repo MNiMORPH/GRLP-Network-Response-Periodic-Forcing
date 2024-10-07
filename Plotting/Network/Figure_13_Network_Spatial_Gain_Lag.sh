@@ -7,8 +7,8 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
-basedir="../../Output/Network/Figure_12_Network_Spatial_Gain_Lag"
-out="../../Figures/Figure_12_Network_Spatial_Gain_Lag"
+basedir="../../Output/Network/Figure_13_Network_Spatial_Gain_Lag"
+out="../../Figures/Figure_13_Network_Spatial_Gain_Lag"
 
 # ---- Variables
 proj=-JX1.5i

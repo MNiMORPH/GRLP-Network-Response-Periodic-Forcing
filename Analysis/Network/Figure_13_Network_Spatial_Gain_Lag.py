@@ -1,5 +1,5 @@
 """
-This script performs the analysis presented in Figure 12 of McNab et al. (2024,
+This script performs the analysis presented in Figure 13 of McNab et al. (2024,
 EGUsphere); produces a rough version of the Figure; and, optionally, generates
 output files for plotting the final Figure in GMT.
 
@@ -181,7 +181,7 @@ plt.show()
 
 # ---- Save
 
-basedir = "../../Output/Network/Figure_12_Network_Spatial_Gain_Lag/"
+basedir = "../../Output/Network/Figure_13_Network_Spatial_Gain_Lag/"
 
 for case in ['UUU', 'NUU', 'UAU', 'NAU']:
     
