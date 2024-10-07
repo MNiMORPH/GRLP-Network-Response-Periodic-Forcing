@@ -7,7 +7,7 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # variables
-out="../../Figures/Figure_8_Network_Teq_Calibration"
+out="../../Figures/Figure_S4_Network_Teq_Calibration_N1_2-102"
 rgn=-R0.003/300/-0.05/1.05
 proj=-JX1.5il/1.5i
 rgnx=-R0/100/0/100
@@ -32,7 +32,7 @@ for i in ${!sweepdirs[@]} ; do
   gmt psbasemap $rgn $proj -B+n -X0.6i -Y1.72i -O -K >> $out.ps
   gmt psxy $basedir/continuous_gain.pg $rgn $proj -Glightgrey -W0.8p,lightgrey -O -K >> $out.ps
   gmt psxy $basedir/linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
-  gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/gain_L.pg $rgn $proj -Sc3p -W0.8p,steelblue -t92 -O -K >> $out.ps
+  gmt psxy $basedir/MC_N1_2-102/${sweepdirs[$i]}/gain_L.pg $rgn $proj -Sc3p -W0.8p,steelblue -t92 -O -K >> $out.ps
   # gmt psxy $basedir/${sweepdirs[$i]}_var_width/gain_L.pg $rgn $proj -Sc3p -W0.8p,steelblue -t92 -O -K >> $out.ps
   echo "${L_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -BnSe${W} -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%% [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
@@ -47,7 +47,7 @@ for i in ${!sweepdirs[@]} ; do
   gmt psbasemap $rgn $proj -B+n -Y-2i -O -K >> $out.ps
   gmt psxy $basedir/continuous_gain.pg $rgn $proj -Glightgrey -W0.8p,lightgrey -O -K >> $out.ps
   gmt psxy $basedir/linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
-  gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/gain_Le.pg $rgn $proj -Sc3p -W0.8p,steelblue -t92 -O -K >> $out.ps
+  gmt psxy $basedir/MC_N1_2-102/${sweepdirs[$i]}/gain_Le.pg $rgn $proj -Sc3p -W0.8p,steelblue -t92 -O -K >> $out.ps
   # gmt psxy $basedir/${sweepdirs[$i]}_var_width/gain_Le.pg $rgn $proj -Sc3p -W0.8p,steelblue -t92 -O -K >> $out.ps
   echo "${Le_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   # gmt psbasemap $rgn $proj -BnSe${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @%2%G@-Qs,L@-@%% [-]" -O -K >> $out.ps
@@ -57,7 +57,7 @@ for i in ${!sweepdirs[@]} ; do
   # rgn_in=-R10/50/0/50
   rgn_in=-R20/100/0/50
   gmt psbasemap $rgn_in $proj_in -B+n -Y0.28i -X1.05i -O -K >> $out.ps
-  gmt pshistogram $basedir/MC_N1_40/${sweepdirs[$i]}/Teq.t $rgn_in $proj_in -Gsteelblue -T15+n -O -K >> $out.ps
+  gmt pshistogram $basedir/MC_N1_2-102/${sweepdirs[$i]}/Teq.t $rgn_in $proj_in -Gsteelblue -T15+n -O -K >> $out.ps
   # gmt pshistogram $basedir/${sweepdirs[$i]}_var_width/Teq.t $rgn_in $proj_in -Gsteelblue -T15+n -O -K >> $out.ps
   gmt psbasemap $rgn_in $proj_in \
     -BSW -Bx40+20+l"@[\widehat{\textit{T\textsubscript{eq}}}@[ [kyr]" -By25 \
