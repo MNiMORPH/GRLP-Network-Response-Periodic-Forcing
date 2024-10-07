@@ -196,81 +196,83 @@ plt.show()
 
 # ---- Plot S5
 
-fig, axs = plt.subplots(6, 4, sharey="row", sharex="row")
-for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
-    
-    axs[0,i].plot(
-        [h[case]['p'] for h in hacks],
-        np.array(regressions[case]['eff_lengths'])/1.e3,
-        "o",
-        alpha=0.2
-        )
-    axs[0,i].set_xlabel(r'$p_{x,Q}$')
+for N1 in indirs.keys():
 
-    axs[1,i].plot(
-        [n[case].bifurcation_ratio for n in nets],
-        np.array(regressions[case]['eff_lengths'])/1.e3,
-        "o",
-        alpha=0.2
-        )
-    axs[1,i].set_xlabel(r'$R_B$')
+    fig, axs = plt.subplots(6, 4, sharey="row", sharex="row")
+    for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
+        
+        axs[0,i].plot(
+            [h[case]['p'] for h in hacks[N1]],
+            np.array(regressions[N1][case]['eff_lengths'])/1.e3,
+            "o",
+            alpha=0.2
+            )
+        axs[0,i].set_xlabel(r'$p_{x,Q}$')
 
-    axs[2,i].plot(
-        [n[case].length_ratio for n in nets],
-        np.array(regressions[case]['eff_lengths'])/1.e3,
-        "o",
-        alpha=0.2
-        )
-    axs[2,i].set_xlabel(r'$R_L$')
-    
-    axs[3,i].plot(
-        [n[case].discharge_ratio for n in nets],
-        np.array(regressions[case]['eff_lengths'])/1.e3,
-        "o",
-        alpha=0.2
-        )
-    axs[3,i].set_xlabel(r'$R_Q$')
-    
-    axs[4,i].plot(
-        [n[case].tokunaga['K_mean'] for n in nets],
-        np.array(regressions[case]['eff_lengths'])/1.e3,
-        "o",
-        alpha=0.2
-        )
-    axs[4,i].set_xlabel(r'$K$')
+        axs[1,i].plot(
+            [n[case].bifurcation_ratio for n in nets[N1]],
+            np.array(regressions[N1][case]['eff_lengths'])/1.e3,
+            "o",
+            alpha=0.2
+            )
+        axs[1,i].set_xlabel(r'$R_B$')
 
-    axs[5,i].plot(
-        [n[case].median_downstream_distance/1.e3 for n in nets],
-        np.array(regressions[case]['eff_lengths'])/1.e3,
-        "o",
-        alpha=0.2
-        )
-    axs[5,i].set_xlabel(r'$\langle L \rangle_{50}$')
+        axs[2,i].plot(
+            [n[case].length_ratio for n in nets[N1]],
+            np.array(regressions[N1][case]['eff_lengths'])/1.e3,
+            "o",
+            alpha=0.2
+            )
+        axs[2,i].set_xlabel(r'$R_L$')
+        
+        axs[3,i].plot(
+            [n[case].discharge_ratio for n in nets[N1]],
+            np.array(regressions[N1][case]['eff_lengths'])/1.e3,
+            "o",
+            alpha=0.2
+            )
+        axs[3,i].set_xlabel(r'$R_Q$')
+        
+        axs[4,i].plot(
+            [n[case].tokunaga['K_mean'] for n in nets[N1]],
+            np.array(regressions[N1][case]['eff_lengths'])/1.e3,
+            "o",
+            alpha=0.2
+            )
+        axs[4,i].set_xlabel(r'$K$')
 
-    
-for row in axs:
-    for i,ax in enumerate(row):
-        ax.set_box_aspect(1)
-        if i==0:
-            ax.set_ylabel(r'$\widehat{L}$ [km]')
+        axs[5,i].plot(
+            [n[case].median_downstream_distance/1.e3 for n in nets[N1]],
+            np.array(regressions[N1][case]['eff_lengths'])/1.e3,
+            "o",
+            alpha=0.2
+            )
+        axs[5,i].set_xlabel(r'$\langle L \rangle_{50}$')
 
-plt.show()
+    for row in axs:
+        for i,ax in enumerate(row):
+            ax.set_box_aspect(1)
+            if i==0:
+                ax.set_ylabel(r'$\widehat{L}$ [km]')
+
+    plt.show()
 
 # ---- save
 
 if output_gmt:
 
-    basedir = "../../Output/Network/Figure_10_Network_Effective_Length_Controls/"
+    basedir = "../../Output/Network/Figure_10_S8_S9_Network_Effective_Length_Controls/"
         
     for N1 in indirs.keys():
         for case in ['UUU', 'NUU', 'UAU', 'NAU']:
         
             with open(basedir + N1 + "_" + case + ".dat", "wb") as f:
                 arr = np.column_stack((
+                    [h[case]['p'] for h in hacks[N1]],
                     [n[case].bifurcation_ratio for n in nets[N1]],
                     [n[case].length_ratio for n in nets[N1]],
                     [n[case].discharge_ratio for n in nets[N1]],
-                    [h[case]['p'] for h in hacks[N1]],
+                    [n[case].tokunaga['K_mean'] for n in nets[N1]],
                     [n[case].mean_downstream_distance/1.e3 for n in nets[N1]],
                     [n[case].median_downstream_distance/1.e3 for n in nets[N1]],
                     np.array(regressions[N1][case]['eff_lengths'])/1.e3,
