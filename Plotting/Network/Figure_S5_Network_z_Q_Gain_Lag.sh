@@ -9,7 +9,7 @@ gmt_extras::set_gmt_defaults
 # variables
 out="../../Figures/Figure_S5_Network_z_Q_Gain_Lag"
 proj=-JX1.5il/1.5i
-basedir="../../Output/Network/Figure_9_Network_Full_Gain_Lag"
+basedir="../../Output/Network/Figure_9_S5_S6_S7_Network_Full_Gain_Lag"
 sweepdirs=("UUU" "NUU" "UAU" "NAU")
 G_z_labels=("a" "b" "c" "d")
 lag_z_labels=("e" "f" "g" "h")
@@ -35,7 +35,7 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/z_Q_continuous_gain.pg $rgn $proj -G197.12/64.125/125.88 -t70 -O -K >> $out.ps
   gmt psxy $basedir/z_linear_gain_rng.pg $rgn $proj -Gdimgrey -t70 -O -K >> $out.ps
   gmt psxy $basedir/z_linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
-  gmt psxy $basedir/${sweepdirs[$i]}/z_Q_gain.pg $rgn $proj -Sc3p -W0.8p,steelblue -Ey+a+p0.8p,steelblue+w2p -t95 -O -K >> $out.ps
+  gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/z_Q_gain.pg $rgn $proj -Sc3p -W0.8p,steelblue -Ey+a+p0.8p,steelblue+w2p -t95 -O -K >> $out.ps
   echo "${G_z_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -Bnse${W} -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%% [-]" -By0.2+l"Gain, @%2%G@-z@-@%% [-]" -O -K >> $out.ps
   echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.1i -N -O -K >> $out.ps
@@ -45,7 +45,7 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/z_Q_continuous_lag.pl $rgn_l $proj -G197.12/64.125/125.88 -t70 -O -K >> $out.ps
   gmt psxy $basedir/z_linear_lag_rng.pl $rgn_l $proj -Gdimgrey -t70 -O -K >> $out.ps
   gmt psxy $basedir/z_linear_lag.pl $rgn $proj -W0.8p -O -K >> $out.ps
-  gmt psxy $basedir/${sweepdirs[$i]}/z_Q_lag.pl $rgn_l $proj -Sc3p -W0.8p,steelblue -Ey+a+p0.8p,steelblue+w2p -t95 -O -K >> $out.ps
+  gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/z_Q_lag.pl $rgn_l $proj -Sc3p -W0.8p,steelblue -Ey+a+p0.8p,steelblue+w2p -t95 -O -K >> $out.ps
   echo "${lag_z_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn_l $proj -BnSe${W} -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%% [-]" -By0.2+l"Lag, @~\152@~@%2%@-z@-@%% / @%2%P@%% [-]" -O -K >> $out.ps
 
