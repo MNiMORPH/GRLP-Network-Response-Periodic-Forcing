@@ -304,7 +304,7 @@ nets['NAN'] = {'net': net, 'topo': topo}
 
 
 # ---- Use multiprocessing to analyse each case in parallel
-with mp.Pool(processes=4) as pool:
+with mp.Pool(processes=8) as pool:
     results = pool.map(
         analyse_network, 
         [(case, nets, lin_net, outdir + str(i) + "/" + case + "/")
