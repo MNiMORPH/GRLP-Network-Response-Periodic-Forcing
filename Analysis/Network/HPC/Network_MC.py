@@ -92,6 +92,10 @@ def analyse_network(iter):
                 seg.Q
                 for seg in nets[case]['net'].list_of_LongProfile_objects
                 ],
+            'dQ_ls': [
+                seg.Q[1] - seg.Q[0]
+                for seg in nets[case]['net'].list_of_LongProfile_objects
+                ],
             'B_ls': [
                 seg.B
                 for seg in nets[case]['net'].list_of_LongProfile_objects

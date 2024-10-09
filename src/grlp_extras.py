@@ -323,6 +323,7 @@ def evolve_network(net, time, Qs_scale, Q_scale, S_scale):
         net.list_of_channel_head_segment_IDs[0]
         ].S0
     Q0 = [np.zeros(len(seg.Q)) for seg in net.list_of_LongProfile_objects]
+    dQ0 = [seg.dQ_up_jcn for seg in net.list_of_LongProfile_objects]
     for seg in net.list_of_LongProfile_objects:
         Q0[seg.ID] = seg.Q.copy()
     ssd0 = [seg.ssd.copy() for seg in net.list_of_LongProfile_objects]
@@ -346,6 +347,8 @@ def evolve_network(net, time, Qs_scale, Q_scale, S_scale):
                 for j in range(len(net.list_of_LongProfile_objects))
                 ]
             net.update_Q(new_Q)
+            for seg in net.list_of_LongProfile_objects:
+                seg.dQ_up_jcn = [dQ*Q_scale[i] for dQ in dQ0[seg.ID]]
             net.create_Q_ext_lists()
             net.update_Q_ext_from_Q()
             net.update_Q_ext_internal()
@@ -722,6 +725,7 @@ def read_MC(indir):
                     x = props['x_ls'],
                     z = props['z_ls'],
                     Q = props['Q_ls'],
+                    dQ = [Q[1]-Q[0] for Q in props['Q_ls']],
                     B = props['B_ls'],
                     overwrite = False
                     )
