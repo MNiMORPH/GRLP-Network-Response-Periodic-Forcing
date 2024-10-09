@@ -51,9 +51,15 @@ def find_lag_time(forcing, response, time, period, can_lead=False):
     # ---- Identify peaks and troughs in response
     # Use scipy's find_peaks function to find peaks and troughs separately,
     # then combine to give all turning points.
+    # Sometimes lag times are systematically different for peaks compared to
+    # troughs. We want to average across this difference, so we make sure we
+    # use an equal number of peaks and troughs.
     response_peaks, __ = sig.find_peaks(response)
     response_troughs, __ = sig.find_peaks(-response)
-    response_tps = np.sort( np.hstack(( response_peaks, response_troughs )) )
+    min_tps = min(len(response_peaks), len(response_troughs))
+    response_tps = np.sort(
+        np.hstack(( response_peaks[:min_tps], response_troughs[:min_tps] )) 
+        )
 
     # ---- Check whether turning points in response preceed those in forcing
     # Sometimes we get turning points at the very beginning of the time series
@@ -73,26 +79,29 @@ def find_lag_time(forcing, response, time, period, can_lead=False):
     lag_times = np.zeros( min(len(response_tps), len(forcing_tps)), dtype=int )
     for i in range(len(lag_times)):
         lag_times[i] = time[response_tps[i]] - time[forcing_tps[i]]
-    
+
     # ---- Average the lag times
-    # We ignore the first turning point, it can be influenced by transient
-    # parts of the response. So we need more than point; otherwise we return
+    # We ignore the first two turning points, which can be influenced by
+    # transient parts of the response. We also want to average at least one
+    # peak and one trough. So we need at least four points; otherwise we return
     # nan.
-    if len(lag_times) > 1:
-        lag_time = np.array(lag_times[1:]).mean()
+    if len(lag_times) > 3:
+        lag_time = np.array(lag_times[2:]).mean()
     else:
         lag_time = np.nan
-    
+
     # ---- Check the lag time is physically plausible
     # Assuming the forcing is (quasi-)sinusoidal, a lag time less than negative
     # one quarter of the forcing period implies peaks/troughs before the
     # start of the time series. This usually points to something going wrong,
     # e.g. noise in the response being picked up as peaks and troughs. So
-    # we also return nan in that case, allowing a small amount of leeway.
+    # we also return nan in that case. We use a cut-off of -0.3*period to allow
+    # for some noise.
     if lag_time < -0.3*period:
         lag_time = np.nan
-    
+
     return lag_time
+
 
 def find_along_stream_lag_times(forcing, response, time, period, can_lead=False):
     """
