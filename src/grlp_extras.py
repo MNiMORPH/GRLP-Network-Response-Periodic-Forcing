@@ -141,20 +141,41 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
             time,
             period,
             can_lead=can_lead)
+            
+    # ---- Deal with NaNs
+    # Sections that have nans on both sides cannot be reliably corrected for
+    # cycle skipping (which involves checking difference between lag times of
+    # adjacent nodes). We therefore also set such sections to nan.
+    nans = np.where(np.isnan(lag_times))[0]
+    for i in range(len(lag_times)):
+        if np.isnan(lag_times[:i]).any() and np.isnan(lag_times[i+1:]).any():
+            lag_times[i] = np.nan
 
     # ---- Check for cycle skipping
     # Move from upstream end downstream, then from downstream end upstream,
     # looking for jumps in lag time of more than half about half a period. We
     # use 0.4*period as a threshold because some difference is expected from
     # node to node. If identified, correct by subtracting period until jump is
-    # removed.
+    # removed. We adjust the relevent node and all preceeding nodes (back to
+    # the last nan).
+    nans = np.where(np.isnan(lag_times))[0]
     if period:
         for i in range(1,len(response[0,:])):
             while (lag_times[i] - lag_times[i-1]) > 0.4*period:
-                lag_times[i:] -= 0.5*period
+                up_nans = nans[nans > i]
+                if up_nans.size > 0:
+                    next_nan = up_nans[0]
+                else:
+                    next_nan = len(lag_times)
+                lag_times[i:next_nan] -= 0.5*period
         for i in range(len(response[0,:])-2,-1,-1):
             while (lag_times[i] - lag_times[i+1]) > 0.4*period:
-                lag_times[:i+1] -= 0.5*period
+                down_nans = nans[nans < i]
+                if down_nans.size > 0:
+                    next_nan = down_nans[-1]
+                else:
+                    next_nan = 0
+                lag_times[next_nan:i+1] -= 0.5*period
 
     return lag_times
 
@@ -527,6 +548,23 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
             can_lead=can_lead
             )
 
+    # ---- Deal with NaNs
+    # If adjacent nodes of a segments' upstream segments, or of its downstream
+    # segment, are nan, then we can't reliably correct for cycle skipping. We
+    # therefore also set nodes between the uppermost / lowermost node and the
+    # next nan to nan.
+    for i,seg in enumerate(net.list_of_LongProfile_objects):
+        nans = np.where(np.isnan(lag_times[i]))[0]
+        if len(nans) > 0:
+            if len(seg.downstream_segment_IDs) == 0 \
+                or np.isnan(lag_times[seg.downstream_segment_IDs[0]][0]):
+                    lag_times[i][nans[-1]:] = np.nan
+            if len(seg.upstream_segment_IDs) > 0:
+                if np.isnan(lag_times[seg.upstream_segment_IDs[0]][-1]) and \
+                    np.isnan(lag_times[seg.upstream_segment_IDs[1]][-1]):
+                        lag_times[i][:nans[0]] = np.nan
+            
+
     # ---- Check for cycle skipping between segments
     # Move from downstream from each of the channel heads looking for jumps in
     # lag time between segments of more than about half a period. We use
@@ -535,12 +573,18 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
     # by subtracting period until jump is removed.
     completed_segs = []
     for segID in net.list_of_channel_head_segment_IDs:
-        
+
         # First force all channel heads to have positive lag.
         # Thinking mainly about z here.
         # If applied with Qs, maybe negative lag is possible...
         while (lag_times[segID] < 0.).any():
             lag_times[segID] += 0.5*period
+            
+        # Also force all channel heads to have lag below 0.5.
+        # For the scenarios we test, do not expect such long lag times at the
+        # inlet. So longer lags indicate cycle skipping.
+        while lag_times[segID][0] > 0.5*period:
+            lag_times[segID][0] -= 0.5*period
             
         # Now move downstream looking for jumps across junctions.
         while net.list_of_LongProfile_objects[segID].downstream_segment_IDs:
@@ -556,7 +600,7 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                     lag_times[down_segID] += 0.5*period
                 completed_segs.append(down_segID)
             segID = down_segID
-    
+
     return lag_times
     
 def find_network_equilibration_time(net_gain, periods, single_seg_net):
