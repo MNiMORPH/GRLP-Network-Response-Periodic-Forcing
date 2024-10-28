@@ -123,9 +123,9 @@ for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
         [net.order_discharges[i] for i in net.orders]
         )
     axs[4,i].set_yscale("log")
-    axs[4,i].set_xlabel(r"Order, $O$")
+    axs[4,i].set_xlabel(r"Order, $\omega$")
     if i==0:
-        axs[4,i].set_ylabel(r"$N_O$, $L_O$, $Q_{w,O}$")
+        axs[4,i].set_ylabel(r"$N_\omega$, $L_\omega$, $Q_{w,\omega}$")
 
 for col in axs:
     for ax in col:

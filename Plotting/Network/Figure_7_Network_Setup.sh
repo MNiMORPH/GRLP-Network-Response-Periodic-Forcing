@@ -16,7 +16,7 @@ plan_labs=("a" "b" "c" "d")
 discharge_labs=("e" "f" "g" "h")
 prof_labs=("i" "j" "k" "l")
 ratio_labs=("m" "n" "o" "p")
-hack_off=(0.32 0.38 0.37 0.37)
+hack_off=(0.41 0.42 0.41 0.41)
 titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengths" "Random segment lengths")
 out="../../Figures/Figure_7_Network_Setup"
 
@@ -28,7 +28,6 @@ gmt psbasemap -R0/1/0/1 -JX2i -B+n -X-1i -K > $out.ps
 
 # Loop, plot
 for i in ${!netdirs[@]} ; do
-# for i in 0 ; do
   
   netdir=$basedir/${netdirs[$i]}
   read Rb Rl Rq h <<< $(awk ' NR==1 { printf "%.2f %.2f %.2f %.2f", $1, $2, $3, $4 } ' $netdir/info.i)
@@ -60,7 +59,7 @@ for i in ${!netdirs[@]} ; do
   gmt psbasemap $rgn $proj \
     -Bnse${W} \
     -Bx20+l"Downstream distance, @%2%x@%% [km]" \
-    -By20+l"Discharge, @%2%Q@-w@-@%% [m@+3@+ s@+-1@+]" \
+    -By40+l"Discharge, @%2%Q@-w@-@%% [m@+3@+ s@+-1@+]" \
     -O -K >> $out.ps
   
   # Hack
@@ -75,7 +74,7 @@ for i in ${!netdirs[@]} ; do
   echo "@%2%p@%% = $h" | \
     gmt pstext $rgn $proj_in -F+f6p,Helvetica,dimgrey+jML+cBL -D${hack_off[$i]}i/0.25i -N -O -K >> $out.ps
   gmt psbasemap $rgn $proj_in \
-    -Bsw -Bx20 -By10 \
+    -Bsw -Bx20 -By40 \
     --MAP_TICK_LENGTH_PRIMARY=2p \
     --MAP_FRAME_PEN=1p \
     -O -K >> $out.ps
@@ -89,7 +88,13 @@ for i in ${!netdirs[@]} ; do
     gmt psscale $rgn $proj \
       -Corder.cpt \
       -Dx0.72i/1.35i+w0.7i/0.07i+h \
-      -B1+l"Stream order, @%2%O@%%" \
+      -B1+l"Stream order, @~\167@~" \
+      --MAP_LABEL_OFFSET=-8p \
+      --MAP_ANNOT_OFFSET=5p \
+      --MAP_TICK_LENGTH=7p \
+      --MAP_DEFAULT_PEN=7p \
+      --MAP_TICK_PEN=1.5p \
+      --FONT=16p \
       -O -K >> $out.ps
   fi
   gmt psbasemap $rgn $proj \
@@ -99,7 +104,7 @@ for i in ${!netdirs[@]} ; do
     -O -K >> $out.ps
 
   # Ratios
-  rgn=-R0.5/4.5/0.7/143
+  rgn=-R0.5/4.5/0.7/1430
   proj=-JX1.5i/1.5il
   gmt psbasemap $rgn $proj -B+n -Y-2i -O -K >> $out.ps
   gmt psxy $netdir/count_fit.oc $rgn $proj -W0.8p,red,4p_4p -O -K >> $out.ps
@@ -108,20 +113,20 @@ for i in ${!netdirs[@]} ; do
   gmt psxy $netdir/lengths.oc $rgn $proj -Sc3.5p -Gblue -O -K >> $out.ps
   gmt psxy $netdir/discharge_fit.oc $rgn $proj -W0.8p,0/125/0,4p_4p -O -K >> $out.ps
   gmt psxy $netdir/discharges.oc $rgn $proj -Sc3.5p -G0/125/0 -O -K >> $out.ps
-  echo "4.5 10 @%2%R@-b@-@%% = $Rb" | \
-    gmt pstext $rgn $proj -F+f6p,red+jRM -D-0.03i/0.14i -O -K >> $out.ps
-  echo "4.5 10 @%2%R@-l@-@%% = $Rl" | \
-    gmt pstext $rgn $proj -F+f6p,blue+jRM -D-0.03i/0i -O -K >> $out.ps
-  echo "4.5 10 @%2%R@-Q@-@%% = $Rq" | \
-    gmt pstext $rgn $proj -F+f6p,0/125/0+jRM -D-0.03i/-0.14i -O -K >> $out.ps
+  echo "@%2%R@-B@-@%% = $Rb" | \
+    gmt pstext $rgn $proj -F+f7p,red+jTL+cTL -D0.04i/-0.05i -O -K >> $out.ps
+  echo "@%2%R@-L@-@%% = $Rl" | \
+    gmt pstext $rgn $proj -F+f7p,blue+jCT+cCT -D0i/-0.05i -O -K >> $out.ps
+  echo "@%2%R@-Q@-@%% = $Rq" | \
+    gmt pstext $rgn $proj -F+f7p,0/125/0+jTR+cTR -D-0.04i/-0.05i -O -K >> $out.ps
   echo "${ratio_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLB+cLB -D0.05i/0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -BnS \
-    -Bx1+l"Stream order, @%2%O@%% [-]" \
+    -Bx1+l"Stream order, @~\167@~ [-]" \
     -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -Be${W} \
-    -By1f3p+l"@%2%@;red;N@-o@-@%% [-]@;;     @%2%@;blue;L@-o@-@%% [km]@;;     @%2%@;0/125/0;Q@-w,o@-@%% [m@+3@+ s@+-1@+]@;;" \
+    -By1f3p+l"@%2%@;red;N@-@~\167@~@-@%% [-]@;;     @%2%@;blue;L@-@~\167@~@-@%% [km]@;;     @%2%@;0/125/0;Q@-w,@~\167@~@-@%% [m@+3@+ s@+-1@+]@;;" \
     --MAP_LABEL_OFFSET=2p \
     -O -K >> $out.ps
 
