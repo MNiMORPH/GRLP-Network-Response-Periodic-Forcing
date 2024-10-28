@@ -46,7 +46,7 @@ for i in ${!periods[@]} ; do
       
   if [ ${periods[$i]} == "slow" ] ; then
     gmt_extras::plot_key_line $rgn $proj 104 87.5 0.05 -W0.8p,dimgrey,4_4 "Upstream supply" $out
-    gmt_extras::plot_key_multi_line $rgn $proj 104 87.5 -0.03 -W0.8p "Continuous supply" $out p.cpt "1.4 1.6 1.8 2 2.2"
+    gmt_extras::plot_key_multi_line $rgn $proj 104 87.5 -0.03 -W0.8p "Along stream supply" $out p.cpt "1.4 1.6 1.8 2 2.2"
   fi
 
   # ---- Lag_z
@@ -61,7 +61,18 @@ for i in ${!periods[@]} ; do
       -O -K >> $out.ps
   
   if [ ${periods[$i]} == "slow" ] ; then
-    gmt psscale $rgn $proj -Dx1.35i/1.85i+w1i/0.07i+jMC+h -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+    # gmt psscale $rgn $proj -Dx1.35i/1.85i+w1i/0.07i+jMC+h -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+    gmt psscale $rgn $proj \
+      -Dx1.35i/1.85i+w1i/0.07i+jMC+h \
+      -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" \
+      -Cp.cpt \
+      --MAP_LABEL_OFFSET=0p \
+      --MAP_ANNOT_OFFSET=5p \
+      --MAP_TICK_LENGTH=7p \
+      --MAP_DEFAULT_PEN=5p \
+      --MAP_TICK_PEN=1p \
+      --FONT=14p \
+      -O -K >> $out.ps
   fi
   
 done

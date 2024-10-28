@@ -60,7 +60,6 @@ for i,p in enumerate(ps):
         Qs_mean=Qs_mean,
         B_mean=B_mean,
         p_Q=p,
-        p_Qs=p,
         p_B=0,
         x0=x0,
         dx=5.e2,
@@ -104,9 +103,13 @@ for i,p in enumerate(ps):
         axs[0,j].plot(net.list_of_LongProfile_objects[0].x/1000., G_zs[i][j])
         axs[1,j].plot(net.list_of_LongProfile_objects[0].x/1000., lag_zs[i][j])
 
-axs[0,0].set_ylabel(r"$G$")
-axs[1,0].set_ylabel(r"$\varphi$")
-titles = [r"$P$ = $T_{eq}$/10", r"$P$ = $T_{eq}$", r"$P$ = $T_{eq}\times$ 10"]
+axs[0,0].set_ylabel(r"$G_z$")
+axs[1,0].set_ylabel(r"$\varphi_z~/~P$")
+titles = [
+    r"$P$ = $T_{eq}~/~10$",
+    r"$P$ = $T_{eq}$",
+    r"$P$ = $T_{eq}~\times~10$"
+    ]
 for i,ax in enumerate(axs[0]):
     ax.set_title(titles[i])
 for ax in axs[1]:
