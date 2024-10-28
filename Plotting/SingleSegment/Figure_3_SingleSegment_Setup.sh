@@ -25,7 +25,14 @@ gmt psxy $basedir/sediment.dq $rgn_Qs $proj -W0.8p,. -O -K >>  $out.ps
 gmt_extras::plot_key_multi_line $rgn_Qw $proj 100 88 11 -W0.8p "@%2%Q@-w@-@%%(@%2%x@%%)" $out p.cpt "1.4 1.6 1.8 2 2.2"
 gmt_extras::plot_key_line $rgn_Qw $proj 100 88 7 -W0.8p,. "@%2%Q@-s@-@%%(@%2%x@%%)" $out
 gmt_extras::plot_key_line $rgn_Qw $proj 100 88 3 -W0.8p,dimgrey,4_4 "@~\341@~@%2%Q@-w@-@%%@~\361@~, @~\341@~@%2%Q@-s@-@%%@~\361@~" $out
-gmt psscale $rgn $proj -Dx1.3i/1.85i+w1i/0.07i+jMC+h -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+gmt psscale $rgn $proj \
+  -Dx1.3i/1.85i+w1i/0.07i+jMC+h \
+  -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" \
+  -Cp.cpt \
+  --MAP_LABEL_OFFSET=2p \
+  --MAP_ANNOT_OFFSET=5p \
+  --FONT=14p \
+  -O -K >> $out.ps
 echo "a" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 gmt psbasemap $rgn_Qw $proj \
   -BnsW \
