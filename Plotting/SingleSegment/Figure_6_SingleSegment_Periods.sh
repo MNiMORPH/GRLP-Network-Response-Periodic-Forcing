@@ -48,9 +48,9 @@ awk ' { if ($1==">") print $0 ; else print $1, $4 } ' $basedir/lag_z_num.pg | \
 echo d | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 gmt_extras::plot_key_line $rgnx $projx 95 84.5 68 -W0.8p "Upstream: Outlet" $out
 gmt_extras::plot_key_line $rgnx $projx 95 84.5 74 -W3p,lightgrey "Upstream: Range" $out
-gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 88 -W0.8p "Continuous: Outlet" $out p.cpt "2.2 2 1.8 1.6 1.4"
-gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 94 -W0.8p "Continuous: Inlet" $out p.cpt "2.2 nan 1.8 nan 1.4"
-gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 82 -W0.8p "Continuous: Max'" $out p.cpt "2.2 nan nan nan 2 nan nan nan 1.8 nan nan nan 1.6 nan nan nan 1.4"
+gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 88 -W0.8p "Along stream: Outlet" $out p.cpt "2.2 2 1.8 1.6 1.4"
+gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 94 -W0.8p "Along stream: Inlet" $out p.cpt "2.2 nan 1.8 nan 1.4"
+gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 82 -W0.8p "Along stream: Max'" $out p.cpt "2.2 nan nan nan 2 nan nan nan 1.8 nan nan nan 1.6 nan nan nan 1.4"
 gmt psbasemap $rgn $proj -BnSeW -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.1+l"Lag, @~\152@~@%2%@-z@-@%% / @%2%P@%%" -O -K >> $out.ps
 
 # ---- G_Qs (Qs)
@@ -87,8 +87,14 @@ gmt psbasemap $rgn $proj -B+n -Y-2.2i -O -K >> $out.ps
 gmt psxy $basedir/lag_Qs_Qw_out_lin.pg $rgn $proj -W0.8p -O -K >> $out.ps 
 gmt psxy $basedir/lag_Qs_Qw_num.pg $rgn $proj -Cp.cpt -W0.8p -O -K >> $out.ps
 echo f | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
-gmt psscale $rgn $proj -Dx0.6i/0.15i+w1i/0.07i+jMC+h+m -Bx0.2+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
-# gmt psscale $rgn $proj -Dx1.35i/1.85i+w1i/0.07i+jMC+h -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+gmt psscale $rgn $proj -Dx0.6i/0.15i+w1i/0.07i+jMC+h+m -Bx0.2+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt \
+  --MAP_LABEL_OFFSET=0p \
+  --MAP_ANNOT_OFFSET=5p \
+  --MAP_TICK_LENGTH=7p \
+  --MAP_DEFAULT_PEN=5p \
+  --MAP_TICK_PEN=1p \
+  --FONT=14p \
+   -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BnSEw -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.05+l"Lag, @~\152@~@%2%@-Qs@-@%% / @%2%P@%%" -O >> $out.ps
 
 # ---- Show

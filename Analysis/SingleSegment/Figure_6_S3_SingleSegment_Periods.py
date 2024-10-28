@@ -25,6 +25,7 @@ import grlp_extras as grlpx
 # ---- Output?
 output_gmt = False
 
+
 # ---- Valley properties
 # Define properties to use when constructing the single segment valleys.
 # Correspond to precipitation rate of c. 1 m/yr for a catchment with Hack
@@ -40,7 +41,7 @@ ps = np.array([1.4, 1.6, 1.8, 2., 2.2])
 
 
 # ---- Scaled periods to test
-periods = np.logspace(-2., 2., 3)
+periods = np.logspace(-2., 2., 29)
 
 
 # ---- Along stream sediment and water supply
@@ -60,7 +61,6 @@ for i,p in enumerate(ps):
         Qs_mean=Qs_mean,
         B_mean=B_mean,
         p_Q=p,
-        p_Qs=p,
         p_B=0,
         x0=x0,
         dx=5.e2,
@@ -127,10 +127,6 @@ lin_lag_Qs_Qw = np.zeros((len(lin_periods), len(lp.x)))
 for i,p in enumerate(lin_periods):
     lin_gain[i,:] = lp.compute_z_gain(p)
     lin_lag[i,:] = lp.compute_z_lag(p, nsum=1000) / p
-    
-    while lin_lag[i,0] > 0.5:
-        lin_lag[i,:] -= 0.5
-    
     lin_gain_Qs[i,:] = lp.compute_Qs_gain(p, A_Qs=0.2)
     lin_lag_Qs[i,:] = lp.compute_Qs_lag(p, A_Qs=0.2, nsum=1000) / p
     lin_gain_Qs_Qw[i,:] = lp.compute_Qs_gain(p, A_Q=0.2)
@@ -138,6 +134,11 @@ for i,p in enumerate(lin_periods):
     
 # ---- Plot
 print("Plotting.")
+
+# Main figure  -- gain and lag for elevation, in response to variation in
+# sediment supply, and for sediment output, in response to variation in
+# sediment and water supply.
+
 fig, axs = plt.subplots(2,3,sharex=True)
 
 axs[0,0].fill(
@@ -173,16 +174,19 @@ for i in range(len(ps)):
         
     axs[1,0].plot(
         periods, 
-        [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Qs[i])]
+        [periodic['lag_z'][0][-1]
+            for i,periodic in enumerate(periodics_Qs[i])]
         )
     axs[1,0].plot(
         periods, 
-        [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Qs[i])],
+        [periodic['lag_z'][0][0]
+            for i,periodic in enumerate(periodics_Qs[i])],
         "--"
         )
     axs[1,0].plot(
         periods, 
-        [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
+        [periodic['lag_z'][0].max()
+            for i,periodic in enumerate(periodics_Qs[i])],
         ":"
         )
 
@@ -217,8 +221,69 @@ axs[1,0].set_ylabel(r"$\varphi / P$")
 
 for ax in axs[1]:
     ax.set_xlabel(r"$P$ / $T_{eq}$")
+fig.suptitle("Figure 6")
 plt.show()
 
+# Extra figure  -- gain and lag for elevation, in response to variation in
+# sediment and water supply.
+
+fig, axs = plt.subplots(2,1,sharex=True)
+
+axs[0].fill(
+    np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+    np.hstack(( lin_gain[:,-1], lin_gain[:,0][::-1] )),
+    "0.9"
+    )
+    
+axs[1].fill(
+    np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+    np.hstack(( lin_lag[:,-1], lin_lag[:,0][::-1] )),
+    "0.9"
+    )
+
+axs[0].plot(lin_periods/lp.equilibration_time, lin_gain[:,-1], "0.6")
+axs[1].plot(lin_periods/lp.equilibration_time, lin_lag[:,-1], "0.6")
+
+for i in range(len(ps)):
+
+    axs[0].plot(
+        periods, 
+        [periodic['G_z'][0][-1] for periodic in periodics_Q[i]]
+        )
+    axs[0].plot(
+        periods, 
+        [periodic['G_z'][0][0] for periodic in periodics_Q[i]],
+        "--"
+        )
+        
+    axs[1].plot(
+        periods, 
+        [periodic['lag_z'][0][-1]
+            for i,periodic in enumerate(periodics_Q[i])]
+        )
+    axs[1].plot(
+        periods, 
+        [periodic['lag_z'][0][0]
+            for i,periodic in enumerate(periodics_Q[i])],
+        "--"
+        )
+    axs[1].plot(
+        periods, 
+        [periodic['lag_z'][0].max()
+            for i,periodic in enumerate(periodics_Q[i])],
+        ":"
+        )
+
+axs[1].set_ylim(0, 0.4)
+axs[0].set_xscale("log")
+
+axs[0].set_ylabel(r"$G_z$")
+axs[1].set_ylabel(r"$\varphi_z~/~P$")
+
+for ax in axs:
+    ax.set_xlabel(r"$P$ / $T_{eq}$")
+fig.suptitle("Figure S3")
+plt.show()
 
 # ---- Output
 
@@ -235,7 +300,7 @@ if output_gmt:
         
     with open(out_dir + "G_z_rng_lin.pg", "wb") as f:
         arr = np.column_stack((
-            np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+            np.hstack(( lin_periods, lin_periods[::-1] ))/lp.equilibration_time,
             np.hstack(( lin_gain[:,-1], lin_gain[:,0][::-1] ))
             ))
         np.savetxt(f, arr)
@@ -271,7 +336,7 @@ if output_gmt:
         
     with open(out_dir + "lag_z_rng_lin.pg", "wb") as f:
         arr = np.column_stack((
-            np.hstack(( lin_periods, lin_periods[::-1] )) / lp.equilibration_time,
+            np.hstack(( lin_periods, lin_periods[::-1] ))/lp.equilibration_time,
             np.hstack(( lin_lag[:,-1], lin_lag[:,0][::-1] ))
             ))
         np.savetxt(f, arr)
@@ -282,9 +347,12 @@ if output_gmt:
             f.write(hdr)
             arr = np.column_stack((
                 periods, 
-                [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Qs[i])],
-                [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Qs[i])],
-                [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Qs[i])],
+                [periodic['lag_z'][0][0]
+                    for i,periodic in enumerate(periodics_Qs[i])],
+                [periodic['lag_z'][0][-1]
+                    for i,periodic in enumerate(periodics_Qs[i])],
+                [periodic['lag_z'][0].max()
+                    for i,periodic in enumerate(periodics_Qs[i])],
                 ))
             np.savetxt(f, arr)
 
@@ -294,9 +362,12 @@ if output_gmt:
             f.write(hdr)
             arr = np.column_stack((
                 periods, 
-                [periodic['lag_z'][0][0] for i,periodic in enumerate(periodics_Q[i])],
-                [periodic['lag_z'][0][-1] for i,periodic in enumerate(periodics_Q[i])],
-                [periodic['lag_z'][0].max() for i,periodic in enumerate(periodics_Q[i])],
+                [periodic['lag_z'][0][0]
+                    for i,periodic in enumerate(periodics_Q[i])],
+                [periodic['lag_z'][0][-1]
+                    for i,periodic in enumerate(periodics_Q[i])],
+                [periodic['lag_z'][0].max()
+                    for i,periodic in enumerate(periodics_Q[i])],
                 ))
             np.savetxt(f, arr)
 
