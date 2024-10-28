@@ -61,7 +61,14 @@ for i in ${!periods[@]} ; do
       -O -K >> $out.ps
   
   if [ ${periods[$i]} == "slow" ] ; then
-    gmt psscale $rgn $proj -Dx1.35i/1.85i+w1i/0.07i+jMC+h -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt --MAP_LABEL_OFFSET=3.5p -O -K >> $out.ps
+    gmt psscale $rgn $proj -Dx1.35i/1.85i+w1i/0.07i+jMC+h -Bx0.2+1+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt \
+      --MAP_LABEL_OFFSET=0p \
+      --MAP_ANNOT_OFFSET=5p \
+      --MAP_TICK_LENGTH=7p \
+      --MAP_DEFAULT_PEN=5p \
+      --MAP_TICK_PEN=1p \
+      --FONT=14p \
+      -O -K >> $out.ps
   fi
   
 done
