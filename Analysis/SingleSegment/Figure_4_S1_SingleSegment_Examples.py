@@ -48,7 +48,6 @@ net = grlpx.generate_single_segment_network(
     Qs_mean=Qs_mean, 
     B_mean=B_mean,
     p_Q=p,
-    p_Qs=p, 
     p_B=0., 
     dx=5.e2, 
     evolve=True
@@ -59,7 +58,6 @@ ref_net = grlpx.generate_single_segment_network(
     Qs_mean=Qs_mean, 
     B_mean=B_mean,
     p_Q=0.,
-    p_Qs=0., 
     p_B=0., 
     dx=5.e2, 
     evolve=True
@@ -94,7 +92,6 @@ for i,period in enumerate(periods):
     spinup_z, spinup_Qs = grlpx.evolve_network(
         net=neti,
         time=spinup_time,
-        dt=dt,
         Qs_scale=np.ones_like(spinup_time),
         Q_scale=np.ones_like(spinup_time),
         S_scale=np.ones_like(spinup_time)
@@ -102,7 +99,6 @@ for i,period in enumerate(periods):
     ref_spinup_z, ref_spinup_Qs = grlpx.evolve_network(
         net=ref_neti,
         time=spinup_time,
-        dt=dt,
         Qs_scale=np.ones_like(spinup_time),
         Q_scale=np.ones_like(spinup_time),
         S_scale=np.ones_like(spinup_time)
@@ -159,7 +155,6 @@ for i,period in enumerate(periods):
     spinup_z, spinup_Qs = grlpx.evolve_network(
         net=neti,
         time=spinup_time,
-        dt=dt,
         Qs_scale=np.ones_like(spinup_time),
         Q_scale=np.ones_like(spinup_time),
         S_scale=np.ones_like(spinup_time)
@@ -167,7 +162,6 @@ for i,period in enumerate(periods):
     ref_spinup_z, ref_spinup_Qs = grlpx.evolve_network(
         net=ref_neti,
         time=spinup_time,
-        dt=dt,
         Qs_scale=np.ones_like(spinup_time),
         Q_scale=np.ones_like(spinup_time),
         S_scale=np.ones_like(spinup_time)
@@ -205,6 +199,10 @@ print()
 
 # ---- Plots
 print("Plotting.")
+
+# Main figure -- sediment output for variation in sediment supply and water
+# supply; variation in long profile for variation in sediment supply.
+
 fig, axs = plt.subplots(4,3,sharey='row')
 
 for i,period in enumerate(periods):
@@ -256,11 +254,11 @@ for i,period in enumerate(periods):
             "--"
             )
 
-axs[0,0].set_ylabel(r"$Q_{s,0}'$, $Q_{s,L}'$")
+axs[0,0].set_ylabel(r"${Q_{s,0}}'$, ${Q_{s,L}}'$")
 for ax in axs[0]:
     ax.set_xlabel(r"$t$ [kyr]")
     
-axs[1,0].set_ylabel(r"$Q_{w,0}'$, $Q_{s,L}'$")
+axs[1,0].set_ylabel(r"${Q_{w,0}}'$, ${Q_{s,L}}'$")
 for ax in axs[1]:
     ax.set_xlabel(r"$t$ [kyr]")
 
@@ -272,7 +270,66 @@ axs[3,0].set_ylabel(r"$z$ [m]")
 for ax in axs[3]:
     ax.set_xlabel(r"$x$ [km]")
 
-fig.tight_layout(pad=0.2)
+fig.suptitle("Figure 4")
+plt.show()
+
+# Extra figure -- sediment output and long profile variation for variation in
+# water supply.
+
+fig, axs = plt.subplots(3,3,sharey='row')
+
+for i,period in enumerate(periods):
+
+    ev = evolutions_Qs[i]
+    ref_ev = ref_evolutions_Qs[i]
+    
+    ev_Qw = evolutions_Qw[i]
+    ref_ev_Qw = ref_evolutions_Qw[i]
+
+    axs[0,i].plot(ev['time']/3.154e10, ev_Qw['Q_scale'], color="0.7")
+    axs[0,i].plot(
+        ev['time']/3.154e10,
+        ref_ev_Qw['Qs'][0][:,-1] / ref_ev_Qw['Qs'][0][:,-1].mean(),
+        "--",
+        color="0.3"
+        )
+    axs[0,i].plot(
+        ev['time']/3.154e10,
+        ev_Qw['Qs'][0][:,-1] / ev_Qw['Qs'][0][:,-1].mean()
+        )
+
+
+    xs = [0, 40, 80, 120, 160]
+    axs[1,i].plot(
+        ev['time']/3.154e10, ref_ev_Qw['z'][0][:,xs], "--", color="0.3"
+        )
+    axs[1,i].plot(ev['time']/3.154e10, ev_Qw['z'][0][:,xs])
+
+    ts = [3000,3050,3100,3150,3200,3250]
+    for t in ts:
+        axs[2,i].plot(
+            net.list_of_LongProfile_objects[0].x/1.e3,
+            ev_Qw['z'][0][t,:]
+            )
+        axs[2,i].plot(
+            net.list_of_LongProfile_objects[0].x/1.e3,
+            ev_Qw['z'][0][t,:]-ev_Qw['z'][0][0,:],
+            "--"
+            )
+
+axs[0,0].set_ylabel(r"${Q_{w,0}}'$, ${Q_{s,L}}'$")
+for ax in axs[0]:
+    ax.set_xlabel(r"$t$ [kyr]")
+
+axs[1,0].set_ylabel(r"$z$ [m]")
+for ax in axs[1]:
+    ax.set_xlabel(r"$t$ [kyr]")
+
+axs[2,0].set_ylabel(r"$z$ [m]")
+for ax in axs[2]:
+    ax.set_xlabel(r"$x$ [km]")
+
+fig.suptitle("Figure S1")
 plt.show()
 
 
