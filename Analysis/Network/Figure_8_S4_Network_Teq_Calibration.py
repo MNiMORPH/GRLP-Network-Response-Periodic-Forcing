@@ -1,9 +1,18 @@
 """
-This script performs the analysis presented in Figure 8 of McNab et al. (2024,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures 8 and S4 of McNab et al.
+(2024, EGUsphere); produces a rough version of the Figures; and, optionally,
+generates output files for plotting the final Figure in GMT.
 
-The purpose of the script/figure is to .
+The purpose of the script/figure is to illustrate results of network
+equilibration time calibration. We show gain for sediment discharge at the
+network outlet for different sets of networks, and compare it to the results
+for single segment cases with or without along stream sediment and water supply.
+Results are shown first using the maximum (trunk) stream length to compute
+the equilibration time, and second using the empirically calibration
+equilibration time.
+
+The main figure shows results for networks with 40 inlet segments, the extra
+figure shows results for networks with between 2 and 102 segments.
 """
 
 
@@ -67,7 +76,7 @@ lin_gain_Qs_Qw = [lp.compute_Qs_gain(p, A_Q=0.2)[-1] for p in lin_periods]
 # ---- Continuous gain
 cont_gains = {}
 cont_ps = [1.4, 2.2]
-cont_periods = np.logspace(-2.5, 2.5, 3) * lp.equilibration_time
+cont_periods = np.logspace(-2.5, 2.5, 29) * lp.equilibration_time
 for i,p in enumerate(cont_ps):
     net = grlpx.generate_single_segment_network(
         L=L,
@@ -99,20 +108,20 @@ print("Plotting.")
 def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
     
     # Set up plot.
-    fig, axs = plt.subplots(3, 4, sharey="row")
+    fig, axs = plt.subplots(3, 4, sharey="row", sharex="row")
 
     # Loop over network cases.
-    for i,case in enumerate(gains[0].keys()):
+    for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
         
-        # Plot gain as a function of forcing period, for single segment cases with
-        # upstream only and along stream supply of sediment and water, and for
-        # network cases.
+        # Plot gain as a function of forcing period, for single segment cases
+        # with upstream only and along stream supply of sediment and water,
+        # and for network cases.
         # Normalise by equilibration time, if calculated with length of longest
         # stream.
         axs[0,i].plot(lin_periods/lp.equilibration_time, lin_gain_Qs)
         axs[0,i].fill(
-            np.hstack(( cont_periods, cont_periods[::-1] ))/lp.equilibration_time,
-            np.hstack(( cont_gains[1.4], cont_gains[2.2][::-1] )),
+            np.hstack((cont_periods, cont_periods[::-1]))/lp.equilibration_time,
+            np.hstack((cont_gains[1.4], cont_gains[2.2][::-1])),
             c="0.6"
             )
         axs[0,i].plot(
@@ -131,8 +140,8 @@ def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
         Teqs = [gs[case]['Teq'] for gs in gains]
         axs[1,i].plot(lin_periods/lp.equilibration_time, lin_gain_Qs)
         axs[1,i].fill(
-            np.hstack(( cont_periods, cont_periods[::-1] ))/lp.equilibration_time,
-            np.hstack(( cont_gains[1.4], cont_gains[2.2][::-1] )),
+            np.hstack((cont_periods, cont_periods[::-1]))/lp.equilibration_time,
+            np.hstack((cont_gains[1.4], cont_gains[2.2][::-1])),
             c="0.6"
             )
         axs[1,i].plot(
@@ -153,7 +162,7 @@ def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
             axs[2,i].set_ylabel("Count")
         
     # Format and show.
-    plt.title(title)
+    fig.suptitle(title)
     for row in axs:
         for ax in row:
             ax.set_box_aspect(1)
@@ -164,7 +173,15 @@ titles = {
     'MC_N1_2-102': r'Figure 8: $N_1$ = 2-102'
     }
 for N1 in indirs.keys():
-    plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains[N1], lp, titles[N1])
+    plot(
+        lin_periods,
+        lin_gain_Qs,
+        cont_periods,
+        cont_gains,
+        gains[N1],
+        lp,
+        titles[N1]
+        )
 
 
 if output_gmt:
@@ -174,31 +191,37 @@ if output_gmt:
     basedir = "../../Output/Network/Figure_8_S4_Network_Teq_Calibration/"
 
     with open(basedir + "linear_gain.pg", "wb") as f:
-        arr = np.column_stack(( lin_periods/lp.equilibration_time, lin_gain_Qs ))
+        arr = np.column_stack((lin_periods/lp.equilibration_time, lin_gain_Qs))
         np.savetxt(f, arr)
         
     with open(basedir + "continuous_gain.pg", "wb") as f:
         arr = np.column_stack(( 
-            np.hstack(( cont_periods, cont_periods[::-1] ))/lp.equilibration_time,
-            np.hstack(( cont_gains[1.4], cont_gains[2.2][::-1] ))
+            np.hstack((cont_periods, cont_periods[::-1]))/lp.equilibration_time,
+            np.hstack((cont_gains[1.4], cont_gains[2.2][::-1]))
             ))
         np.savetxt(f, arr)
     
     for N1 in indirs.keys():
-        for j,case in enumerate(nets[N1][0].keys()):
+        for j,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
             Teqs = [gs[case]['Teq'] for gs in gains[N1]]
             
             with open(basedir + N1 + "/" + case + "/gain_L.pg", "wb") as f:
                 arr = np.column_stack(( 
-                    [p/lp.equilibration_time for gs in gains[N1] for p in gs[case]['P']],
-                    [g[0][-1] for gs in gains[N1] for g in gs[case]['G_Qs']['Qs']]
+                    [p/lp.equilibration_time 
+                        for gs in gains[N1] for p in gs[case]['P']],
+                    [g[0][-1]
+                        for gs in gains[N1] for g in gs[case]['G_Qs']['Qs']]
                     ))
                 np.savetxt(f, arr)
                 
             with open(basedir + N1 + "/" + case + "/gain_Le.pg", "wb") as f:
                 arr = np.column_stack(( 
-                    [p/Teqs[i] for i,gs in enumerate(gains[N1]) for p in gs[case]['P']],
-                    [g[0][-1] for gs in gains[N1] for g in gs[case]['G_Qs']['Qs']]
+                    [p/Teqs[i]
+                        for i,gs in enumerate(gains[N1])
+                            for p in gs[case]['P']],
+                    [g[0][-1]
+                        for gs in gains[N1]
+                            for g in gs[case]['G_Qs']['Qs']]
                     ))
                 np.savetxt(f, arr)
                 
