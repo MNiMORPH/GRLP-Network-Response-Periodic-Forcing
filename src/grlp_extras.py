@@ -4,6 +4,7 @@ import scipy.signal as sig
 import os
 import pickle
 import grlp
+import copy
 from scipy.optimize import minimize
 
 # ---- Functions
@@ -535,6 +536,87 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
         List of arrays of lag for each segment. Arrays will have length N.
     """
     
+    def first_nan_last_nan(arr):
+        """
+        Check array for nans and return first and last occurence.
+        """
+        nans = np.where(np.isnan(arr))[0]
+        if nans.any():
+            first_nan = nans[0]
+            last_nan = nans[-1]
+        else:
+            first_nan = len(arr)
+            last_nan = 0
+        return first_nan, last_nan
+
+    def move_upstream(net, segID):
+        """
+        Move recursively upstream from a given segment checking for big jumps
+        between segments and correcting.
+        """
+
+        # ---- Extract segment
+        seg = net.list_of_LongProfile_objects[segID]
+
+        # ---- Loop over upstream segments, if there are any
+        if seg.upstream_segment_IDs:
+            for upID in seg.upstream_segment_IDs:
+                
+                # Check for nans.
+                first_nan, last_nan = first_nan_last_nan(LAG_TIMES[upID])
+                
+                # Correct any cycle skipping.
+                while (LAG_TIMES[upID][-1]-LAG_TIMES[segID][0]) > 0.4*period:
+                    LAG_TIMES[upID][last_nan+1:] -= 0.5*period
+                while (LAG_TIMES[upID][-1]-LAG_TIMES[segID][0]) < -0.4*period:
+                    LAG_TIMES[upID][last_nan+1:] += 0.5*period
+                
+                # Update corrected segments.
+                CHECKED[upID][last_nan+1:] = True
+                
+                # If no nans present, we continue upstream.
+                # NaNs mean we cannot determine whether jumps occur in the lag
+                # times, so we cannot reliably check for cycle skipping.
+                if not np.isnan(LAG_TIMES[upID]).any():
+                    move_upstream(net, upID)
+                    
+    def move_downstream(net, segID):
+        """
+        Move recursively downstream from a given segment checking for big jumps
+        between segments and correcting.
+        """
+                
+        # ---- Extract segment
+        seg = net.list_of_LongProfile_objects[segID]
+
+        # ---- If the upstream point is not NaN, we start working upstream
+        if not np.isnan(LAG_TIMES[segID][0]):
+            move_upstream(net, segID)
+            
+        # ---- If there are any NaNs, we stop moving downstream
+        if not np.isnan(LAG_TIMES[segID]).any():
+            
+            # Check there is something downstream
+            if seg.downstream_segment_IDs:
+            
+                # Identify downstream segment
+                downID = seg.downstream_segment_IDs[0]
+
+                # Check for NaNs.
+                first_nan, last_nan = first_nan_last_nan(LAG_TIMES[downID])
+                
+                # Correct any cycle skipping.
+                while (LAG_TIMES[downID][0]-LAG_TIMES[segID][-1]) > 0.4*period:
+                    LAG_TIMES[downID][:first_nan] -= 0.5*period
+                while (LAG_TIMES[downID][0]-LAG_TIMES[segID][-1]) < -0.4*period:
+                    LAG_TIMES[downID][:first_nan] += 0.5*period
+                    
+                # Update checked record.
+                CHECKED[downID][:first_nan] = True
+                
+                # Continue downstream.
+                move_downstream(net, downID)
+
     # ---- First attempt to compute lag times along each segment
     lag_times = [
         np.zeros(len(seg.x)) for seg in net.list_of_LongProfile_objects
@@ -547,61 +629,53 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
             period,
             can_lead=can_lead
             )
-
-    # ---- Deal with NaNs
-    # If adjacent nodes of a segments' upstream segments, or of its downstream
-    # segment, are nan, then we can't reliably correct for cycle skipping. We
-    # therefore also set nodes between the uppermost / lowermost node and the
-    # next nan to nan.
-    for i,seg in enumerate(net.list_of_LongProfile_objects):
-        nans = np.where(np.isnan(lag_times[i]))[0]
-        if len(nans) > 0:
-            if len(seg.downstream_segment_IDs) == 0 \
-                or np.isnan(lag_times[seg.downstream_segment_IDs[0]][0]):
-                    lag_times[i][nans[-1]:] = np.nan
-            if len(seg.upstream_segment_IDs) > 0:
-                if np.isnan(lag_times[seg.upstream_segment_IDs[0]][-1]) and \
-                    np.isnan(lag_times[seg.upstream_segment_IDs[1]][-1]):
-                        lag_times[i][:nans[0]] = np.nan
             
+    # ---- Create global-ish variables for use in cycle skipping functions
+    # We create the "CORRECTED" list of arrays to keep track of which nodes
+    # we have been able to connect back to a channel head. Those that are
+    # surrounded by NaNs cannot be checked and will be set to NaN at the end.
+    LAG_TIMES = copy.deepcopy(lag_times)
+    CHECKED = [np.full(len(seg.x), False)
+        for seg in net.list_of_LongProfile_objects]
 
-    # ---- Check for cycle skipping between segments
-    # Move from downstream from each of the channel heads looking for jumps in
-    # lag time between segments of more than about half a period. We use
-    # 0.4*period as a threshold since there is some natural difference across
-    # junctions that we need to project over. If jumps are identified, correct
-    # by subtracting period until jump is removed.
-    completed_segs = []
+    # ---- Work downstream from each channel head
+    # We assume that the lag at the channel heads is small (i.e. less than
+    # half a forcing period). Then we work through the network from each head
+    # (first downstream then also upstream from downstream nodes). If we
+    # encounter NaNs, we stop.
     for segID in net.list_of_channel_head_segment_IDs:
-
+    
+        # Extract segment.
+        seg = net.list_of_LongProfile_objects[segID]
+        
+        # Check for NaNs.
+        first_nan, last_nan = first_nan_last_nan(LAG_TIMES[segID])
+        
         # First force all channel heads to have positive lag.
         # Thinking mainly about z here.
         # If applied with Qs, maybe negative lag is possible...
-        while (lag_times[segID] < 0.).any():
-            lag_times[segID] += 0.5*period
-            
+        while lag_times[segID][0] < 0.:
+            lag_times[segID][:first_nan] += 0.5*period
+    
         # Also force all channel heads to have lag below 0.5.
         # For the scenarios we test, do not expect such long lag times at the
         # inlet. So longer lags indicate cycle skipping.
         while lag_times[segID][0] > 0.5*period:
-            lag_times[segID][0] -= 0.5*period
-            
-        # Now move downstream looking for jumps across junctions.
-        while net.list_of_LongProfile_objects[segID].downstream_segment_IDs:
-            down_segID = (
-                net.list_of_LongProfile_objects[segID].downstream_segment_IDs[0]
-                )
-            if down_segID not in completed_segs:
-                while (lag_times[down_segID][0]-lag_times[segID][-1]) > \
-                    0.4*period:
-                    lag_times[down_segID] -= 0.5*period
-                while (lag_times[down_segID][0]-lag_times[segID][-1]) < \
-                    -0.4*period:
-                    lag_times[down_segID] += 0.5*period
-                completed_segs.append(down_segID)
-            segID = down_segID
+            lag_times[segID][0][:first_nan] -= 0.5*period
 
-    return lag_times
+        # Updated checked record
+        CHECKED[segID][:first_nan] = True
+
+        # Start working downstream
+        move_downstream(net, segID)
+
+    # ---- Set sections that couldn't be checked to NaN
+    for segID in range(len(net.list_of_LongProfile_objects)):
+        LAG_TIMES[segID][~CHECKED[segID]] = np.nan
+        
+    # ---- Finished!
+    return LAG_TIMES
+
     
 def find_network_equilibration_time(net_gain, periods, single_seg_net):
     """
