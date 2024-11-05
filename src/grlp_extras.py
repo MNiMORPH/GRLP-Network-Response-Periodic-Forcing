@@ -136,7 +136,7 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
     # ---- Measure lags for each point along stream
     lag_times = np.zeros( len(response[0,:]) )
     for i in range(len(response[0,:])):
-        lag_times[i] = grlpx.find_lag_time(
+        lag_times[i] = find_lag_time(
             forcing,
             response[:,i],
             time,
