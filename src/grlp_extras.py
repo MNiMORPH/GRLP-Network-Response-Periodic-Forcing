@@ -605,7 +605,6 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                 while LAG_TIMES[downID][0]-LAG_TIMES[segID][-1] > 0.25*period:
                     LAG_TIMES[downID][:first_nan] -= 0.5*period
                 while LAG_TIMES[downID][0]-LAG_TIMES[segID][-1] < -0.25*period:
-                    print(upID, "down")
                     LAG_TIMES[downID][:first_nan] += 0.5*period
     
                 # Update checked record.
