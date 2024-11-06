@@ -162,7 +162,7 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
     nans = np.where(np.isnan(lag_times))[0]
     if period:
         for i in range(1,len(response[0,:])):
-            while lag_times[i] - lag_times[i-1] > 0.25*period:
+            while lag_times[i] - lag_times[i-1] > 0.4*period:
                 up_nans = nans[nans > i]
                 if up_nans.size > 0:
                     next_nan = up_nans[0]
@@ -170,7 +170,7 @@ def find_along_stream_lag_times(forcing, response, time, period, can_lead=False)
                     next_nan = len(lag_times)
                 lag_times[i:next_nan] -= 0.5*period
         for i in range(len(response[0,:])-2,-1,-1):
-            while lag_times[i] - lag_times[i+1] > 0.25*period:
+            while lag_times[i] - lag_times[i+1] > 0.4*period:
                 down_nans = nans[nans < i]
                 if down_nans.size > 0:
                     next_nan = down_nans[-1]
@@ -566,9 +566,9 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                 first_nan, last_nan = first_nan_last_nan(LAG_TIMES[upID])
     
                 # Correct any cycle skipping.
-                while LAG_TIMES[upID][-1]-LAG_TIMES[segID][0] > 0.25*period:
+                while LAG_TIMES[upID][-1]-LAG_TIMES[segID][0] > 0.4*period:
                     LAG_TIMES[upID][last_nan+1:] -= 0.5*period
-                while LAG_TIMES[upID][-1]-LAG_TIMES[segID][0] < -0.25*period:
+                while LAG_TIMES[upID][-1]-LAG_TIMES[segID][0] < -0.4*period:
                     LAG_TIMES[upID][last_nan+1:] += 0.5*period
     
                 # Update corrected segments.
@@ -602,9 +602,9 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
                 first_nan, last_nan = first_nan_last_nan(LAG_TIMES[downID])
     
                 # Correct any cycle skipping.
-                while LAG_TIMES[downID][0]-LAG_TIMES[segID][-1] > 0.25*period:
+                while LAG_TIMES[downID][0]-LAG_TIMES[segID][-1] > 0.4*period:
                     LAG_TIMES[downID][:first_nan] -= 0.5*period
-                while LAG_TIMES[downID][0]-LAG_TIMES[segID][-1] < -0.25*period:
+                while LAG_TIMES[downID][0]-LAG_TIMES[segID][-1] < -0.4*period:
                     LAG_TIMES[downID][:first_nan] += 0.5*period
     
                 # Update checked record.
