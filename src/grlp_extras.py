@@ -746,60 +746,6 @@ def find_network_equilibration_time(net_gain, periods, single_seg_net):
         
     return net_Teq
 
-# def read_sweep(indir):
-# 
-#     netdirs = next(os.walk(indir))[1]
-#     nets = []
-#     hacks = []
-#     gains = []
-#     lags = []
-#     for netdir in netdirs:
-# 
-#         with open(indir + netdir + "/hack.obj", "rb") as f:
-#             hack = pickle.load(f)
-#             hacks.append(hack)
-# 
-#         with open(indir + netdir + "/props.obj", "rb") as f:
-#             prop = pickle.load(f)
-#             if 'mean_width' in prop.keys():
-#                 net, net_topo = grlp.generate_random_network(
-#                     magnitude=None, 
-#                     segment_lengths=prop['lengths'],
-#                     mean_discharge=prop['mean_discharge'],
-#                     supply_discharges=prop['supply_discharges'],
-#                     internal_discharges=prop['internal_discharges'],
-#                     approx_dx=5.e2,
-#                     min_nxs=5,
-#                     sediment_discharge_ratio=prop['sediment_discharge_ratio'],
-#                     mean_width=prop['mean_width'],
-#                     variable_width=prop['variable_width'],
-#                     topology=prop['topology']
-#                     )
-#             else:
-#                 net, net_topo = grlp.generate_random_network(
-#                     magnitude=None, 
-#                     segment_lengths=prop['lengths'],
-#                     supply_discharges=prop['supply_discharges'],
-#                     internal_discharges=prop['internal_discharges'],
-#                     approx_dx=5.e2,
-#                     min_nxs=5,
-#                     sediment_discharge_ratio=prop['sediment_discharge_ratio'],
-#                     mean_width=98.1202038813591,
-#                     topology=prop['topology']
-#                     )
-#             net.compute_network_properties()
-#             nets.append(net)
-# 
-#         with open(indir + netdir + "/gain.obj", "rb") as f:
-#             gain = pickle.load(f)
-#             gains.append(gain)
-# 
-#         with open(indir + netdir + "/lag.obj", "rb") as f:
-#             lag = pickle.load(f)
-#             lags.append(lag)
-# 
-#     return nets, hacks, gains, lags
-    
 def read_MC(indir):
     """
     Read and unpack the results of a Monte Carlo simulation.
