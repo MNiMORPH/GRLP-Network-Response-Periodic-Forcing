@@ -793,7 +793,7 @@ def read_MC(indir):
                     x = props['x_ls'],
                     z = props['z_ls'],
                     Q = props['Q_ls'],
-                    dQ = [Q[1]-Q[0] for Q in props['Q_ls']],
+                    dQ = props['dQ_ls'],
                     B = props['B_ls'],
                     overwrite = False
                     )
