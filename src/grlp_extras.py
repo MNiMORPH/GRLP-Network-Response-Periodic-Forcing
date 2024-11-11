@@ -650,14 +650,14 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
         # First force all channel heads to have positive lag.
         # Thinking mainly about z here.
         # If applied with Qs, maybe negative lag is possible...
-        while lag_times[segID][0] < 0.:
-            lag_times[segID][:first_nan] += 0.5*period
+        while LAG_TIMES[segID][0] < 0.:
+            LAG_TIMES[segID][:first_nan] += 0.5*period
     
         # Also force all channel heads to have lag below 0.5.
         # For the scenarios we test, do not expect such long lag times at the
         # inlet. So longer lags indicate cycle skipping.
-        while lag_times[segID][0] > 0.5*period:
-            lag_times[segID][0][:first_nan] -= 0.5*period
+        while LAG_TIMES[segID][0] > 0.5*period:
+            LAG_TIMES[segID][0][:first_nan] -= 0.5*period
     
         # Updated checked record
         CHECKED[segID][:first_nan] = True
