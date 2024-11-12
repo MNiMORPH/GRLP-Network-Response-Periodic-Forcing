@@ -657,7 +657,7 @@ def find_network_lag_times(net, prop, time, forcing, period, can_lead=False):
         # For the scenarios we test, do not expect such long lag times at the
         # inlet. So longer lags indicate cycle skipping.
         while LAG_TIMES[segID][0] > 0.5*period:
-            LAG_TIMES[segID][0][:first_nan] -= 0.5*period
+            LAG_TIMES[segID][:first_nan] -= 0.5*period
     
         # Updated checked record
         CHECKED[segID][:first_nan] = True
