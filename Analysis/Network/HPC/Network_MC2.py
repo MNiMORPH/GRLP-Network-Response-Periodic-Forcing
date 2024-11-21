@@ -209,16 +209,16 @@ segment_length_area_ratio = 1.
 supply_area = 10.e3
 
 
-# -------- Linear version
-lin_net = grlpx.generate_single_segment_network(
-    L,
-    Q_mean,
-    Qs_mean,
-    B_mean,
-    0.,
-    0.,
-    0.
-    )
+# # -------- Linear version
+# lin_net = grlpx.generate_single_segment_network(
+#     L,
+#     Q_mean,
+#     Qs_mean,
+#     B_mean,
+#     0.,
+#     0.,
+#     0.
+#     )
 
 
 # -------- Set up networks: Uniform width
@@ -361,11 +361,25 @@ net.compute_network_properties()
 nets['NAN'] = {'net': net, 'topo': topo}
 
 
+# -------- Single segment version
+ss_nets = {}
+for case in nets.keys():
+    ss_nets[case] = grlpx.generate_single_segment_network(
+        nets[case]['net'].list_of_LongProfile_objects[0].x.max(),
+        Q_mean,
+        Qs_mean,
+        B_mean,
+        0.,
+        0.,
+        0.
+        )
+
+
 # -------- Use multiprocessing to analyse each case in parallel
 with mp.Pool(processes=8) as pool:
     results = pool.map(
         analyse_network, 
-        [(nets[case]['net'], lin_net, outdir + str(i) + "/" + case + "/")
+        [(nets[case]['net'], ss_nets[case], outdir + str(i) + "/" + case + "/")
             for case in nets.keys()]
         )
 
