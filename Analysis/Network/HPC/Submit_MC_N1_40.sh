@@ -11,13 +11,21 @@ module load Python
 source /home/mcnab/network/bin/activate
 
 # Define parameters
-nruns=50
+nruns=200
 
 # Loop over runs, submitting jobs
 for run in $(seq $nruns) ; do
+  
+  # Submit the job
   srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=8  \
-    python Network_MC2.py \
-    $run 40 "/home/mcnab/grlp_network_analysis/Output/Network/MC2_N1_40/" &
+    python Network_MC.py \
+    $run 40 "/home/mcnab/grlp_network_analysis/Output/Network/MC_N1_40/" &
+    
+  # Every 50th job, wait for jobs to finish before continuing
+  if [ $i -eq 49 ] || [ $i -eq 99 ] || [ $i -eq 149 ] ; then
+    wait
+  fi
+
 done
   
 wait

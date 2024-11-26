@@ -41,7 +41,6 @@ where:
 # External packages
 import numpy as np
 import scipy.stats as sts
-import random
 import copy
 import pickle
 import os
@@ -196,28 +195,16 @@ print(str(i) + ": Starting: " + begin.strftime("%H:%M:%S"))
 # 100 kyr.
 # See ../Compute_River_Properties.py for details.
 x0 = 50.e3
-L = 100.e3
 Q_mean = 26.
 Qs_mean = Q_mean * 1.e-4
 B_mean = 254.
 
 
 # -------- Network properties
-segment_length = sts.gamma(2., scale=1./2.)
+mean_segment_length = 5.
+segment_length = sts.gamma(2., scale=mean_segment_length/2.)
 segment_length_area_ratio = 1.
 supply_area = 10.e3
-
-
-# -------- Linear version
-lin_net = grlpx.generate_single_segment_network(
-    L,
-    Q_mean,
-    Qs_mean,
-    B_mean,
-    0.,
-    0.,
-    0.
-    )
 
 
 # -------- Set up networks: Uniform width
@@ -226,7 +213,7 @@ nets = {}
 # ---- Base network
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
+    segment_length=mean_segment_length,
     approx_dx=2.e2,
     min_nxs=4,
     mean_discharge=Q_mean,
@@ -241,7 +228,7 @@ nets['UUU'] = {'net': net, 'topo': topo}
 # ---- Along stream supply
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
+    segment_length=mean_segment_length,
     segment_length_area_ratio=segment_length_area_ratio,
     supply_area=supply_area,
     approx_dx=2.e2,
@@ -258,7 +245,6 @@ nets['UAU'] = {'net': net, 'topo': topo}
 # ---- Random segment lengths
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
     segment_length=segment_length,
     approx_dx=2.e2,
     min_nxs=4,
@@ -274,7 +260,6 @@ nets['NUU'] = {'net': net, 'topo': topo}
 # ---- Random segment lengths & Along stream supply
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
     segment_lengths=nets['NUU']['topo'].segment_lengths,
     segment_length_area_ratio=segment_length_area_ratio,
     supply_area=supply_area,
@@ -295,7 +280,7 @@ nets['NAU'] = {'net': net, 'topo': topo}
 # ---- Base network
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
+    segment_length=mean_segment_length,
     approx_dx=2.e2,
     min_nxs=4,
     mean_discharge=Q_mean,
@@ -311,7 +296,7 @@ nets['UUN'] = {'net': net, 'topo': topo}
 # ---- Along stream supply
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
+    segment_length=mean_segment_length,
     segment_length_area_ratio=segment_length_area_ratio,
     supply_area=supply_area,
     approx_dx=2.e2,
@@ -329,7 +314,6 @@ nets['UAN'] = {'net': net, 'topo': topo}
 # ---- Random segment lengths
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
     segment_lengths=nets['NUU']['topo'].segment_lengths,
     approx_dx=2.e2,
     min_nxs=4,
@@ -346,7 +330,6 @@ nets['NUN'] = {'net': net, 'topo': topo}
 # ---- Random segment lengths & Along stream supply
 net, topo = grlp.generate_random_network(
     magnitude=N1,
-    max_length=L,
     segment_lengths=nets['NUU']['topo'].segment_lengths,
     segment_length_area_ratio=segment_length_area_ratio,
     supply_area=supply_area,
@@ -363,11 +346,25 @@ net.compute_network_properties()
 nets['NAN'] = {'net': net, 'topo': topo}
 
 
+# -------- Single segment version
+ss_nets = {}
+for case in nets.keys():
+    ss_nets[case] = grlpx.generate_single_segment_network(
+        nets[case]['net'].list_of_LongProfile_objects[0].x.max(),
+        Q_mean,
+        Qs_mean,
+        B_mean,
+        0.,
+        0.,
+        0.
+        )
+
+
 # -------- Use multiprocessing to analyse each case in parallel
 with mp.Pool(processes=8) as pool:
     results = pool.map(
         analyse_network, 
-        [(nets[case]['net'], lin_net, outdir + str(i) + "/" + case + "/")
+        [(nets[case]['net'], ss_nets[case], outdir + str(i) + "/" + case + "/")
             for case in nets.keys()]
         )
 
