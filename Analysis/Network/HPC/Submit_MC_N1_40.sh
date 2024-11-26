@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --nodes=10
+#SBATCH --nodes=20
 #SBATCH --ntasks=50
 #SBATCH --cpus-per-task=8
 #SBATCH --time=10-00:0
@@ -21,8 +21,8 @@ for run in $(seq $nruns) ; do
     python Network_MC.py \
     $run 40 "/home/mcnab/grlp_network_analysis/Output/Network/MC_N1_40/" &
     
-  # Every 50th job, wait for jobs to finish before continuing
-  if [ $i -eq 49 ] || [ $i -eq 99 ] || [ $i -eq 149 ] ; then
+  # After 100 jobs, wait for jobs to finish before continuing
+  if [ $i -eq 99 ] ; then
     wait
   fi
 
