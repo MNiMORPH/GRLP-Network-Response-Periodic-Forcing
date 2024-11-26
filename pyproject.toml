@@ -21,5 +21,4 @@ packages = [{include = "grlp_extras.py", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-grlp = { git =  "https://github.com/MNiMORPH/GRLP.git", branch = "master" }
-pyyaml = "^6.0"
+grlp = { git =  "https://github.com/MNiMORPH/GRLP.git", tag = "v2.0.0-beta" }
