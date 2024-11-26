@@ -26,7 +26,7 @@ def calculate_probabilities(max_magnitude):
     # return
     return magnitudes, lengths
 
-magnitudes, lengths = calculate_probabilities(200)
+magnitudes, lengths = calculate_probabilities(500)
 
 find_magnitude = interp1d(lengths, magnitudes)
 
