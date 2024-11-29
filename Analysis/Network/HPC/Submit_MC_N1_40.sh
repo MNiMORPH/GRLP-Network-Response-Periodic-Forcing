@@ -14,7 +14,7 @@ source /home/mcnab/network/bin/activate
 nruns=200
 
 # Loop over runs, submitting jobs
-for i in $(seq $nruns) ; do
+for i in $(seq 0 $nruns) ; do
   
   # Submit the job
   srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=8  \
