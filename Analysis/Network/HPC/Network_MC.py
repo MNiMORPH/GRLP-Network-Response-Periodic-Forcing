@@ -121,7 +121,7 @@ def analyse_network(iter):
     os.makedirs(outdir)
     with open(outdir + "props.obj", "wb") as f:
         pickle.dump({
-            'x_bl': L,
+            'x_bl': net.list_of_LongProfile_objects[0].x_ext[0][-1],
             'z_bl': 0.,
             'S0': [
                 seg.S0 
@@ -201,7 +201,7 @@ B_mean = 254.
 
 
 # -------- Network properties
-mean_segment_length = 5.
+mean_segment_length = 5.e3
 segment_length = sts.gamma(2., scale=mean_segment_length/2.)
 segment_length_area_ratio = 1.
 supply_area = 10.e3

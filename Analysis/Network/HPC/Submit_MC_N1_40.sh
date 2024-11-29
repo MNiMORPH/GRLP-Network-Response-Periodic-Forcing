@@ -14,12 +14,12 @@ source /home/mcnab/network/bin/activate
 nruns=200
 
 # Loop over runs, submitting jobs
-for run in $(seq $nruns) ; do
+for i in $(seq $nruns) ; do
   
   # Submit the job
   srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=8  \
     python Network_MC.py \
-    $run 40 "/home/mcnab/grlp_network_analysis/Output/Network/MC_N1_40/" &
+    $i 40 "/home/mcnab/grlp_network_analysis/Output/Network/MC_N1_40/" &
     
   # After 100 jobs, wait for jobs to finish before continuing
   if [ $i -eq 99 ] ; then
