@@ -45,7 +45,7 @@ for i in ${!netdirs[@]} ; do
   gmt psbasemap $rgn $proj -B+n -Y5.3i -X1.65i -O -K >> $out.ps
   gmt psxy $netdir/planform.d $rgn $proj -W1p -Corder.cpt -O -K >> $out.ps
   gmt psbasemap $rgn $proj -Btslr -Bx20+l"Downstream distance [km]" -O -K >> $out.ps
-  echo "${plan_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLB+cLB -D0.05i/0.08i -O -K >> $out.ps
+  echo "${plan_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
   echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.08i -N -O -K >> $out.ps
   
   # Discharge
@@ -104,21 +104,24 @@ for i in ${!netdirs[@]} ; do
     -O -K >> $out.ps
 
   # Ratios
-  rgn=-R0.5/4.5/0.7/1430
+  Rb_colour=187/85/102
+  Rl_colour=221/170/51
+  Rq_colour=0/68/136
+  rgn=-R0.5/4.5/0.7/500
   proj=-JX1.5i/1.5il
   gmt psbasemap $rgn $proj -B+n -Y-2i -O -K >> $out.ps
-  gmt psxy $netdir/count_fit.oc $rgn $proj -W0.8p,red,4p_4p -O -K >> $out.ps
-  gmt psxy $netdir/counts.oc $rgn $proj -Sc3.5p -Gred -O -K >> $out.ps
-  gmt psxy $netdir/length_fit.oc $rgn $proj -W0.8p,blue,4p_4p -O -K >> $out.ps
-  gmt psxy $netdir/lengths.oc $rgn $proj -Sc3.5p -Gblue -O -K >> $out.ps
-  gmt psxy $netdir/discharge_fit.oc $rgn $proj -W0.8p,0/125/0,4p_4p -O -K >> $out.ps
-  gmt psxy $netdir/discharges.oc $rgn $proj -Sc3.5p -G0/125/0 -O -K >> $out.ps
+  gmt psxy $netdir/count_fit.oc $rgn $proj -W0.8p,$Rb_colour,4p_4p -O -K >> $out.ps
+  gmt psxy $netdir/length_fit.oc $rgn $proj -W0.8p,$Rl_colour,4p_4p -O -K >> $out.ps
+  gmt psxy $netdir/discharge_fit.oc $rgn $proj -W0.8p,$Rq_colour,4p_4p -O -K >> $out.ps
+  gmt psxy $netdir/counts.oc $rgn $proj -Sc3.5p -G$Rb_colour -O -K >> $out.ps
+  gmt psxy $netdir/lengths.oc $rgn $proj -Sc3.5p -G$Rl_colour -O -K >> $out.ps
+  gmt psxy $netdir/discharges.oc $rgn $proj -Sc3.5p -G$Rq_colour -O -K >> $out.ps
   echo "@%2%R@-B@-@%% = $Rb" | \
-    gmt pstext $rgn $proj -F+f7p,red+jTL+cTL -D0.04i/-0.05i -O -K >> $out.ps
+    gmt pstext $rgn $proj -F+f7p,$Rb_colour+jTL+cTL -D0.04i/-0.05i -O -K >> $out.ps
   echo "@%2%R@-L@-@%% = $Rl" | \
-    gmt pstext $rgn $proj -F+f7p,blue+jCT+cCT -D0i/-0.05i -O -K >> $out.ps
+    gmt pstext $rgn $proj -F+f7p,$Rl_colour+jCT+cCT -D0i/-0.05i -O -K >> $out.ps
   echo "@%2%R@-Q@-@%% = $Rq" | \
-    gmt pstext $rgn $proj -F+f7p,0/125/0+jTR+cTR -D-0.04i/-0.05i -O -K >> $out.ps
+    gmt pstext $rgn $proj -F+f7p,$Rq_colour+jTR+cTR -D-0.04i/-0.05i -O -K >> $out.ps
   echo "${ratio_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLB+cLB -D0.05i/0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -BnS \
@@ -126,8 +129,8 @@ for i in ${!netdirs[@]} ; do
     -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -Be${W} \
-    -By1f3p+l"@%2%@;red;N@-@~\167@~@-@%% [-]@;;     @%2%@;blue;L@-@~\167@~@-@%% [km]@;;     @%2%@;0/125/0;Q@-w,@~\167@~@-@%% [m@+3@+ s@+-1@+]@;;" \
-    --MAP_LABEL_OFFSET=2p \
+    -By1f3p+l"@%2%@;$Rb_colour;N@-@~\167@~@-@%% [-]@;;     @%2%@;$Rl_colour;L@-@~\167@~@-@%% [km]@;;     @%2%@;$Rq_colour;Q@-w,@~\167@~@-@%% [m@+3@+ s@+-1@+]@;;" \
+    --MAP_LABEL_OFFSET=4p \
     -O -K >> $out.ps
 
 done

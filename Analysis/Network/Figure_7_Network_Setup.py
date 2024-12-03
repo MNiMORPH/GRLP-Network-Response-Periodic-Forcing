@@ -24,17 +24,20 @@ import grlp_extras as grlpx
 # ---- Variables
 output_gmt = False
 indir = "../../Output/Network/MC_N1_40/"
-n = 0
+n = 177
 
 
 # ---- Read data
 print("Reading results.")
-nets, hacks, gains, lags = grlpx.read_MC(indir)
+nets, hacks, gains, lags = grlpx.read_MC(
+    indir,
+    cases=['UUU', 'NUU', 'UAU', 'NAU']
+    )
 
 
 # ---- Evolve the profiles to reach steady state
 print("Evolving the networks to steady state.")
-for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
+for case in nets[n].keys():
     nets[n][case].evolve_threshold_width_river_network(nt=100, dt=3.15e12)
 
 
@@ -141,13 +144,13 @@ if output_gmt:
 
     for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
         
-        net = nets[0][case]
+        net = nets[n][case]
         
         # Planform
         planform = grlp.plot_network(net, show=False)
         with open(basedir + case + "/planform.d", "wb") as f:
             for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j]+1)
+                hdr = b"> -Z%i\n" % (net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( planform[j]['x'], planform[j]['y'] ))
                 np.savetxt(f, arr)
@@ -169,13 +172,13 @@ if output_gmt:
                 else:
                     x = seg.x/1.e3
                     Q = seg.Q
-                hdr = b"> -Z%i\n" % (net.segment_orders[j]+1)
+                hdr = b"> -Z%i\n" % (net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( x, Q ))
                 np.savetxt(f, arr)
                 
         # Hack
-        hack = hacks[0][case]
+        hack = hacks[n][case]
         with open(basedir + case + "/hack_fit.dq", "wb") as f:
             d = np.linspace(0,max(hack['d']), 100)
             Q = hack['k'] * (d**hack['p'])
@@ -185,14 +188,14 @@ if output_gmt:
             arr = np.column_stack(( 
                 np.array(hack['d'])/1.e3,
                 hack['Q'],
-                net.segment_orders+1
+                net.segment_orders
                 ))
             np.savetxt(f, arr)
 
         # Profile
         with open(basedir + case + "/profile.de", "wb") as f:
             for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j]+1)
+                hdr = b"> -Z%i\n" % (net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( seg.x/1.e3, seg.z ))
                 np.savetxt(f, arr)
