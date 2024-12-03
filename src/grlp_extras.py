@@ -746,7 +746,7 @@ def find_network_equilibration_time(net_gain, periods, single_seg_net):
         
     return net_Teq
 
-def read_MC(indir):
+def read_MC(indir, cases=None):
     """
     Read and unpack the results of a Monte Carlo simulation.
     """
@@ -763,8 +763,9 @@ def read_MC(indir):
     # Loop over topology directories.
     for topodir in topodirs:
         
-        # Get list of networks derived from the topology.
-        netdirs = next(os.walk(indir + topodir))[1]
+        # If cases not specified, get list from directory.
+        if cases is None:
+            cases = next(os.walk(indir + topodir))[1]
         
         # Set up dictionaries to store results for each network.
         topo_nets = {}
@@ -773,17 +774,17 @@ def read_MC(indir):
         topo_lags = {}
         
         # Loop over networks.
-        for netdir in netdirs:
+        for case in cases:
             
             # Read the Hack object.
-            with open(indir + topodir + "/" + netdir + "/hack.obj", "rb") as f:
-                topo_hacks[netdir] = pickle.load(f)
+            with open(indir + topodir + "/" + case + "/hack.obj", "rb") as f:
+                topo_hacks[case] = pickle.load(f)
             
             # Read the network properties and create network instance.
-            with open(indir + topodir + "/" + netdir + "/props.obj", "rb") as f:
+            with open(indir + topodir + "/" + case + "/props.obj", "rb") as f:
                 props = pickle.load(f)
-                topo_nets[netdir] = grlp.Network()
-                topo_nets[netdir].initialize(
+                topo_nets[case] = grlp.Network()
+                topo_nets[case].initialize(
                     config_file = None,
                     x_bl = props['x_bl'],
                     z_bl = props['z_bl'],
@@ -797,23 +798,23 @@ def read_MC(indir):
                     B = props['B_ls'],
                     overwrite = False
                     )
-                topo_nets[netdir].set_niter(3)
-                topo_nets[netdir].get_z_lengths()
+                topo_nets[case].set_niter(3)
+                topo_nets[case].get_z_lengths()
                 for i,seg in enumerate(
-                    topo_nets[netdir].list_of_LongProfile_objects
+                    topo_nets[case].list_of_LongProfile_objects
                     ):
                     seg.set_source_sink_distributed(props['ssd_ls'][i])
-                for seg in topo_nets[netdir].list_of_LongProfile_objects:
+                for seg in topo_nets[case].list_of_LongProfile_objects:
                     seg.compute_Q_s()
-                topo_nets[netdir].compute_network_properties()
+                topo_nets[case].compute_network_properties()
             
             # Read the gain object.
-            with open(indir + topodir + "/" + netdir + "/gain.obj", "rb") as f:
-                topo_gains[netdir] = pickle.load(f)
+            with open(indir + topodir + "/" + case + "/gain.obj", "rb") as f:
+                topo_gains[case] = pickle.load(f)
             
             # Read the lag object.
-            with open(indir + topodir + "/" + netdir + "/lag.obj", "rb") as f:
-                topo_lags[netdir] = pickle.load(f)
+            with open(indir + topodir + "/" + case + "/lag.obj", "rb") as f:
+                topo_lags[case] = pickle.load(f)
 
         # Store the output.
         nets.append(topo_nets)
