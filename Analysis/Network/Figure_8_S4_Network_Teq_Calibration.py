@@ -32,7 +32,7 @@ import grlp_extras as grlpx
 output_gmt = False
 indirs = {
     "MC_N1_40": "../../Output/Network/MC_N1_40/",
-    "MC_N1_2-102": "../../Output/Network/MC_N1_2-102/"
+    # "MC_N1_2-102": "../../Output/Network/MC2_N1_2-102/"
     }
 
 
@@ -64,7 +64,10 @@ hacks = {}
 gains = {}
 lags = {}
 for N1 in indirs.keys():
-    nets[N1], hacks[N1], gains[N1], lags[N1] = grlpx.read_MC(indirs[N1])
+    nets[N1], hacks[N1], gains[N1], lags[N1] = grlpx.read_MC(
+        indirs[N1],
+        cases=['UUU', 'NUU', 'UAU', 'NAU']
+        )
 
 
 # ---- Linear gain
@@ -78,6 +81,7 @@ cont_gains = {}
 cont_ps = [1.4, 2.2]
 cont_periods = np.logspace(-2.5, 2.5, 29) * lp.equilibration_time
 for i,p in enumerate(cont_ps):
+    print("Hack exponent, p = %.1f." % p)
     net = grlpx.generate_single_segment_network(
         L=L,
         Q_mean=Q_mean,
@@ -90,8 +94,16 @@ for i,p in enumerate(cont_ps):
         evolve=True
         )
     gs = []
-    for period in cont_periods:
-        print(p,period)
+    for j,period in enumerate(cont_periods):
+        print(
+            "\r" + 
+            u"\u25AE"*int(np.round((j*2)/(len(cont_periods)*2)*50)) + 
+            u"\u25AF"*int(np.round(50 - (j*2)/(len(cont_periods)*2)*50)) + 
+            " " + 
+            str(int((j*2)/(len(cont_periods)*2)*100)).rjust(3) + "%. " + 
+            "Period = %e kyr." % (period/3.154e10),
+            end=""
+            )
         periodic = grlpx.evolve_network_periodic(
             copy.deepcopy(net),
             period,
@@ -100,12 +112,17 @@ for i,p in enumerate(cont_ps):
             )
         gs.append(periodic['G_Qs'][0][-1])
     cont_gains[p] = gs
-
+    print(
+        "\r" + 
+        u"\u25AE"*50 + 
+        " 100%%. Period = %e kyr." % (period/3.154e10)
+        )
+    print()
 
 # ---- Plot
 print("Plotting.")
 
-def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
+def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, nets, title):
     
     # Set up plot.
     fig, axs = plt.subplots(3, 4, sharey="row", sharex="row")
@@ -116,8 +133,11 @@ def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
         # Plot gain as a function of forcing period, for single segment cases
         # with upstream only and along stream supply of sediment and water,
         # and for network cases.
-        # Normalise by equilibration time, if calculated with length of longest
-        # stream.
+        Teqs = [
+            n[case].list_of_LongProfile_objects[0].x.max()**2. /
+                lp.diffusivity.mean()
+            for n in nets
+            ]
         axs[0,i].plot(lin_periods/lp.equilibration_time, lin_gain_Qs)
         axs[0,i].fill(
             np.hstack((cont_periods, cont_periods[::-1]))/lp.equilibration_time,
@@ -125,12 +145,12 @@ def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
             c="0.6"
             )
         axs[0,i].plot(
-            [p/lp.equilibration_time for gs in gains for p in gs[case]['P']],
+            [p/Teqs[i] for i,gs in enumerate(gains) for p in gs[case]['P']],
             [g[0][-1] for gs in gains for g in gs[case]['G_Qs']['Qs']],
             "o",
             alpha=0.05
             )
-        axs[0,i].set_xlabel(r"Period, $P$ / $T_{eq}$ [-]")
+        axs[0,i].set_xlabel(r"Period, / $T_{eq,max}$ [-]")
         if i==0:
             axs[0,i].set_ylabel("Gain, $G_{Q_s,L}$ [-]")
         axs[0,i].set_xscale("log")
@@ -170,7 +190,7 @@ def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, title):
 
 titles = {
     'MC_N1_40': r'Figure 8: $N_1$ = 40',
-    'MC_N1_2-102': r'Figure 8: $N_1$ = 2-102'
+    # 'MC_N1_2-102': r'Figure 8: $N_1$ = 2-102'
     }
 for N1 in indirs.keys():
     plot(
@@ -180,6 +200,7 @@ for N1 in indirs.keys():
         cont_gains,
         gains[N1],
         lp,
+        nets[N1],
         titles[N1]
         )
 
@@ -203,17 +224,30 @@ if output_gmt:
     
     for N1 in indirs.keys():
         for j,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
-            Teqs = [gs[case]['Teq'] for gs in gains[N1]]
             
+            Teqs = [
+                n[case].list_of_LongProfile_objects[0].x.max()**2. /
+                    lp.diffusivity.mean()
+                for n in nets[N1]
+                ]
+                
             with open(basedir + N1 + "/" + case + "/gain_L.pg", "wb") as f:
                 arr = np.column_stack(( 
-                    [p/lp.equilibration_time 
-                        for gs in gains[N1] for p in gs[case]['P']],
+                    [p/Teqs[i] 
+                        for i,gs in enumerate(gains[N1])
+                            for p in gs[case]['P']],
                     [g[0][-1]
-                        for gs in gains[N1] for g in gs[case]['G_Qs']['Qs']]
+                        for gs in gains[N1]
+                            for g in gs[case]['G_Qs']['Qs']]
                     ))
                 np.savetxt(f, arr)
                 
+            with open(basedir + N1 + "/" + case + "/Teq_max.t", "wb") as f:
+                arr = [Teq/3.154e10 for Teq in Teqs]
+                np.savetxt(f, arr)
+            
+            Teqs = [gs[case]['Teq'] for gs in gains[N1]]
+
             with open(basedir + N1 + "/" + case + "/gain_Le.pg", "wb") as f:
                 arr = np.column_stack(( 
                     [p/Teqs[i]
@@ -226,5 +260,5 @@ if output_gmt:
                 np.savetxt(f, arr)
                 
             with open(basedir + N1 + "/" + case + "/Teq.t", "wb") as f:
-                arr = [gs[case]['Teq']/3.15e10 for gs in gains[N1]]
+                arr = [gs[case]['Teq']/3.154e10 for gs in gains[N1]]
                 np.savetxt(f, arr)
