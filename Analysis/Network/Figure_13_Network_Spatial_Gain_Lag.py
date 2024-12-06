@@ -29,7 +29,7 @@ import grlp_extras as grlpx
 # ---- Variables
 output_gmt = False
 indir = "../../Output/Network/MC_N1_40/"
-neti = 0
+neti = 177
 Pi = 3
 
 
@@ -49,7 +49,10 @@ p = 1.8
 
 # ---- Read data
 print("Reading results.")
-nets, hacks, gains, lags = grlpx.read_MC(indir)
+nets, hacks, gains, lags = grlpx.read_MC(
+    indir,
+    cases=['UUU', 'NUU', 'UAU', 'NAU']
+    )
 
 
 # ---- Measure gain and lag with period equal to network equilibration time
@@ -63,9 +66,9 @@ for case in ['UUU', 'NUU', 'UAU', 'NAU']:
     print(case)
     
     # Predict network Teq
-    L_eff = nets[neti][case].mean_downstream_distance * 1.2
-    Teq = (L_eff**2.) / nets[neti][case].mean_diffusivity
-    
+    Teq = gains[neti][case]['Teq']
+    L_eff = np.sqrt(Teq*nets[neti][case].mean_diffusivity)
+
     # Evolve to ensure steady state
     nets[neti][case].evolve_threshold_width_river_network(nt=100, dt=3.154e10)
     
@@ -87,8 +90,8 @@ single_segs = {'UUU': {}, 'NUU': {}, 'UAU': {}, 'NAU': {}}
 for case in ['UUU', 'NUU', 'UAU', 'NAU']:
     
     # Predict network Teq
-    L_eff = nets[neti][case].mean_downstream_distance * 1.2
-    Teq = (L_eff**2.) / nets[neti][case].mean_diffusivity
+    Teq = gains[neti][case]['Teq']
+    L_eff = np.sqrt(Teq*nets[neti][case].mean_diffusivity)
 
     # Upstream supply example
     single_segs[case]['U'] = grlpx.generate_single_segment_network(
@@ -105,7 +108,7 @@ for case in ['UUU', 'NUU', 'UAU', 'NAU']:
         
     # Along stream supply example - also evolve it to measure gain and lag
     single_segs[case]['A'] = grlpx.generate_single_segment_network(
-        L=L,
+        L=nets[neti][case].list_of_LongProfile_objects[0].x_ext[0][-1],
         Q_mean=Q_mean,
         Qs_mean=Qs_mean,
         B_mean=B_mean,
@@ -130,8 +133,8 @@ fig, axs = plt.subplots(2, 4, sharex=True, sharey="row")
 for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
     
     # Predict network Teq
-    L_eff = nets[neti][case].mean_downstream_distance * 1.2
-    Teq = (L_eff**2.) / nets[neti][case].mean_diffusivity
+    Teq = gains[neti][case]['Teq']
+    L_eff = np.sqrt(Teq*nets[neti][case].mean_diffusivity)
 
     # Plot gain and lag for single segment, upstream supply case
     axs[0,i].plot(
@@ -187,15 +190,15 @@ for case in ['UUU', 'NUU', 'UAU', 'NAU']:
     
     # Predict network Teq
     net = nets[neti][case]
-    L_eff = net.mean_downstream_distance * 1.2
-    Teq = (L_eff**2.) / net.mean_diffusivity
+    Teq = gains[neti][case]['Teq']
+    L_eff = np.sqrt(Teq*nets[neti][case].mean_diffusivity)
     single_seg_U =  single_segs[case]['U'].list_of_LongProfile_objects[0]
     single_seg_A =  single_segs[case]['A'].list_of_LongProfile_objects[0]
 
     with open(basedir + case + "/gain.dg", "wb") as f:
 
         for j,seg in enumerate(net.list_of_LongProfile_objects):
-            hdr = b"> -Z%i\n" % (net.segment_orders[j]+1)
+            hdr = b"> -Z%i\n" % (net.segment_orders[j])
             f.write(hdr)
             arr = np.column_stack((
                 seg.x/1.e3,
@@ -205,7 +208,7 @@ for case in ['UUU', 'NUU', 'UAU', 'NAU']:
             
     with open(basedir + case + "/lag.dl", "wb") as f:
         for j,seg in enumerate(net.list_of_LongProfile_objects):
-            hdr = b"> -Z%i\n" % (net.segment_orders[j]+1)
+            hdr = b"> -Z%i\n" % (net.segment_orders[j])
             f.write(hdr)
             arr = np.column_stack((
                 seg.x/1.e3,

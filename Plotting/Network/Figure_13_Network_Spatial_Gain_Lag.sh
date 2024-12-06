@@ -12,17 +12,13 @@ out="../../Figures/Figure_13_Network_Spatial_Gain_Lag"
 
 # ---- Variables
 proj=-JX1.5i
-# rgn=-R-10/110/0.1/0.6
 rgn=-R-10/110/0.1/0.8
-# rgn_lag=-R-10/110/0.075/0.325
 rgn_lag=-R-10/110/0.025/0.325
-# nets=("m40_fix_seg_length_no_internal" "m40_rnd_seg_length_no_internal" "m40_fix_seg_length_w_internal" "m40_rnd_seg_length_w_internal")
-# nets=("m40_fix_seg_length_no_internal_var_width" "m40_rnd_seg_length_no_internal_var_width" "m40_fix_seg_length_w_internal_var_width" "m40_rnd_seg_length_w_internal_var_width")
 nets=("UUU" "NUU" "UAU" "NAU")
 axes=("eW" "ew" "ew" "ew")
 g_lab=("a" "b" "c" "d")
 l_lab=("e" "f" "g" "h")
-titles=("Uniform segment lengths" "Random segment lengths" "Unifom segment lengths" "Random segment lengths")
+titles=("Uniform segment lengths" "Non-uniform segment lengths" "Unifom segment lengths" "Non-uniform segment lengths")
 
 # ---- Initiate
 gmt psbasemap $rgn $proj -B+n -Y6i -X-0.65i -K > $out.ps
@@ -48,40 +44,24 @@ for i in ${!nets[@]} ; do
       -O -K >> $out.ps
       
   if [ $i -eq 0 ] ; then
-    # gmt_extras::plot_key_multi_line $rgn $proj 105 90.5 0.56 -W0.8p "Network" $out order.cpt "1 2 3 4"
-    # gmt_extras::plot_key_line $rgn $proj 105 90.5 0.52 -W0.8p,3_2 "Upstream supply" $out
-    # gmt_extras::plot_key_line $rgn $proj 105 90.5 0.48 -W0.8p,dimgrey,3_3.1_0.8_3.1_3 "Continuous supply" $out
-    gmt_extras::plot_key_multi_line $rgn $proj 105 90.5 0.76 -W0.8p "Network" $out order.cpt "1 2 3 4"
+    gmt_extras::plot_key_multi_line $rgn $proj 105 90.5 0.76 -W0.8p "Network" $out order.cpt "4 3 2 1"
     gmt_extras::plot_key_line $rgn $proj 105 90.5 0.72 -W0.8p,3_2 "Upstream supply" $out
-    gmt_extras::plot_key_line $rgn $proj 105 90.5 0.68 -W0.8p,dimgrey,3_3.1_0.8_3.1_3 "Continuous supply" $out
+    gmt_extras::plot_key_line $rgn $proj 105 90.5 0.68 -W0.8p,dimgrey,3_3.1_0.8_3.1_3 "Along stream supply" $out
   fi
-#   if [ ${periods[$i]} == "slow" ] ; then
-#     echo "> -Z0.4
-# 83.5 0
-# 87.6 0
-# > -Z0.5
-# 87.6 0
-# 91.7 0
-# > -Z0.6
-# 91.7 0
-# 95.8 0
-# > -Z0.7
-# 95.8 0
-# 100 0" | gmt psxy $rgn $proj -W0.8p -Cp.cpt -O -K >> $out.ps
-#     echo "83.5 0.09
-# 100 0.09" | gmt psxy $rgn $proj -W0.8p,dimgrey,4_4 -O -K >> $out.ps
-#     echo "83.5 0.09 Upstream supply
-# 83.5 0 Continuous supply" | gmt pstext $rgn $proj -F+f7p,Helvetica,black+jRM -D-0.05i/0i -O -K >> $out.ps
-#   fi
 
-  if [ ${nets[$i]} == "m40_rnd_seg_length_w_internal" ] ; then
+  if [ ${nets[$i]} == "NAU" ] ; then
     gmt psscale $rgn $proj \
       -Corder.cpt \
       -Dx0.7i/1.35i+w0.7i/0.07i+h \
-      -B1+l"Stream order, @%2%O@%%" \
+      -B1+l"Stream order, @~\167@~" \
+      --MAP_LABEL_OFFSET=-8p \
+      --MAP_ANNOT_OFFSET=5p \
+      --MAP_TICK_LENGTH=7p \
+      --MAP_DEFAULT_PEN=7p \
+      --MAP_TICK_PEN=1.5p \
+      --FONT=16p \
       -O -K >> $out.ps
   fi
-
 
   # ---- Lag_z
   gmt psbasemap $rgn_lag $proj -B+n -Y-1.65i -O -K >> $out.ps
@@ -104,14 +84,14 @@ echo "0.75 1.72
 0.75 1.79
 2.4 1.79
 2.4 1.72" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "No internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -Gwhite -N -O -K >> $out.ps
+echo "Upstream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -Gwhite -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -X3.3i -O -K >> $out.ps
 echo "0.75 1.72
 0.75 1.79
 2.4 1.79
 2.4 1.72" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "With internal supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -Gwhite -N -O -K >> $out.ps
+echo "Along stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -Gwhite -N -O -K >> $out.ps
 
 # ---- Show
 gmt psbasemap $rgn $proj -B+n -O >> $out.ps
