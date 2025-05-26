@@ -1,0 +1,19 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "GRLP-Network-Response-Periodic-Forcing"
+version = "1"
+authors = [
+  "Fergus McNab"
+]
+description = "Analyse response of GRLP networks to periodic variation in sediment and water supply, for the paper McNab et al. (2025, EGUSphere)."
+readme = "README.md"
+packages = [{include = "grlp_extras.py", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+grlp = { git =  "https://github.com/MNiMORPH/GRLP.git", tag = "v2.0.0-beta" }
+numpy = "2.0.2"
+scipy = "1.13.1"

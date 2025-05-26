@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: grlp-network-analysis
+Version: 0.0.1
+Summary: Perform GRLP network analyses for the paper McNab et al. (in prep.).
+Author: Fergus McNab
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+
+# GRLP Network Analysis
+
+Code to reproduce analyses presented in McNab et al. (in prep.).
