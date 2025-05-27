@@ -8,7 +8,7 @@
         },
     ],
 
-    "license": "Creative Commons Attribution 4.0 International",
+    "license": "CC-BY-4.0",
 
     "title": "Software and data supplement to 'Influence of network geometry on long-term morphodynamics of alluvial rivers' by McNab et al. (2025, EGUsphere)",
     "description": "Analyse response of GRLP networks to periodic variation in sediment and water supply, for the paper McNab et al. (2025, EGUSphere).",
