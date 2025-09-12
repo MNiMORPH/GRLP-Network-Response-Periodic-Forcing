@@ -1,0 +1,5 @@
+This directory contains network planform data as shown in Figure 1 of the paper. The data are originally from the [HydroRIVERS](https://www.hydrosheds.org/products/hydrorivers]) database (accessed August 2025; Lehner & Grill, 2013). Data for individual catchments (`*.csv`) were extracted from the original shapefile for North America (`HydroRIVERS_v10_na.shp`), using basin outlines from the [HydroBASINS](https://www.hydrosheds.org/products/hydrobasins) database (`hybas_lake_na_lev06_v1c.shp`, accessed August 2025; Lehner & Grill, 2013). The script `Process_Planforms.sh` reprocesses the data to create files for plotting in GMT (`*.gmt`).
+
+### References
+
+Lehner, B. and Grill, G., 2013, Global river hydrography and network routing: baseline data and new approaches to study the world’s large river systems, *Hydrological Processes*, **27**(15), p. 2,171-2,186, [doi:10.1002/hyp.9740](https://doi.org/10.1002/hyp.9740).

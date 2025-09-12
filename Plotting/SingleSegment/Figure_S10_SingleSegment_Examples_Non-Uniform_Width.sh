@@ -13,7 +13,7 @@ periods=("fast" "medium" "slow")
 min_times=(-2.5 -25 -250)
 max_times=(32.5 325 3250)
 time_ticks=(10 100 1000)
-axes=("ne" "ne" "nE")
+axes=("e" "e" "E")
 forcing_axes=("W" "w" "w")
 elevation_axes=("neW" "new" "new")
 profile_axes=("nSrW" "nSrw" "nSrw")
@@ -54,13 +54,13 @@ ${min_times[$i]} 1.2" | gmt psxy $rgn $proj -Gwhite -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/Qs_out.tq $rgn $proj -W1p,black -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/Qs_out_tps.tq $rgn $proj -Sc3p -Gblack -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/scale_circles.ts $rgn $proj -Sc4p -W0.8p -Ct.cpt -O -K >> $out.ps
-  echo ${Qs_labels[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${Qs_labels[$i]})" | \
+    gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   echo ${titles[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica,black+jBC+cTC -D0i/0.16i -N -O -K >> $out.ps
+    gmt pstext $rgn $proj -F+f11p,Helvetica,black+jBC+cTC -D0i/0.12i -N -O -K >> $out.ps
   if [ $i -eq 2 ] ; then
-    gmt_extras::plot_key_line $rgn $proj 720 400 1.3 -W1p,lightred "@%2%Q@-s,0@-@%%" $out
-    gmt_extras::plot_key_line $rgn $proj 1820 1500 1.3 -W1p,dimgrey,3p_2p "@%2%Q@-s,L@-@%% (Up')" $out
+    gmt_extras::plot_key_line $rgn $proj 800 480 1.3 -W1p,lightred "@%2%Q@-s,0@-@%%" $out
+    gmt_extras::plot_key_line $rgn $proj 1900 1580 1.3 -W1p,dimgrey,3p_2p "@%2%Q@-s,L@-@%% (Up')" $out
     gmt_extras::plot_key_line $rgn $proj 3150 2830 1.3 -W1p,black "@%2%Q@-s,L@-@%% (Along')" $out
   fi
   gmt psbasemap $rgn $proj \
@@ -72,7 +72,7 @@ ${min_times[$i]} 1.2" | gmt psxy $rgn $proj -Gwhite -O -K >> $out.ps
     --MAP_LABEL_OFFSET=4p \
     -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
-    -Bs${axes[$i]} \
+    -Bts${axes[$i]} \
     -Bx${time_ticks[$i]}+l"Time, @%2%t@%% [kyr]" \
     -By0.2+l"@[\textit{Q\textsubscript{s,L}}~/~\overline{\textit{Q\textsubscript{s,L}}}@[ [-]" \
     --MAP_LABEL_OFFSET=4p \
@@ -95,11 +95,11 @@ ${min_times[$i]} 1.2" | gmt psxy $rgn $proj -Gwhite -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/Qw_ref_Qs_out_tps.tq $rgn $proj -Sc3p -Gdimgrey -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/Qw_Qs_out.tq $rgn $proj -W1p,black -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/Qw_Qs_out_tps.tq $rgn $proj -Sc3p -Gblack -O -K >> $out.ps
-  echo ${Qw_labels[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${Qw_labels[$i]})" | \
+    gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   if [ $i -eq 2 ] ; then
-    gmt_extras::plot_key_line $rgn $proj 720 400 1.3 -W1p,dodgerblue "@%2%Q@-w,0@-@%%" $out
-    gmt_extras::plot_key_line $rgn $proj 1820 1500 1.3 -W1p,dimgrey,3p_2p "@%2%Q@-s,L@-@%% (Up')" $out
+    gmt_extras::plot_key_line $rgn $proj 800 480 1.3 -W1p,dodgerblue "@%2%Q@-w,0@-@%%" $out
+    gmt_extras::plot_key_line $rgn $proj 1900 1580 1.3 -W1p,dimgrey,3p_2p "@%2%Q@-s,L@-@%% (Up')" $out
     gmt_extras::plot_key_line $rgn $proj 3150 2830 1.3 -W1p,black "@%2%Q@-s,L@-@%% (Along')" $out
   fi
   gmt psbasemap $rgn $proj \
@@ -111,7 +111,7 @@ ${min_times[$i]} 1.2" | gmt psxy $rgn $proj -Gwhite -O -K >> $out.ps
     --MAP_LABEL_OFFSET=4p \
     -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
-    -Bs${axes[$i]} \
+    -Bns${axes[$i]} \
     -Bx${time_ticks[$i]}+l"Time, @%2%t@%% [kyr]" \
     -By0.2+l"@[\textit{Q\textsubscript{s,L}}~/~\overline{\textit{Q\textsubscript{s,L}}}@[ [-]" \
     --MAP_LABEL_OFFSET=4p \
@@ -133,8 +133,8 @@ ${max_times[$i]} 680
   gmt psxy $indir/${periods[$i]}/ref_profile_tps.te $rgn $proj -Sc3p -Gdimgrey -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/profile.te $rgn $proj -W1p -Cx.cpt -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/profile_tps.te $rgn $proj -Sc3p -Cx.cpt -O -K >> $out.ps
-  echo ${z_labels[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${z_labels[$i]})" | \
+    gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   if [ $i -eq 2 ] ; then
     gmt_extras::plot_key_line $rgn $proj 1820 1500 750 -W1p,dimgrey,3p_2p "@%2%z@%% (Up')" $out
     gmt_extras::plot_key_multi_line $rgn $proj 3150 2830 750 -W1p,black "@%2%z@%% (Along')" $out x.cpt "80 60 40 20 0"
@@ -168,8 +168,8 @@ ${max_times[$i]} 680
   gmt psbasemap $rgn $proj -B+n -Y-2i -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/profile_pert.de $rgn2 $proj2 -W1p -Ct2.cpt -O -K >> $out.ps
   gmt psxy $indir/${periods[$i]}/profile.de $rgn $proj -W1p -Ct.cpt -O -K >> $out.ps
-  echo ${prof_labels[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${prof_labels[$i]})" | \
+    gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -B${profile_axes[$i]} \
     -Bx20+l"Downstream distance, @%2%x@%% [km]" \
@@ -195,6 +195,6 @@ gmt psbasemap -R -J -B+n -O >> $out.ps
 
 
 # ---- Show
-gmt psconvert -A -E400 -Tj $out.ps
+gmt psconvert -A -E300 -Tj $out.ps
 eog $out.jpg &
 rm $out.ps *.cpt

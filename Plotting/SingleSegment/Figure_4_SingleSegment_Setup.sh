@@ -7,12 +7,12 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Variables
-out=../../Figures/Figure_3_SingleSegment_Setup
+out=../../Figures/Figure_4_SingleSegment_Setup
 rgn=-R-5/105/0/700
 rgn_Qw=-R-5/105/0/70
 rgn_Qs=-R-5/105/0/7
 proj=-JX2.6i/2i
-basedir=../../Output/SingleSegment/Figure_3_SingleSegment_Setup
+basedir=../../Output/SingleSegment/Figure_4_SingleSegment_Setup
 
 # ---- CPTs
 gmt makecpt -T0.6/2.6/0.4 -Cplasma -D -G0/0.95 -I > p.cpt
@@ -33,7 +33,7 @@ gmt psscale $rgn $proj \
   --MAP_ANNOT_OFFSET=5p \
   --FONT=14p \
   -O -K >> $out.ps
-echo "a" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+echo "(a)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 gmt psbasemap $rgn_Qw $proj \
   -BnsW \
   -Bx20+l"Downstream distance, @%2%x@%% [km]" \
@@ -52,10 +52,11 @@ gmt psbasemap $rgn $proj \
   -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
 gmt_extras::plot_key_multi_line $rgn $proj 100 88 650 -W0.8p "Along-stream supply" $out p.cpt "1.4 1.6 1.8 2 2.2"
 gmt_extras::plot_key_line $rgn $proj 100 88 590 -W0.8p,dimgrey,4_4 "Upstream supply" $out
-echo "b" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O >> $out.ps
+echo "(b)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O >> $out.ps
 
 # ---- Show
 # gv $out.ps &
-gmt psconvert -A -E400 -Tj $out.ps
+gmt psconvert -A -E300 -Tj $out.ps
+gmt psconvert -A -E300 -Tf $out.ps
 eog $out.jpg &
 rm $out.ps *.cpt

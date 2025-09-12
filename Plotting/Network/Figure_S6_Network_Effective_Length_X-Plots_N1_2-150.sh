@@ -25,7 +25,7 @@ cross_plot () {
   gmt psbasemap $rgn $proj -B+n $off -O -K >> $out.ps
   awk ' { print $'$col', $1 } ' $basedir/N1_2-150_${case}.dat | \
     gmt psxy $rgn $proj -Sc2.5p -W0.8p,tomato -t70 -O -K >> $out.ps
-  echo $panel | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "($panel)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   gmt psbasemap $rgn $proj \
     -Bn$axes \
     -Bx$dx+l"$lab" \
@@ -38,9 +38,10 @@ source ../gmt_extras.sh
 
 # ---- Set defaults
 gmt_extras::set_gmt_defaults
+gmt set MAP_LABEL_OFFSET 3p
 
 # ---- Variables
-basedir="../../Output/Network/Figure_10_S5_S6_Network_Effective_Length_Controls"
+basedir="../../Output/Network/Figure_11_S5_S6_Network_Effective_Length_Controls"
 cases=("UUU" "NUU" "UAU" "NAU")
 titles=("Uniform segment lengths" "Non-uniform segment lengths" "Uniform segment lengths" "Non-uniform segment lengths")
 proj=-JX1i
@@ -76,8 +77,8 @@ done
 
 # Finalise, show
 gmt psbasemap -R0/1/0/1 $proj -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tf $out.ps
-convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
+gmt psconvert -A -E300 -Tf $out.ps
+convert -density 300x300 -quality 90 -alpha remove $out.pdf $out.jpg
 rm $out.ps $out.pdf
 eog $out.jpg
 
@@ -110,7 +111,7 @@ done
 
 # Finalise, show
 gmt psbasemap -R0/1/0/1 $proj -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tf $out.ps
-convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
+gmt psconvert -A -E300 -Tf $out.ps
+convert -density 300x300 -quality 90 -alpha remove $out.pdf $out.jpg
 rm $out.ps $out.pdf
 eog $out.jpg &

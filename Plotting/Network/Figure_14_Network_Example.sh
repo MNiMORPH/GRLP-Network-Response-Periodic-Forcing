@@ -36,8 +36,8 @@ label_time_series() {
 gmt_extras::set_gmt_defaults
 
 # ---- Variables
-out=../../Figures/Figure_13_Network_Example
-basedir=../../Output/Network/Figure_13_Network_Example
+out=../../Figures/Figure_14_Network_Example
+basedir=../../Output/Network/Figure_14_Network_Example
 
 # ---- CPTs
 gmt makecpt -T0.2/0.6/0.01 -Cplasma -D -Z > gain.cpt
@@ -53,8 +53,8 @@ gmt psbasemap $rgn $proj -B+n -Y4i -K > $out.ps
 gmt psxy $basedir/planform_select.d $rgn $proj -W4p,grey -O -K >> $out.ps
 gmt psxy $basedir/planform.d $rgn $proj -W1.2p -Corder.cpt -O -K >> $out.ps
 gmt psxy $basedir/planform_nodes.d $rgn $proj -Sc2.5p -W0.8p,black -O -K >> $out.ps
-echo a | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
-gmt psscale $rgn $proj -Dx1i/2.15i+w1.5i/0.07i+jMC+h+m -Corder.cpt -B1+l"Stream order, @~\167@~ [-]" \
+echo "(a)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -O -K >> $out.ps
+gmt psscale $rgn $proj -Dx1i/2.12i+w1.5i/0.07i+jMC+h+m -Corder.cpt -B1+l"Stream order, @~\167@~ [-]" \
   --MAP_LABEL_OFFSET=2p \
   --MAP_ANNOT_OFFSET=5p \
   --MAP_TICK_LENGTH=6p \
@@ -69,13 +69,13 @@ label_stream 98 1.25 91 1.75 iv
 label_stream 36 11.5 31.5 10.3 v
 label_stream 62 1 68 1 vi
 label_stream 76 18.5 83.5 19 vii
-gmt psbasemap $rgn $proj -BnSlr -Bx20+l"Downstream distance, @%2%x@%% [km]" -O -K >> $out.ps
+gmt psbasemap $rgn $proj -BtSlr -Bx20+l"Downstream distance, @%2%x@%% [km]" -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -X2.25i -O -K >> $out.ps
 gmt psxy $basedir/planform_select.d $rgn $proj -W4p,grey -O -K >> $out.ps
 gmt psxy $basedir/planform_gain.dg $rgn $proj -W1.2p -Cgain.cpt -O -K >> $out.ps
-echo b | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
-gmt psscale $rgn $proj -Dx1i/2.15i+w1.5i/0.07i+jMC+e+h+m -Cgain.cpt -B0.1+l"Gain, @%2%G@-z@-@%% [-]" \
+echo "(b)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -O -K >> $out.ps
+gmt psscale $rgn $proj -Dx1i/2.12i+w1.5i/0.07i+jMC+e+h+m -Cgain.cpt -B0.1+l"Gain, @%2%G@-z@-@%% [-]" \
   --MAP_LABEL_OFFSET=2p \
   --MAP_ANNOT_OFFSET=5p \
   --MAP_TICK_LENGTH=6p \
@@ -90,13 +90,13 @@ label_stream 98 1.25 91 1.75 iv
 label_stream 36 11.5 31.5 10.3 v
 label_stream 62 1 68 1 vi
 label_stream 76 18.5 83.5 19 vii
-gmt psbasemap $rgn $proj -BnSlr -Bx20+l"Downstream distance, @%2%x@%% [km]" -O -K >> $out.ps
+gmt psbasemap $rgn $proj -BtSlr -Bx20+l"Downstream distance, @%2%x@%% [km]" -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -X2.25i -O -K >> $out.ps
 gmt psxy $basedir/planform_select.d $rgn $proj -W4p,grey -O -K >> $out.ps
 gmt psxy $basedir/planform_lag.dl $rgn $proj -W1.2p -Clag.cpt -O -K >> $out.ps
-echo c | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
-gmt psscale $rgn $proj -Dx1i/2.15i+w1.5i/0.07i+jMC+e+h+m -Clag.cpt -B0.05+l"Lag, @~\152@~@%2%@-z@-@%% / @%2%P@%% [-]" \
+echo "(c)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -O -K >> $out.ps
+gmt psscale $rgn $proj -Dx1i/2.12i+w1.5i/0.07i+jMC+e+h+m -Clag.cpt -B0.05+l"Lag, @~\152@~@%2%@-z@-@%% / @%2%P@%% [-]" \
   --MAP_LABEL_OFFSET=2p \
   --MAP_ANNOT_OFFSET=5p \
   --MAP_TICK_LENGTH=6p \
@@ -111,26 +111,26 @@ label_stream 98 1.25 91 1.75 iv
 label_stream 36 11.5 31.5 10.3 v
 label_stream 62 1 68 1 vi
 label_stream 76 18.5 83.5 19 vii
-gmt psbasemap $rgn $proj -BnSlr -Bx20+l"Downstream distance, @%2%x@%% [km]" -O -K >> $out.ps
+gmt psbasemap $rgn $proj -BtSlr -Bx20+l"Downstream distance, @%2%x@%% [km]" -O -K >> $out.ps
 
 # ---- Plot time series
 
 rgn=-R0/260/0/700
 
-gmt psbasemap $rgn $proj -B+n -X-4.5i -Y-2.6i -O -K >> $out.ps
+gmt psbasemap $rgn $proj -B+n -X-4.5i -Y-2.5i -O -K >> $out.ps
 gmt psxy $basedir/force_tps.te $rgn $proj -W0.8p,lightgrey -O -K >> $out.ps
 gmt psxy $basedir/panel0.te $rgn $proj -W1p -Corder.cpt -O -K >> $out.ps
 gmt psxy $basedir/panel_tps0.te $rgn $proj -Sc2p -Corder.cpt -O -K >> $out.ps
-echo d | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.07i -Gwhite -C30%/40% -O -K >> $out.ps
-gmt psbasemap $rgn $proj -BnSrW -Bx50+l"Time, @%2%t@%% [kyr]" -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
+echo "(d)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -Gwhite -C30%/40% -O -K >> $out.ps
+gmt psbasemap $rgn $proj -BtSrW -Bx50+l"Time, @%2%t@%% [kyr]" -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
 label_time_series 10 610 i 0i
 
 gmt psbasemap $rgn $proj -B+n -X2.25i -O -K >> $out.ps
 gmt psxy $basedir/force_tps.te $rgn $proj -W0.6p,lightgrey -O -K >> $out.ps
 gmt psxy $basedir/panel1.te $rgn $proj -W1p -Corder.cpt -O -K >> $out.ps
 gmt psxy $basedir/panel_tps1.te $rgn $proj -Sc2p -Corder.cpt -O -K >> $out.ps
-echo e | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.07i -Gwhite -C30%/40% -O -K >> $out.ps
-gmt psbasemap $rgn $proj -BnSrw -Bx50+l"Time, @%2%t@%% [kyr]" -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
+echo "(e)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -Gwhite -C30%/40% -O -K >> $out.ps
+gmt psbasemap $rgn $proj -BtSrw -Bx50+l"Time, @%2%t@%% [kyr]" -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
 label_time_series 460 540 ii 0i
 label_time_series 155 400 iii 0i
 label_time_series 50 100 iv 0i
@@ -139,14 +139,15 @@ gmt psbasemap $rgn $proj -B+n -X2.25i -O -K >> $out.ps
 gmt psxy $basedir/force_tps.te $rgn $proj -W0.6p,lightgrey -O -K >> $out.ps
 gmt psxy $basedir/panel2.te $rgn $proj -W1p -Corder.cpt -O -K >> $out.ps
 gmt psxy $basedir/panel_tps2.te $rgn $proj -Sc2p -Corder.cpt -O -K >> $out.ps
-echo f | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.07i -Gwhite -C30%/40% -O -K >> $out.ps
-gmt psbasemap $rgn $proj -BnSrw -Bx50+l"Time, @%2%t@%% [kyr]" -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
+echo "(f)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -Gwhite -C30%/40% -O -K >> $out.ps
+gmt psbasemap $rgn $proj -BtSrw -Bx50+l"Time, @%2%t@%% [kyr]" -By100+l"Elevation, @%2%z@%% [m]" -O -K >> $out.ps
 label_time_series 350 480 v 0i
 label_time_series 110 180 vi 0i
 label_time_series 20 90 vii 0.02i
 
 # ---- Show
 gmt psbasemap $rgn $proj -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tj $out.ps
+gmt psconvert -A -E300 -Tj $out.ps
+gmt psconvert -A -E300 -Tf $out.ps
 rm $out.ps *.cpt
 eog $out.jpg &

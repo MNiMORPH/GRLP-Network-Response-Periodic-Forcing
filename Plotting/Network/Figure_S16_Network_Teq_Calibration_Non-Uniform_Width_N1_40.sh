@@ -5,6 +5,7 @@ source ../gmt_extras.sh
 
 # ---- Set defaults
 gmt_extras::set_gmt_defaults
+gmt gmtset MAP_LABEL_OFFSET 3p
 
 # variables
 out="../../Figures/Figure_S16_Network_Teq_Calibration_Non-Uniform_Width_N1_40"
@@ -33,7 +34,7 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/continuous_gain.pg $rgn $proj -Glightgrey -W0.8p,lightgrey -O -K >> $out.ps
   gmt psxy $basedir/linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/gain_L.pg $rgn $proj -Sc3.5p -W0.6p,steelblue -t75 -O -K >> $out.ps
-  echo "${L_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${L_labs[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -BtSe${W} -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq,max@-@%% [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
   echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.07i -N -O -K >> $out.ps
 
@@ -44,11 +45,11 @@ for i in ${!sweepdirs[@]} ; do
   fi
 
   proj_in=-JX0.35i
-  rgn_in=-R0/200/0/50
+  rgn_in=-R0/300/0/75
   gmt psbasemap $rgn_in $proj_in -B+n -Y0.28i -X1.05i -O -K >> $out.ps
   gmt pshistogram $basedir/MC_N1_40/${sweepdirs[$i]}/Teq_max.t $rgn_in $proj_in -Gsteelblue -W0.1p,steelblue -T15+n -O -K >> $out.ps
   gmt psbasemap $rgn_in $proj_in \
-    -BSW -Bx100+l"@[\textit{T\textsubscript{eq,max}}@[ [kyr]" -By25 \
+    -BSW -Bx150+l"@[\textit{T\textsubscript{eq,max}}@[ [kyr]" -By25 \
     --MAP_TICK_LENGTH_PRIMARY=2p \
     --MAP_FRAME_PEN=0.8p \
     --FONT_LABEL=5p \
@@ -60,7 +61,7 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/continuous_gain.pg $rgn $proj -Glightgrey -W0.8p,lightgrey -O -K >> $out.ps
   gmt psxy $basedir/linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/gain_Le.pg $rgn $proj -Sc3.5p -W0.6p,steelblue -t75 -O -K >> $out.ps
-  echo "${Le_labs[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${Le_labs[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -BtSe${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
 
   proj_in=-JX0.35i
@@ -96,7 +97,7 @@ echo "Along-stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.75i -Gw
 
 # Finalise, show
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tf $out.ps
-convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
+gmt psconvert -A -E300 -Tf $out.ps
+convert -density 300x300 -quality 90 -alpha remove $out.pdf $out.jpg
 rm $out.ps $out.pdf
 eog $out.jpg &

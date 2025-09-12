@@ -7,10 +7,10 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Variables
-out=../../Figures/Figure_10_Network_Effective_Length_Controls
+out=../../Figures/Figure_11_Network_Effective_Length_Controls
 vars=("@%2%R@-B@-@%%" "@%2%R@-L@-@%%" "@%2%R@-Q@-@%%" "@%2%K@%%" "@%2%l@%%@-max@-" "@~\341@~@%2%l@%%@~\361@~" "@~\341@~@%2%l@-I @-@%%@~\361@~" "@%2%L@%%@-max@-" "@~\341@~@%2%L@%%@~\361@~" "@~\341@~@%2%L@-I @-@%%@~\361@~" "@%2%w@%%" "@~\341@~@%2%w@%%@~\361@~" "@%2%p@%%")
 offs=(0.15 0.25 0.15 0.25 0.15 0.25 0.15 0.25 0.15 0.25 0.15 0.25 0.15)
-basedir="../../Output/Network/Figure_10_S5_S6_Network_Effective_Length_Controls"
+basedir="../../Output/Network/Figure_11_S5_S6_Network_Effective_Length_Controls"
 cases=("UUU" "NUU" "UAU" "NAU")
 corr_labels=("a" "b" "c" "d")
 Le_labels=("e" "f" "g" "h")
@@ -36,10 +36,10 @@ for i in ${!cases[@]} ; do
     E="e"
   fi
 
-  rgn=-R-0.5/12.5/-0.9/1.1
+  rgn=-R-0.5/12.5/0/1.19
   gmt psbasemap $rgn $proj -B+n -X0.45i -Y3.8i -O -K >> $out.ps
   for j in ${!vars[@]} ; do
-    echo $j -0.9 "${vars[$j]}" | \
+    echo $j 0 "${vars[$j]}" | \
       gmt pstext $rgn $proj -F+f7p+jBC -D0i/-${offs[$j]}i -N -O -K >> $out.ps
   done
   for k in $(seq 0 1 $(wc -l $basedir/N1_40_${cases[$i]}_corr.dat | awk ' { print $1-1 } ')) ; do
@@ -47,19 +47,35 @@ for i in ${!cases[@]} ; do
     x2=$(echo $k | awk ' { print $1+0.3 } ')
     y1=$(awk ' { if ($1=='$k') print $2 } ' $basedir/N1_40_${cases[$i]}_corr.dat)
     y2=$(awk ' { if ($1=='$k') print $2 } ' $basedir/N1_2-150_${cases[$i]}_corr.dat)
+    if [ $(echo $y1 | awk ' { print $1/sqrt($1*$1) } ') == -1 ] ; then
+      y1=$(echo $y1 | awk ' { print sqrt($1*$1) } ')
+      fill="p9+fsteelblue+r400"
+    else
+      fill=steelblue
+    fi
     echo "$x1 0
 $x1 $y1
 $k $y1
-$k 0" | gmt psxy $rgn $proj -Gsteelblue -W0.1p,steelblue -O -K >> $out.ps
+$k 0" | gmt psxy $rgn $proj -G$fill -O -K >> $out.ps
   echo "$x2 0
 $x2 $y2
 $k $y2
-$k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
+$k 0" | gmt psxy $rgn $proj -Gtomato -O -K >> $out.ps
   done
   # gmt psxy $basedir/${corrfiles[$i]} $rgn $proj -Sc3.5p -Gsteelblue -W0.8p -O -K >> $out.ps
-  gmt psbasemap $rgn $proj -Bnse${W} -Bx1 -By0.2+l"Correlation coefficient, @%2%r@%%" -O -K >> $out.ps
-  echo "${corr_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
-  echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.1i -N -O -K >> $out.ps
+  gmt psbasemap $rgn $proj -Btse${W} -Bx1 -By0.2+l"Correlation coefficient, @~\174@~@%2%r@%% @~\174@~" -O -K >> $out.ps
+  echo "(${corr_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.07i -N -O -K >> $out.ps
+  if [ $i -eq 3 ] ; then
+    echo "N@-1@- = 40" | gmt pstext $rgn $proj -F+f6p+jMR+cTC -D-0.09i/-0.08i -O -K >> $out.ps
+    echo "N@-1@- = [2..150]" | gmt pstext $rgn $proj -F+f6p+jML+cTC -D0.09i/-0.08i -O -K >> $out.ps
+    echo "r > 0" | gmt pstext $rgn $proj -F+f6p+jMR+cTC -D-0.09i/-0.18i -O -K >> $out.ps
+    echo "r < 0" | gmt pstext $rgn $proj -F+f6p+jML+cTC -D0.09i/-0.18i -O -K >> $out.ps
+    echo 6 1.19 | gmt psxy $rgn $proj -Ss6p -Gsteelblue -D-0.04i/-0.08i -O -K >> $out.ps
+    echo 6 1.19 | gmt psxy $rgn $proj -Ss6p -Gtomato -D0.04i/-0.08i -O -K >> $out.ps
+    echo 6 1.19 | gmt psxy $rgn $proj -Ss6p -Gdimgrey -D-0.04i/-0.18i -O -K >> $out.ps
+    echo 6 1.19 | gmt psxy $rgn $proj -Ss6p -Gp9+fdimgrey+r400 -D0.04i/-0.18i -O -K >> $out.ps
+  fi
 
   rgn=-R0/180/-10/260
   gmt psbasemap $rgn $proj -B+n -Y-2i -O -K >> $out.ps
@@ -70,7 +86,7 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
     -Btsr${W} -Bpx45+l"Mean inlet length, @%2%@~\341@~L@-I@-@%%@~\361@~ [km]" \
     -By50+l"Effective length, @[\widehat{\textit{L}}@[ [km]" \
     -O -K >> $out.ps
-  echo "${Le_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${Le_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   grad=$(awk ' { printf "%.2f", $1 } ' $basedir/N1_40_${cases[$i]}_grad.dat)
   gmt_extras::plot_key_line $rgn $proj 48 70 238 -W0.8p,3p_2p "@[\widehat{\textit{L}}@[ / @[\langle\textit{L\textsubscript{I}}\rangle@[ = $grad" $out
 
@@ -100,7 +116,7 @@ $k 0" | gmt psxy $rgn $proj -Gtomato -W0.1p,tomato -O -K >> $out.ps
     -BtSr${W} -Bpx45+l"Mean inlet length, @~\341@~@%2%L@-I @-@%%@~\361@~ [km]"\
     -By50+l"Effective length, @[\widehat{\textit{L}}@[ [km]" \
     -O -K >> $out.ps
-  echo "${Le2_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${Le2_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   grad=$(awk ' { printf "%.2f", $1 } ' $basedir/N1_2-150_${cases[$i]}_grad.dat)
   gmt_extras::plot_key_line $rgn $proj 48 70 238 -W0.8p,3p_2p "@[\widehat{\textit{L}}@[ / @[\langle\textit{L\textsubscript{I}}\rangle@[ = $grad" $out
 
@@ -127,23 +143,23 @@ done
 rgn=-R0/3.15/0/3.15
 proj=-JX3.15i
 gmt psbasemap $rgn $proj -B+n -X-6.15i -Y3.8i -O -K >> $out.ps
-echo "0.75 1.72
-0.75 1.79
-2.4 1.79
-2.4 1.72" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "Upstream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -Gwhite -N -O -K >> $out.ps
+echo "0.75 1.7
+0.75 1.75
+2.4 1.75
+2.4 1.7" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo "Upstream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.75i -Gwhite -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -X3.3i -O -K >> $out.ps
-echo "0.75 1.72
-0.75 1.79
-2.4 1.79
-2.4 1.72" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "Along-stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.79i -Gwhite -N -O -K >> $out.ps
+echo "0.75 1.7
+0.75 1.75
+2.4 1.75
+2.4 1.7" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo "Along-stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.75i -Gwhite -N -O -K >> $out.ps
 
 
 # Finalise, show
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tf $out.ps
-convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps $out.pdf
+gmt psconvert -A -E300 -Tf $out.ps
+convert -density 300x300 -quality 90 -alpha remove $out.pdf $out.jpg
+rm $out.ps
 eog $out.jpg &

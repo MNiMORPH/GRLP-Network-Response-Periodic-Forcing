@@ -5,12 +5,13 @@ source ../gmt_extras.sh
 
 # ---- Set defaults
 gmt_extras::set_gmt_defaults
+gmt set MAP_LABEL_OFFSET 3p
 
 # ---- Variables
-out="../../Figures/Figure_11_Network_Effective_Length_N1"
+out="../../Figures/Figure_12_Network_Effective_Length_N1"
 rgn=-R-5/155/1/1.6
 proj=-JX1.5i
-basedir="../../Output/Network/Figure_11_Network_Effective_Length_N1"
+basedir="../../Output/Network/Figure_12_Network_Effective_Length_N1"
 cases=("UUU" "NUU" "UAU" "NAU")
 eff_labels=("a" "b" "c" "d")
 mean_labels=("e" "f" "g" "h")
@@ -37,7 +38,7 @@ for i in ${!cases[@]} ; do
     gmt psxy $rgn $proj -Sc3p -W0.8p,steelblue -t70 -O -K >> $out.ps
   awk ' { print $1, $2 } ' $basedir/N1_2-150_${cases[$i]}_bin.dat | \
     gmt psxy $rgn $proj -Sd3.5p -W1p,black -O -K >> $out.ps
-  echo ${eff_labels[$i]} | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${eff_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -Btse${W} -Bx50+l"Number of inlet segments, @%2%N@%%@-1@- [-]" -By50+l"Effective length, @[\widehat{\textit{L}}@[ [km]" -O -K >> $out.ps
   echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.07i -N -O -K >> $out.ps
 
@@ -49,7 +50,7 @@ for i in ${!cases[@]} ; do
     gmt psxy $rgn $proj -Sc3p -W0.8p,steelblue -t70 -O -K >> $out.ps
   awk ' { print $1, $3 } ' $basedir/N1_2-150_${cases[$i]}_bin.dat | \
     gmt psxy $rgn $proj -Sd3.5p -W1p,black -O -K >> $out.ps
-  echo ${mean_labels[$i]} | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${mean_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -Bnse${W} -Bx50+l"Number of inlet segments, @%2%N@%%@-1@- [-]" -By40+l"Mean inlet length, @[\langle\textit{L\textsubscript{I}}\rangle@[ [km]" -O -K >> $out.ps
 
   rgn=-R-5/155/1/1.6
@@ -60,7 +61,7 @@ for i in ${!cases[@]} ; do
     gmt psxy $rgn $proj -Sc3p -W0.8p,steelblue -t70 -O -K >> $out.ps
   awk ' { print $1, $2/$3 } ' $basedir/N1_2-150_${cases[$i]}_bin.dat | \
     gmt psxy $rgn $proj -Sd3.5p -W1p,black -O -K >> $out.ps
-  echo ${ratio_labels[$i]} | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${ratio_labels[$i]})" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn $proj -BnSe${W} -Bx50+l"Number of inlet segments, @%2%N@%%@-1@- [-]" -By0.1+l"@[\widehat{\textit{L}}@[ / @[\langle\textit{L\textsubscript{I}}\rangle@[ [-]" -O -K >> $out.ps
 
   if [ $i -eq 3 ] ; then
@@ -89,7 +90,7 @@ echo "Along-stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.75i -Gw
 
 # ---- Finalise
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tf $out.ps
-convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps $out.pdf
+gmt psconvert -A -E300 -Tf $out.ps
+convert -density 300x300 -quality 90 -alpha remove $out.pdf $out.jpg
+rm $out.ps
 eog $out.jpg &

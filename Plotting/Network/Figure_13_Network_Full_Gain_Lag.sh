@@ -8,9 +8,9 @@ gmt_extras::set_gmt_defaults
 gmt set MAP_LABEL_OFFSET 3p
 
 # variables
-out="../../Figures/Figure_12_Network_Full_Gain_Lag"
+out="../../Figures/Figure_13_Network_Full_Gain_Lag"
 proj=-JX1.5il/1.1i
-basedir="../../Output/Network/Figure_12_S7_S8_S9_Network_Full_Gain_Lag"
+basedir="../../Output/Network/Figure_13_S7_S8_S9_Network_Full_Gain_Lag"
 sweepdirs=("UUU" "NUU" "UAU" "NAU")
 G_z_labels=("a" "b" "c" "d")
 lag_z_labels=("e" "f" "g" "h")
@@ -30,6 +30,11 @@ for i in ${!sweepdirs[@]} ; do
   else
     W="w"
   fi
+  if [ $i -eq 3 ] ; then
+    E="r"
+  else
+    E="e"
+  fi
   
   rgn=-R0.003/300/-0.05/1.05
   gmt psbasemap $rgn $proj -B+n -X1.65i -Y6i -O -K >> $out.ps
@@ -38,8 +43,8 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/z_linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/z_gain.pg $rgn $proj -Ey+a+p0.6p,steelblue+w2p -t95 -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/z_gain.pg $rgn $proj -Sc3.5p -W0.6p,steelblue -t75 -O -K >> $out.ps
-  echo "${G_z_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
-  gmt psbasemap $rgn $proj -Btse${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{z}}@[ [-]" -O -K >> $out.ps
+  echo "(${G_z_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
+  gmt psbasemap $rgn $proj -Bts${E}${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{z}}@[ [-]" -O -K >> $out.ps
   echo "${titles[$i]}" | gmt pstext $rgn $proj -F+f8p+jCB+cCT -D0i/0.07i -N -O -K >> $out.ps
 
   if [ $i -eq 3 ] ; then
@@ -56,8 +61,8 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/z_linear_lag.pl $rgn $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/z_lag.pl $rgn $proj -Ey+a+p0.6p,steelblue+w2p -t95 -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/z_lag.pl $rgn $proj -Sc3.5p -W0.6p,steelblue -t75 -O -K >> $out.ps
-  echo "${lag_z_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
-  gmt psbasemap $rgn_l $proj -Btse${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Lag, @[\varphi\textit{\textsubscript{z} / P}@[ [-]" -O -K >> $out.ps
+  echo "(${lag_z_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
+  gmt psbasemap $rgn_l $proj -Bts${E}${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Lag, @[\varphi\textit{\textsubscript{z} / P}@[ [-]" -O -K >> $out.ps
 
   if [ $i -eq 3 ] ; then
     rgnx=-R0/100/0/100
@@ -73,32 +78,43 @@ for i in ${!sweepdirs[@]} ; do
   gmt psxy $basedir/Qs_continuous_gain.pg $rgn $proj -G197.12/64.125/125.88 -t70 -O -K >> $out.ps
   gmt psxy $basedir/Qs_linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/Qs_gain.pg $rgn $proj -Sc3.5p -W0.6p,steelblue -t90 -O -K >> $out.ps
-  echo "${G_Qs_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
-  gmt psbasemap $rgn $proj -Btse${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
+  echo "(${G_Qs_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTL+cTL -D0.04i/-0.06i -O -K >> $out.ps
+  gmt psbasemap $rgn $proj -Bts${E}${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
   
   rgn_l=-R0.003/300/-0.05/1.05
   gmt psbasemap $rgn_l $proj -B+n -Y-1.2i -O -K >> $out.ps
+  if [ $i -le 1 ] ; then
+    echo "0.007 0
+4 0
+4 1.05
+0.007 1.05" | gmt psxy $rgn_l $proj -W1p,grey -L -O -K >> $out.ps
+    if [ $i -eq 0 ] ; then
+      echo 4 1.05 Fig. 17a | gmt pstext $rgn_l $proj -F+f6p,Helvetica-Bold,grey+jTR -D-0.03i/-0.05i -O -K >> $out.ps
+    else
+      echo 4 1.05 Fig. 17b | gmt pstext $rgn_l $proj -F+f6p,Helvetica-Bold,grey+jTR -D-0.03i/-0.05i -O -K >> $out.ps      
+    fi
+  fi
   gmt psxy $basedir/Qs_continuous_lag.pl $rgn_l $proj -G197.12/64.125/125.88 -t70 -O -K >> $out.ps
   gmt psxy $basedir/Qs_linear_lag.pl $rgn_l $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/Qs_lag.pl $rgn_l $proj -Sc3.5p -W0.6p,steelblue -t90 -O -K >> $out.ps
-  echo "${lag_Qs_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTL+cTL -D0.05i/-0.08i -O -K >> $out.ps
-  gmt psbasemap $rgn_l $proj -Btse${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Lag, @[\varphi\textit{\textsubscript{Q\textsubscript{s},L} / P}@[ [-]" -O -K >> $out.ps
+  echo "(${lag_Qs_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTR+cTR -D-0.04i/-0.06i -O -K >> $out.ps
+  gmt psbasemap $rgn_l $proj -Bts${E}${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Lag, @[\varphi\textit{\textsubscript{Q\textsubscript{s},L} / P}@[ [-]" -O -K >> $out.ps
 
   rgn=-R0.003/300/-0.05/1.25
   gmt psbasemap $rgn $proj -B+n -Y-1.2i -O -K >> $out.ps
   gmt psxy $basedir/Qs_Qw_continuous_gain.pg $rgn $proj -G197.12/64.125/125.88 -t70 -O -K >> $out.ps
   gmt psxy $basedir/Qs_Qw_linear_gain.pg $rgn $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/Qs_Qw_gain.pg $rgn $proj -Sc3.5p -W0.6p,steelblue -t90 -O -K >> $out.ps
-  echo "${G_Qs_Qw_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jBL+cBL -D0.05i/0.08i -O -K >> $out.ps
-  gmt psbasemap $rgn $proj -Btse${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
+  echo "(${G_Qs_Qw_labels[$i]})" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jTR+cTR -D-0.04i/-0.06i -O -K >> $out.ps
+  gmt psbasemap $rgn $proj -Bts${E}${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" -O -K >> $out.ps
 
   rgn_l=-R0.003/300/-0.275/0.025
   gmt psbasemap $rgn_l $proj -B+n -Y-1.2i -O -K >> $out.ps
   gmt psxy $basedir/Qs_Qw_continuous_lag.pl $rgn_l $proj -G197.12/64.125/125.88 -t70 -O -K >> $out.ps
   gmt psxy $basedir/Qs_Qw_linear_lag.pl $rgn_l $proj -W0.8p -O -K >> $out.ps
   gmt psxy $basedir/MC_N1_40/${sweepdirs[$i]}/Qs_Qw_lag.pl $rgn_l $proj -Sc3.5p -W0.6p,steelblue -t90 -O -K >> $out.ps
-  echo "${lag_Qs_Qw_labels[$i]}" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jBL+cBL -D0.05i/0.08i -O -K >> $out.ps
-  gmt psbasemap $rgn_l $proj -BtSe${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.05+l"Lag, @[\varphi\textit{\textsubscript{Q\textsubscript{s},L} / P}@[ [-]" -O -K >> $out.ps
+  echo "(${lag_Qs_Qw_labels[$i]})" | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jTR+cTR -D-0.04i/-0.06i -O -K >> $out.ps
+  gmt psbasemap $rgn_l $proj -BtS${E}${W} -Bx1f3p+l"Period, \textit{P} / @[\widehat{\textit{T\textsubscript{eq}}}@[ [-]" -By0.05+l"Lag, @[\varphi\textit{\textsubscript{Q\textsubscript{s},L} / P}@[ [-]" -O -K >> $out.ps
 
 done
 
@@ -119,29 +135,29 @@ echo "0.75 1.3
 echo "Along-stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.35i -Gwhite -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -Y-1.2i -X3.15i -O -K >> $out.ps
-echo "0.1 2.05
-0.17 2.05
-0.17 0.25
-0.1 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "0.17 1.15 @~\144@~@%2%z@%%: Varying sediment supply" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
+echo "0.05 2.05
+0.12 2.05
+0.12 0.25
+0.05 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo "0.12 1.15 @~\144@~@%2%z@%%: Varying sediment supply" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -Y-2.4i -O -K >> $out.ps
-echo "0.1 2.05
-0.17 2.05
-0.17 0.25
-0.1 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "0.17 1.15 @~\144@~@%2%Q@-s@-@%%: Varying sediment supply" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
+echo "0.05 2.05
+0.12 2.05
+0.12 0.25
+0.05 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo "0.12 1.15 @~\144@~@%2%Q@-s@-@%%: Varying sediment supply" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -Y-2.4i -O -K >> $out.ps
-echo "0.1 2.05
-0.17 2.05
-0.17 0.25
-0.1 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "0.17 1.15 @~\144@~@%2%Q@-s@-@%%: Varying water supply" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
+echo "0.05 2.05
+0.12 2.05
+0.12 0.25
+0.05 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo "0.12 1.15 @~\144@~@%2%Q@-s@-@%%: Varying water supply" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
 
 # Finalise, show
 gmt psbasemap -R0/1/0/1 -JX2i -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tf $out.ps
-convert -density 600x600 -quality 100 -alpha remove $out.pdf $out.jpg
-rm $out.ps $out.pdf
+gmt psconvert -A -E300 -Tf $out.ps
+convert -density 300x300 -quality 90 -alpha remove $out.pdf $out.jpg
+rm $out.ps
 eog $out.jpg &

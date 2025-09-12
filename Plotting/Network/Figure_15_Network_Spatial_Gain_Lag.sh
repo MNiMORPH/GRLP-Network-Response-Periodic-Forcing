@@ -7,15 +7,15 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
-basedir="../../Output/Network/Figure_14_Network_Spatial_Gain_Lag"
-out="../../Figures/Figure_14_Network_Spatial_Gain_Lag"
+basedir="../../Output/Network/Figure_15_Network_Spatial_Gain_Lag"
+out="../../Figures/Figure_15_Network_Spatial_Gain_Lag"
 
 # ---- Variables
 proj=-JX1.5i/1.1i
 rgn=-R-10/110/-0.05/1.05
 rgn_lag=-R-10/110/-0.025/0.425
 nets=("UUU" "NUU" "UAU" "NAU")
-axes=("eW" "ew" "ew" "ew")
+axes=("eW" "ew" "ew" "rw")
 titles=("Uniform segment lengths" "Non-uniform segment lengths" "Uniform segment lengths" "Non-uniform segment lengths")
 
 # ---- Initiate
@@ -41,16 +41,16 @@ for p in "fast" "medium" "slow" ; do
   fi
 
   for i in ${!nets[@]} ; do
-
+    
     indir=$basedir/${nets[$i]}
 
     # ---- Gain_z
     gmt psbasemap $rgn $proj -B+n -X1.65i -Y1.2i -O -K >> $out.ps
     gmt psxy $indir/$p/single_seg_U_gain.dg $rgn $proj -W0.8p,black,3_2 -O -K >> $out.ps
     gmt psxy $indir/$p/single_seg_A_gain.dg $rgn $proj -W0.8p,dimgrey,3_3_0.8_3 -O -K >> $out.ps
-    gmt psxy $indir/$p/gain.dg $rgn $proj -W0.8p -Corder.cpt -O -K >> $out.ps
-    echo ${g_lab[$i]} | \
-      gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+    gmt psxy $indir/$p/gain.dg $rgn $proj -W+cl -Corder.cpt -O -K >> $out.ps
+    echo "(${g_lab[$i]})" | \
+      gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -O -K >> $out.ps
     gmt psbasemap $rgn $proj -Bts${axes[$i]} \
         -Bx20+l"Downstream distance [km]" \
         -By0.2+l"Gain, @%2%G@-z@-@%% [-]" \
@@ -70,9 +70,9 @@ for p in "fast" "medium" "slow" ; do
     gmt psbasemap $rgn_lag $proj -B+n -Y-1.2i -O -K >> $out.ps
     gmt psxy $indir/$p/single_seg_U_lag.dl $rgn_lag $proj -W0.8p,black,3_3 -O -K >> $out.ps
     gmt psxy $indir/$p/single_seg_A_lag.dl $rgn_lag $proj -W0.8p,dimgrey,3_3_0.8_3 -O -K >> $out.ps
-    gmt psxy $indir/$p/lag.dl $rgn_lag $proj -W0.8p -Corder.cpt -O -K >> $out.ps
-    echo ${l_lab[$i]} | \
-      gmt pstext $rgn_lag $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+    gmt psxy $indir/$p/lag.dl $rgn_lag $proj -W+cl -Corder.cpt -O -K >> $out.ps
+    echo "(${l_lab[$i]})" | \
+      gmt pstext $rgn_lag $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.04i/-0.06i -O -K >> $out.ps
       
     if [ $p == "slow" ] ; then
       S="S"
@@ -97,6 +97,10 @@ for p in "fast" "medium" "slow" ; do
         --FONT=16p \
         -O -K >> $out.ps
     fi
+    
+    if [ $p == "slow" ] && [ ${nets[$i]} == "UAU" ] ; then
+      gmt_extras::plot_discharge_key $rgn_lag $proj 100 0.28 0.38 $out
+    fi
 
   done
 
@@ -119,29 +123,38 @@ echo "0.75 1.3
 echo "Along-stream supply" | gmt pstext $rgn $proj -F+f8p+jCM+cCB -D0i/1.35i -Gwhite -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -Y-1.2i -X3.15i -O -K >> $out.ps
-echo "0.1 2.05
-0.17 2.05
-0.17 0.25
-0.1 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "0.17 1.15 @%2%P@%% = @%2%T@-eq@-@%% / 10" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
+echo "0.05 2.05
+0.12 2.05
+0.12 1.48
+>
+0.12 0.82
+0.12 0.25
+0.05 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo 0.12 1.15 "\textit{P} = @[\widehat{\textit{T\textsubscript{eq}}}@[ / 10" | gmt pstext $rgn $proj -F+f8p+a270 -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -Y-2.4i -O -K >> $out.ps
-echo "0.1 2.05
-0.17 2.05
-0.17 0.25
-0.1 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "0.17 1.15 @%2%P@%% = @%2%T@-eq@-@%%" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
+echo "0.05 2.05
+0.12 2.05
+0.12 1.38
+>
+0.12 0.92
+0.12 0.25
+0.05 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo 0.12 1.15 "\textit{P} = @[\widehat{\textit{T\textsubscript{eq}}}@[" | gmt pstext $rgn $proj -F+f8p+a270 -N -O -K >> $out.ps
 
 gmt psbasemap $rgn $proj -B+n -Y-2.4i -O -K >> $out.ps
-echo "0.1 2.05
-0.17 2.05
-0.17 0.25
-0.1 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
-echo "0.17 1.15 @%2%P@%% = @%2%T@-eq@-@%% x 10" | gmt pstext $rgn $proj -F+f8p+a270 -Gwhite -N -O -K >> $out.ps
+echo "0.05 2.05
+0.12 2.05
+0.12 1.5
+>
+0.12 0.8
+0.12 0.25
+0.05 0.25" | gmt psxy $rgn $proj -W0.8p -O -K >> $out.ps
+echo 0.12 1.15 "\textit{P} = @[\widehat{\textit{T\textsubscript{eq}}}~\times@[ 10" | gmt pstext $rgn $proj -F+f8p+a270 -N -O -K >> $out.ps
 
 # ---- Show
 gmt psbasemap $rgn $proj -B+n -O >> $out.ps
-# gv $out.ps &
-gmt psconvert -A -E400 -Tj $out.ps
+gmt psconvert -A -E300 -Tj $out.ps
+gmt psconvert -A -E300 -Tf $out.ps
 rm $out.ps order.cpt
 eog $out.jpg &

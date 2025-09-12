@@ -35,11 +35,11 @@ for i in ${!periods[@]} ; do
   gmt psbasemap $rgn $proj -B+n -X2.3i -Y2.2i -O -K >> $out.ps
   gmt psxy $indir/G_z_lin.dg $rgn $proj -W0.8p,dimgrey,4_4 -O -K >> $out.ps
   gmt psxy $indir/G_z.dg $rgn $proj -W0.8p -Cp.cpt -O -K >> $out.ps
-  echo ${g_lab[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${g_lab[$i]})" | \
+    gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.06i/-0.08i -O -K >> $out.ps
   echo ${title[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica,black+jCB+cCT -N -D0i/0.16i -O -K >> $out.ps
-  gmt psbasemap $rgn $proj -Bns${axes[$i]} \
+    gmt pstext $rgn $proj -F+f11p,Helvetica,black+jCB+cCT -N -D0i/0.12i -O -K >> $out.ps
+  gmt psbasemap $rgn $proj -Bts${axes[$i]} \
       -Bx20+l"Downstream distance [km]" \
       -By0.2+l"Gain, @%2%G@-z@-@%%" \
       -O -K >> $out.ps
@@ -53,8 +53,8 @@ for i in ${!periods[@]} ; do
   gmt psbasemap $rgn_lag $proj -B+n -Y-2.2i -O -K >> $out.ps
   gmt psxy $indir/Lag_z_lin.dl $rgn_lag $proj -W0.8p,dimgrey,4_4 -O -K >> $out.ps
   gmt psxy $indir/Lag_z.dl $rgn_lag $proj -W0.8p -Cp.cpt -O -K >> $out.ps
-  echo ${l_lab[$i]} | \
-    gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+  echo "(${l_lab[$i]})" | \
+    gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.06i/-0.08i -O -K >> $out.ps
   gmt psbasemap $rgn_lag $proj -BnS${axes[$i]} \
       -Bx20+l"Downstream distance [km]" \
       -By0.1+l"Lag, @~\152@~@%2%@-z@-@%% / @%2%P@%%" \
@@ -78,6 +78,6 @@ done
 
 # ---- Show
 gmt psbasemap $rgn $proj -B+n -O >> $out.ps
-gmt psconvert -A -E400 -Tj $out.ps
+gmt psconvert -A -E300 -Tj $out.ps
 eog $out.jpg &
 rm $out.ps *.cpt

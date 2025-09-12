@@ -7,8 +7,8 @@ source ../gmt_extras.sh
 gmt_extras::set_gmt_defaults
 
 # ---- Inputs / Output
-basedir="../../Output/SingleSegment/Figure_6_S3_SingleSegment_Periods"
-out="../../Figures/Figure_6_SingleSegment_Periods"
+basedir="../../Output/SingleSegment/Figure_7_S3_SingleSegment_Periods"
+out="../../Figures/Figure_7_SingleSegment_Periods"
 
 # ---- Variables
 proj=-JX2il/2i
@@ -29,7 +29,7 @@ awk ' { if ($1==">") print $0 ; else print $1, $3 } ' $basedir/G_z_num.pg | \
   gmt psxy $rgn $proj -Cp.cpt -W0.8p -O -K >> $out.ps
 awk ' { if ($1==">") print $0 ; else print $1, $2 } ' $basedir/G_z_num.pg | \
   gmt psxy $rgn $proj -Cp.cpt -W0.8p,3_3 -O -K >> $out.ps
-echo a | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+echo "(a)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 echo 1 1.3 "@~\144@~@%2%z@%%" | \
   gmt pstext $rgn $proj -F+f10p,Helvetica,black+jMC -D0i/0.15i -N -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BtseW -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.2+l"Gain, @%2%G@-z@-@%%" -O -K >> $out.ps
@@ -45,7 +45,7 @@ awk ' { if ($1==">") print $0 ; else print $1, $2 } ' $basedir/lag_z_num.pl | \
   gmt psxy $rgn $proj -Cp.cpt -W0.8p,3_3 -O -K >> $out.ps
 awk ' { if ($1==">") print $0 ; else print $1, $4 } ' $basedir/lag_z_num.pl | \
   gmt psxy $rgn $proj -Cp.cpt -W0.8p,0.8_4 -O -K >> $out.ps
-echo d | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+echo "(d)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 gmt_extras::plot_key_line $rgnx $projx 95 84.5 68 -W0.8p "Upstream: Outlet" $out
 gmt_extras::plot_key_line $rgnx $projx 95 84.5 74 -W3p,lightgrey "Upstream: Range" $out
 gmt_extras::plot_key_multi_line $rgnx $projx 95 84.5 88 -W0.8p "Along-stream: Outlet" $out p.cpt "2.2 2 1.8 1.6 1.4"
@@ -58,7 +58,7 @@ rgn=-R${pmin}/${pmax}/-0.1/1.3
 gmt psbasemap $rgn $proj -B+n -Y2.2i -X2.6i -O -K >> $out.ps
 gmt psxy $basedir/G_Qs_out_lin.pg $rgn $proj -W0.8p -O -K >> $out.ps 
 gmt psxy $basedir/G_Qs_num.pg $rgn $proj -Cp.cpt -W0.8p -O -K >> $out.ps
-echo b | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+echo "(b)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 echo 1 1.3 "@~\144@~@%2%Q@-s@-@%%: Varying sediment supply" | \
   gmt pstext $rgn $proj -F+f10p,Helvetica,black+jMC -D0i/0.15i -N -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BtseW -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" --MAP_LABEL_OFFSET=4p -O -K >> $out.ps
@@ -68,7 +68,7 @@ rgn=-R${pmin}/${pmax}/-0.025/0.525
 gmt psbasemap $rgn $proj -B+n -Y-2.2i -O -K >> $out.ps
 gmt psxy $basedir/lag_Qs_out_lin.pl $rgn $proj -W0.8p -O -K >> $out.ps 
 gmt psxy $basedir/lag_Qs_num.pl $rgn $proj -Cp.cpt -W0.8p -O -K >> $out.ps
-echo e | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
+echo "(e)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jLT+cLT -D0.05i/-0.08i -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BnSeW -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.1+l"Lag, @[\varphi\textit{\textsubscript{Q\textsubscript{s},L} / P}@[ [-]" --MAP_LABEL_OFFSET=4p -O -K >> $out.ps
 
 # ---- G_Qs (Qw)
@@ -76,7 +76,7 @@ rgn=-R${pmin}/${pmax}/-0.1/1.3
 gmt psbasemap $rgn $proj -B+n -Y2.2i -X2.25i -O -K >> $out.ps
 gmt psxy $basedir/G_Qs_Qw_out_lin.pg $rgn $proj -W0.8p -O -K >> $out.ps 
 gmt psxy $basedir/G_Qs_Qw_num.pg $rgn $proj -Cp.cpt -W0.8p -O -K >> $out.ps
-echo c | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
+echo "(c)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
 echo 1 1.3 "@~\144@~@%2%Q@-s@-@%%: Varying water supply" | \
   gmt pstext $rgn $proj -F+f10p,Helvetica,black+jMC -D0i/0.15i -N -O -K >> $out.ps
 gmt psbasemap $rgn $proj -BtsEw -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.2+l"Gain, @[\textit{G\textsubscript{Q\textsubscript{s},L}}@[ [-]" --MAP_LABEL_OFFSET=4p -O -K >> $out.ps
@@ -86,7 +86,7 @@ rgn=-R${pmin}/${pmax}/-0.275/0.025
 gmt psbasemap $rgn $proj -B+n -Y-2.2i -O -K >> $out.ps
 gmt psxy $basedir/lag_Qs_Qw_out_lin.pl $rgn $proj -W0.8p -O -K >> $out.ps 
 gmt psxy $basedir/lag_Qs_Qw_num.pl $rgn $proj -Cp.cpt -W0.8p -O -K >> $out.ps
-echo f | gmt pstext $rgn $proj -F+f11p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
+echo "(f)" | gmt pstext $rgn $proj -F+f10p,Helvetica-Bold,black+jRT+cRT -D-0.05i/-0.08i -O -K >> $out.ps
 gmt psscale $rgn $proj -Dx0.6i/0.15i+w1i/0.07i+jMC+h+m -Bx0.4+l"@%2%p@-x,Qw@-     p@-x,Qs@-@%%" -Cp.cpt \
   --MAP_LABEL_OFFSET=0p \
   --MAP_ANNOT_OFFSET=5p \
@@ -98,6 +98,7 @@ gmt psscale $rgn $proj -Dx0.6i/0.15i+w1i/0.07i+jMC+h+m -Bx0.4+l"@%2%p@-x,Qw@-   
 gmt psbasemap $rgn $proj -BnSEw -Bx1f3p+l"Period, @%2%P@%% / @%2%T@-eq@-@%%" -By0.05+l"Lag, @[\varphi\textit{\textsubscript{Q\textsubscript{s},L} / P}@[ [-]" --MAP_LABEL_OFFSET=4p -O >> $out.ps
 
 # ---- Show
-gmt psconvert -A -E400 -Tj $out.ps
+gmt psconvert -A -E300 -Tj $out.ps
+gmt psconvert -A -E300 -Tf $out.ps
 eog $out.jpg &
 rm $out.ps *.cpt
