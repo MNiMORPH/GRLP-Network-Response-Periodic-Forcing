@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figures S10 and S11 of McNab et
-al. (2025, EGUsphere); produces a rough version of the Figure; and, optionally,
-generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures S10 and S11; produces a
+rough version of the Figure; and, optionally, generates output files for
+plotting the final Figure in GMT.
 
 The purpose of the script/figure is to illustrate how a valley's long profile
 and sediment output vary in response to sinusoidal variations in sediment or
@@ -9,7 +9,7 @@ water supply. We compare the upstream supply case, in which sediment and water
 are only supplied at the inlet, and the along stream supply case, in which
 sediment and water are also supplied along the valley. 
 
-Here, in contrast with Figures 4 and S1, valley width is set to increase
+Here, in contrast with Figures 5 and S1, valley width is set to increase
 downstream with the same power-law exponent as water and sediment discharge,
 rather than being held constant. This has the effect of keeping the diffusivity
 constant along stream.

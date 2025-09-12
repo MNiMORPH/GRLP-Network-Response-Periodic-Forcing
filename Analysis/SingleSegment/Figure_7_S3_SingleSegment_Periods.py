@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figures 6 and S3 of McNab et al.
-(2025, EGUsphere); produces a rough version of the Figure; and, optionally,
-generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures 7 and S3; produces a
+rough version of the Figure; and, optionally, generates output files for
+plotting the final Figure in GMT.
 
 The purpose of the script/figure is to explore how gain and lag vary as
 functions of the forcing period for the single segment case with along stream
@@ -221,7 +221,7 @@ axs[1,0].set_ylabel(r"$\varphi / P$")
 
 for ax in axs[1]:
     ax.set_xlabel(r"$P$ / $T_{eq}$")
-fig.suptitle("Figure 6")
+fig.suptitle("Figure 7")
 plt.show()
 
 # Extra figure  -- gain and lag for elevation, in response to variation in
@@ -290,7 +290,7 @@ plt.show()
 
 if output_gmt:
 
-    out_dir = "../../Output/SingleSegment/Figure_6_S3_SingleSegment_Periods/"
+    out_dir = "../../Output/SingleSegment/Figure_7_S3_SingleSegment_Periods/"
 
     with open(out_dir + "G_z_out_lin.pg", "wb") as f:
         arr = np.column_stack((

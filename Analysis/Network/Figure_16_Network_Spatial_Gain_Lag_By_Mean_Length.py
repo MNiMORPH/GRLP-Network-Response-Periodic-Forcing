@@ -1,19 +1,12 @@
 """
-This script performs the analysis presented in Figure 15 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 16; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to show how spatial patterns of gain and
 lag vary with network structure. We show four examples, evenly spaced between
 most compact and most elongate.
 """
-
-
-# ---- Define functions
-def compute_origin_gradient(x, y):
-    x = np.array(x)
-    y = np.array(y)
-    return x.dot(y) / x.dot(x)
 
 
 # ---- Import functions
@@ -206,9 +199,12 @@ plt.show()
 
 # ---- Save
 
+def Q_to_W(Q, minQ, maxQ, minW=0.8, maxW=2.2):
+    return minW + (Q - minQ)/(maxQ - minQ)*(maxW-minW)
+
 if output_gmt:
 
-    basedir = "../../Output/Network/Figure_15_Network_Spatial_Gain_Lag_By_Mean_Length/"
+    basedir = "../../Output/Network/Figure_16_Network_Spatial_Gain_Lag_By_Mean_Length/"
 
     for i,neti in enumerate([0, 66, 132, 199]):
         
@@ -220,10 +216,19 @@ if output_gmt:
         single_seg_U = single_segs_U[i].list_of_LongProfile_objects[0]
         single_seg_A = single_segs_A[i].list_of_LongProfile_objects[0]
         
+        # Get discharges
+        head = net.list_of_channel_head_segment_IDs[0]
+        minQ = net.list_of_LongProfile_objects[head].Q.min()
+        maxQ = net.list_of_LongProfile_objects[0].Q.max()
+        seg_Qs = [seg.Q.mean() for seg in net.list_of_LongProfile_objects]
+        seg_IDs_by_Q = np.array(seg_Qs).argsort()[::-1]
+
+        
         planform = grlp.plot_network(net, show=False)
         with open(basedir + str(neti) + "/planform.d", "wb") as f:
             for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( planform[j]['x'], planform[j]['y'] ))
                 np.savetxt(f, arr)
@@ -231,7 +236,8 @@ if output_gmt:
         with open(basedir + str(neti) + "/gain.dg", "wb") as f:
 
             for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack((
                     seg.x/1.e3,
@@ -241,7 +247,8 @@ if output_gmt:
                 
         with open(basedir + str(neti) + "/lag.dl", "wb") as f:
             for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack((
                     seg.x/1.e3,

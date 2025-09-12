@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure S26 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure S26; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to show how gain and lag vary spatially
 throughout a network. We show results for four network cases, in which segment
@@ -9,7 +9,7 @@ lengths are either uniform or non-uniform, and sediment and water are supplied
 only at valley inlets or also along stream; and for three forcing periods, 
 0.1*, 1* and 10* the empirically determined equilibration time.
 
-Here, in contrast with Figures 13, valley width is set to increase
+Here, in contrast with Figures 15, valley width is set to increase
 downstream with the same power-law exponent as water and sediment discharge,
 rather than being held constant. This has the effect of keeping the diffusivity
 constant along stream.
@@ -210,66 +210,80 @@ plt.show()
 
 # ---- Save
 
-basedir = "../../Output/Network/Figure_S26_Network_Spatial_Gain_Lag_Non-Uniform_Width/"
+def Q_to_W(Q, minQ, maxQ, minW=0.8, maxW=2.2):
+    return minW + (Q - minQ)/(maxQ - minQ)*(maxW-minW)
 
-for case in ['UUN', 'NUN', 'UAN', 'NAN']:
-    
-    # Predict network Teq
-    net = nets[neti][case]
-    Teq = gains[neti][case]['Teq']
-    L_eff = np.sqrt(Teq*nets[neti][case].mean_diffusivity)
-    single_seg_U =  single_segs[case]['U'].list_of_LongProfile_objects[0]
-    single_seg_A =  single_segs[case]['A'].list_of_LongProfile_objects[0]
-    
-    labels = ["fast", "medium", "slow"]
-    
-    for i,P_scl in enumerate([0.1, 1., 10.]):
+if output_gmt:
+
+    basedir = "../../Output/Network/Figure_S26_Network_Spatial_Gain_Lag_Non-Uniform_Width/"
+
+    for case in ['UUN', 'NUN', 'UAN', 'NAN']:
         
-        with open(basedir + case + "/" + labels[i] + "/gain.dg", "wb") as f:
+        # Predict network Teq
+        net = nets[neti][case]
+        Teq = gains[neti][case]['Teq']
+        L_eff = np.sqrt(Teq*nets[neti][case].mean_diffusivity)
+        single_seg_U =  single_segs[case]['U'].list_of_LongProfile_objects[0]
+        single_seg_A =  single_segs[case]['A'].list_of_LongProfile_objects[0]
+        
+        # Network discharges
+        head = net.list_of_channel_head_segment_IDs[0]
+        minQ = net.list_of_LongProfile_objects[head].Q.min()
+        maxQ = net.list_of_LongProfile_objects[0].Q.max()
+        seg_Qs = [seg.Q.mean() for seg in net.list_of_LongProfile_objects]
+        seg_IDs_by_Q = np.array(seg_Qs).argsort()[::-1]
 
-            for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
-                f.write(hdr)
+        labels = ["fast", "medium", "slow"]
+        
+        for i,P_scl in enumerate([0.1, 1., 10.]):
+            
+            with open(basedir + case + "/" + labels[i] + "/gain.dg", "wb") as f:
+
+                for j,seg in enumerate(net.list_of_LongProfile_objects):
+                    W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                    hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
+                    f.write(hdr)
+                    arr = np.column_stack((
+                        seg.x/1.e3,
+                        net_gains[case][i][j]
+                        ))
+                    np.savetxt(f, arr)
+                    
+            with open(basedir + case + "/" + labels[i] + "/lag.dl", "wb") as f:
+                for j,seg in enumerate(net.list_of_LongProfile_objects):
+                    W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                    hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
+                    f.write(hdr)
+                    arr = np.column_stack((
+                        seg.x/1.e3,
+                        net_lags[case][i][j]
+                        ))
+                    np.savetxt(f, arr)
+            
+            with open(basedir + case + "/" + labels[i] + "/single_seg_U_gain.dg", "wb") as f:
                 arr = np.column_stack((
-                    seg.x/1.e3,
-                    net_gains[case][i][j]
+                    (L - L_eff + single_seg_U.x)/1.e3,
+                    single_seg_U.compute_z_gain(Teq*P_scl)
                     ))
                 np.savetxt(f, arr)
                 
-        with open(basedir + case + "/" + labels[i] + "/lag.dl", "wb") as f:
-            for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
-                f.write(hdr)
+            with open(basedir + case + "/" + labels[i] + "/single_seg_U_lag.dl", "wb") as f:
                 arr = np.column_stack((
-                    seg.x/1.e3,
-                    net_lags[case][i][j]
+                    (L - L_eff + single_seg_U.x)/1.e3,
+                    single_seg_U.compute_z_lag(Teq*P_scl)/(Teq*P_scl)
                     ))
                 np.savetxt(f, arr)
-        
-        with open(basedir + case + "/" + labels[i] + "/single_seg_U_gain.dg", "wb") as f:
-            arr = np.column_stack((
-                (L - L_eff + single_seg_U.x)/1.e3,
-                single_seg_U.compute_z_gain(Teq*P_scl)
-                ))
-            np.savetxt(f, arr)
-            
-        with open(basedir + case + "/" + labels[i] + "/single_seg_U_lag.dl", "wb") as f:
-            arr = np.column_stack((
-                (L - L_eff + single_seg_U.x)/1.e3,
-                single_seg_U.compute_z_lag(Teq*P_scl)/(Teq*P_scl)
-                ))
-            np.savetxt(f, arr)
 
-        with open(basedir + case + "/" + labels[i] + "/single_seg_A_gain.dg", "wb") as f:
-            arr = np.column_stack((
-                single_seg_A.x/1.e3,
-                single_segs[case]['A_gains'][i][0]
-                ))
-            np.savetxt(f, arr)
-            
-        with open(basedir + case + "/" + labels[i] + "/single_seg_A_lag.dl", "wb") as f:
-            arr = np.column_stack((
-                single_seg_A.x/1.e3,
-                single_segs[case]['A_lags'][i][0]
-                ))
-            np.savetxt(f, arr)
+            with open(basedir + case + "/" + labels[i] + "/single_seg_A_gain.dg", "wb") as f:
+                arr = np.column_stack((
+                    single_seg_A.x/1.e3,
+                    single_segs[case]['A_gains'][i][0]
+                    ))
+                np.savetxt(f, arr)
+                
+            with open(basedir + case + "/" + labels[i] + "/single_seg_A_lag.dl", "wb") as f:
+                arr = np.column_stack((
+                    single_seg_A.x/1.e3,
+                    single_segs[case]['A_lags'][i][0]
+                    ))
+                np.savetxt(f, arr)

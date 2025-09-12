@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure S13 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure S13; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to explore how gain and lag vary along
 stream for the single segment case with along stream sediment and water supply.

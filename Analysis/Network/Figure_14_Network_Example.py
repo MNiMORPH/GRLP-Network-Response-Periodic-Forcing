@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 13 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 14; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to show how patterns of aggradation and
 incision can vary throughout a network. We show plots of gain and lag on
@@ -216,7 +216,7 @@ plt.show()
 
 if output_gmt:
 
-    basedir = "../../Output/Network/Figure_13_Network_Example/"
+    basedir = "../../Output/Network/Figure_14_Network_Example/"
 
     with open(basedir + "planform.d", "wb") as f:
         plan = grlp.plot_network(nets[neti]['UUU'], show=False)

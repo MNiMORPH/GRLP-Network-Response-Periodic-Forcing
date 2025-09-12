@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 5 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 6; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to explore how gain and lag vary along
 stream for the single segment case with along stream sediment and water supply.
@@ -127,7 +127,7 @@ if output_gmt:
         period *= net.list_of_LongProfile_objects[0].equilibration_time
 
         out_dir = \
-            "../../Output/SingleSegment/Figure_5_SingleSegment_Spatial/" + \
+            "../../Output/SingleSegment/Figure_6_SingleSegment_Spatial/" + \
             dirs[i]
 
         with open(out_dir + "G_z_lin.dg", "wb") as f:

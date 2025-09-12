@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 11 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 12; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to show how a network effective lengths,
 and their relationships with network mean lengths, depend on the number of
@@ -157,7 +157,7 @@ plt.show()
 
 if output_gmt:
     
-    basedir = "../../Output/Network/Figure_11_Network_Effective_Length_N1/"
+    basedir = "../../Output/Network/Figure_12_Network_Effective_Length_N1/"
 
     for N1 in indirs.keys():
         for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):

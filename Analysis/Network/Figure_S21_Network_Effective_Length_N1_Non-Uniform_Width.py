@@ -1,13 +1,13 @@
 """
-This script performs the analysis presented in Figure S21 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure S21; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to show how a network effective lengths,
 and their relationships with network mean lengths, depend on the number of
 segments in the network.
 
-Here, in contrast with Figures 10, valley width is set to increase
+Here, in contrast with Figures 11, valley width is set to increase
 downstream with the same power-law exponent as water and sediment discharge,
 rather than being held constant. This has the effect of keeping the diffusivity
 constant along stream.

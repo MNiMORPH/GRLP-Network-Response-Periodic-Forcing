@@ -1,12 +1,12 @@
 """
-This script performs the analysis presented in Figures S22, S23, S24 and S25 of
-McNab et al. (2025, EGUsphere); produces a rough version of the Figure; and,
-optionally, generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures S22, S23, S24 and S25;
+produces a rough version of the Figure; and, optionally, generates output files
+for plotting the final Figure in GMT.
 
 The purpose of the script/figures is to show how gain and lag in both elevation
 and sediment discharge vary as functions of forcing period for each of the
 different network cases we investigate, in this case with non-uniform valley
-widths (Figures 11, S7, S8 and S9, respectively, are equivalent with uniform
+widths (Figures 13, S7, S8 and S9, respectively, are equivalent with uniform
 valley widths).
 
 The first figure shows results for elevation in response to sediment supply
@@ -739,13 +739,13 @@ if output_gmt:
 
     for N1 in indirs.keys():
         
-        gains, lags = grlpx.read_MC(
-            indirs[N1],
-            cases=['UUN', 'NUN', 'UAN', 'NAN'],
-            toread=['gains', 'lags']
-            )
-        
         for case in ['UUN', 'NUN', 'UAN', 'NAN']:
+            
+            gains, lags = grlpx.read_MC(
+                indirs[N1],
+                cases=[case],
+                toread=['gains', 'lags']
+                )
             
             Teqs = [gs[case]['Teq'] for gs in gains]
             
@@ -861,5 +861,5 @@ if output_gmt:
                     ))
                 np.savetxt(f, arr)
                 
-        del gains
-        del lags
+            del gains
+            del lags

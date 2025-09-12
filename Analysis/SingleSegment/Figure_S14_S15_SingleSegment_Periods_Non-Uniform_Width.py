@@ -1,14 +1,14 @@
 """
-This script performs the analysis presented in Figures S14 and S15 of McNab et
-al. (2025, EGUsphere); produces a rough version of the Figure; and, optionally,
-generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures S14 and S15; produces a
+rough version of the Figure; and, optionally generates output files for
+plotting the final Figure in GMT.
 
 The purpose of the script/figure is to explore how gain and lag vary as
 functions of the forcing period for the single segment case with along stream
 sediment and water supply. We compare the results with analytical solutions
 derived by McNab et al. (2023, GRL) for the upstream supply case.
 
-Here, in contrast with Figures 6 and S3, valley width is set to increase
+Here, in contrast with Figures 7 and S3, valley width is set to increase
 downstream with the same power-law exponent as water and sediment discharge,
 rather than being held constant. This has the effect of keeping the diffusivity
 constant along stream.

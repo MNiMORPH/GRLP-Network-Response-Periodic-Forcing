@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figures 12, S7, S8 and S9 of
-McNab et al. (2025, EGUsphere); produces a rough version of the Figure; and,
-optionally, generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures 13, S7, S8 and S9;
+produces a rough version of the Figure; and, optionally, generates output files
+for plotting the final Figure in GMT.
 
 The purpose of the script/figures is to show how gain and lag in both elevation
 and sediment discharge vary as functions of forcing period for each of the
@@ -132,7 +132,7 @@ print()
 # ---- Plot
 
 def plot_main(lin_periods, lin_periodics, lin_periodics_Q, cont_periods,
-    cont_periodics, cont_periodics_Q, gains, lags):
+    cont_periodics, cont_periodics_Q, gains, lags, title):
 
     # Set up plot.
     fig, axs = plt.subplots(6, 4, sharey="row", sharex=True)
@@ -379,11 +379,12 @@ def plot_main(lin_periods, lin_periodics, lin_periodics_Q, cont_periods,
     for row in axs:
         for ax in row:
             ax.set_box_aspect(1)
+    fig.suptitle(title)
     plt.show()
     
     
 def plot_supp(lin_periods, lin_periodics, lin_periodics_Q, cont_periods, 
-    cont_periodics, cont_periodics_Q, gains, lags):
+    cont_periodics, cont_periodics_Q, gains, lags, title):
     
     # Set up plot.
     fig, axs = plt.subplots(2, 4, sharey="row", sharex=True)
@@ -491,8 +492,11 @@ def plot_supp(lin_periods, lin_periodics, lin_periodics_Q, cont_periods,
     for row in axs:
         for ax in row:
             ax.set_box_aspect(1)
+    fig.suptitle(title)
     plt.show()
 
+main_titles = {'MC_N1_40': 'Figure 13', 'MC_N1_2-150': 'Figure S7'}
+supp_titles = {'MC_N1_40': 'Figure S8', 'MC_N1_2-150': 'Figure S9'}
 
 for N1 in indirs.keys():
     print("Plotting: %s" % N1)
@@ -506,13 +510,13 @@ for N1 in indirs.keys():
     plot_main(
         lin_periods, lin_periodics, lin_periodics_Q,
         cont_periods, cont_periodics, cont_periodics_Q,
-        gains, lags
+        gains, lags, main_titles[N1]
         )
         
     plot_supp(
         lin_periods, lin_periodics, lin_periodics_Q,
         cont_periods, cont_periodics, cont_periodics_Q,
-        gains, lags
+        gains, lags, supp_titles[N1]
         )
         
     del gains
@@ -522,7 +526,7 @@ for N1 in indirs.keys():
 
 if output_gmt:
 
-    basedir = "../../Output/Network/Figure_12_S7_S8_S9_Network_Full_Gain_Lag/"
+    basedir = "../../Output/Network/Figure_13_S7_S8_S9_Network_Full_Gain_Lag/"
 
     with open(basedir + "z_linear_gain.pg", "wb") as f:
         arr = np.column_stack((
@@ -737,14 +741,14 @@ if output_gmt:
 
     for N1 in indirs.keys():
         
-        gains, lags = grlpx.read_MC(
-            indirs[N1],
-            cases=['UUU', 'NUU', 'UAU', 'NAU'],
-            toread=['gains', 'lags']
-            )
-        
         for case in ['UUU', 'NUU', 'UAU', 'NAU']:
             
+            gains, lags = grlpx.read_MC(
+                indirs[N1],
+                cases=[case],
+                toread=['gains', 'lags']
+                )
+
             Teqs = [gs[case]['Teq'] for gs in gains]
             
             with open(basedir + N1 + "/" + case + "/z_gain.pg", "wb") as f:
@@ -859,5 +863,5 @@ if output_gmt:
                     ))
                 np.savetxt(f, arr)
                 
-        del gains
-        del lags
+            del gains
+            del lags

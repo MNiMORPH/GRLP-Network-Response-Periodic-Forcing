@@ -1,11 +1,11 @@
 """
-This script performs the analysis presented in Figures S16 and S17 of McNab et
-al. (2025, EGUsphere); produces a rough version of the Figures; and, optionally,
-generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures S16 and S17; produces a
+rough version of the Figures; and, optionally, generates output files for
+plotting the final Figure in GMT.
 
 The purpose of the script/figure is to illustrate results of network
 equilibration time calibration for networks with non-uniform valley width
-(Figures 8 and S4 are equivalent, respectively, but with uniform valley width).
+(Figures 10 and S4 are equivalent, respectively, but with uniform valley width).
 We show gain for sediment discharge at the network outlet for different sets of
 networks, and compare it to the results for single segment cases with or without
 along stream sediment and water supply. Results are shown first using the
@@ -58,22 +58,12 @@ lp = net.list_of_LongProfile_objects[0]
 lp.compute_equilibration_time()
 
 
-# ---- Read data
-print("Reading results.")
-nets = {}
-gains = {}
-for N1 in indirs.keys():
-    nets[N1], gains[N1] = grlpx.read_MC(
-        indirs[N1],
-        cases=['UUN', 'NUN', 'UAN', 'NAN'],
-        toread = ['nets', 'gains']
-        )
-print()
-
 # ---- Linear gain
+print("Computing gain for single segment, upstream supply case.")
 lin_periods = np.logspace(-2.5, 2.5, 81) * lp.equilibration_time
 lin_gain_Qs = [lp.compute_Qs_gain(p, A_Qs=0.2)[-1] for p in lin_periods]
 lin_gain_Qs_Qw = [lp.compute_Qs_gain(p, A_Q=0.2)[-1] for p in lin_periods]
+print()
 
 
 # ---- Continuous gain
@@ -127,18 +117,33 @@ print("Plotting.")
 def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, nets, title):
     
     # Set up plot.
-    fig, axs = plt.subplots(3, 4, sharey="row", sharex="row")
+    fig, axs = plt.subplots(4, 4, sharey="row", sharex="row")
 
     # Loop over network cases.
     for i,case in enumerate(['UUN', 'NUN', 'UAN', 'NAN']):
         
         # Plot gain as a function of forcing period, for single segment cases
         # with upstream only and along stream supply of sediment and water,
-        # and for network cases.
-        Teqs = [
-            n[case].list_of_LongProfile_objects[0].x.max()**2. /
-                lp.diffusivity.mean()
+        # and for network cases. Set network equilibration time using maximum
+        # distance from inlet to outlet.
+        lps = [
+            grlpx.generate_single_segment_network(
+                n[case].list_of_LongProfile_objects[0].x.max(),
+                n[case].mean_Q,
+                n[case].mean_Q * 1.e-4,
+                n[case].mean_B,
+                0.,
+                0.,
+                0.,
+                evolve=False
+                )
             for n in nets
+            ]
+        for lpi in lps:
+            lpi.list_of_LongProfile_objects[0].compute_equilibration_time()
+        Teqs = [
+            lpi.list_of_LongProfile_objects[0].equilibration_time
+            for lpi in lps
             ]
         axs[0,i].plot(lin_periods/lp.equilibration_time, lin_gain_Qs)
         axs[0,i].fill(
@@ -157,31 +162,37 @@ def plot(lin_periods, lin_gain_Qs, cont_periods, cont_gains, gains, lp, nets, ti
             axs[0,i].set_ylabel("Gain, $G_{Q_s,L}$ [-]")
         axs[0,i].set_xscale("log")
         
+        # Plot counts of empirical equilibration time.
+        axs[1,i].hist([Teq/3.154e10 for Teq in Teqs])
+        axs[1,i].set_xlabel(r"$T_{eq,max}$ [kyr]")
+        if i==0:
+            axs[1,i].set_ylabel("Count")
+
         # Plot gain as a function of forcing period.
         # This time normalise by empirically optimised equilibration time.
         Teqs = [gs[case]['Teq'] for gs in gains]
-        axs[1,i].plot(lin_periods/lp.equilibration_time, lin_gain_Qs)
-        axs[1,i].fill(
+        axs[2,i].plot(lin_periods/lp.equilibration_time, lin_gain_Qs)
+        axs[2,i].fill(
             np.hstack((cont_periods, cont_periods[::-1]))/lp.equilibration_time,
             np.hstack((cont_gains[0.8], cont_gains[2.4][::-1])),
             c="0.6"
             )
-        axs[1,i].plot(
+        axs[2,i].plot(
             [p/Teqs[i] for i,gs in enumerate(gains) for p in gs[case]['P']],
             [g[0][-1] for gs in gains for g in gs[case]['G_Qs']['Qs']],
             "o",
             alpha=0.05
             )
-        axs[1,i].set_xlabel(r"Period, $P$ / $\widehat{T_{eq}}$ [-]")
+        axs[2,i].set_xlabel(r"Period, $P$ / $\widehat{T_{eq}}$ [-]")
         if i==0:
-            axs[1,i].set_ylabel("Gain, $G_{Q_s,L}$ [-]")
-        axs[1,i].set_xscale("log")
+            axs[2,i].set_ylabel("Gain, $G_{Q_s,L}$ [-]")
+        axs[2,i].set_xscale("log")
         
         # Plot counts of empirical equilibration time.
-        axs[2,i].hist([Teq/3.154e10 for Teq in Teqs])
-        axs[2,i].set_xlabel(r"$\widehat{T_{eq}}$ [kyr]")
+        axs[3,i].hist([Teq/3.154e10 for Teq in Teqs])
+        axs[3,i].set_xlabel(r"$\widehat{T_{eq}}$ [kyr]")
         if i==0:
-            axs[2,i].set_ylabel("Count")
+            axs[3,i].set_ylabel("Count")
         
     # Format and show.
     fig.suptitle(title)
@@ -195,16 +206,26 @@ titles = {
     'MC_N1_2-150': r'Figure S17: $N_1$ = 2-150'
     }
 for N1 in indirs.keys():
+    
+    nets, gains = grlpx.read_MC(
+        indirs[N1],
+        cases=['UUN', 'NUN', 'UAN', 'NAN'],
+        toread = ['nets', 'gains']
+        )
+
     plot(
         lin_periods,
         lin_gain_Qs,
         cont_periods,
         cont_gains,
-        gains[N1],
+        gains,
         lp,
-        nets[N1],
+        nets,
         titles[N1]
         )
+        
+    del nets
+    del gains
 
 
 if output_gmt:
@@ -226,21 +247,42 @@ if output_gmt:
         np.savetxt(f, arr)
     
     for N1 in indirs.keys():
+        
         for j,case in enumerate(['UUN', 'NUN', 'UAN', 'NAN']):
             
+            nets, gains = grlpx.read_MC(
+                indirs[N1],
+                cases=[case],
+                toread = ['nets', 'gains']
+                )
+            
+            lps = [
+                grlpx.generate_single_segment_network(
+                    n[case].list_of_LongProfile_objects[0].x.max(),
+                    n[case].mean_Q,
+                    n[case].mean_Q * 1.e-4,
+                    n[case].mean_B,
+                    0.,
+                    0.,
+                    0.,
+                    evolve=False
+                    )
+                for n in nets
+                ]
+            for lpi in lps:
+                lpi.list_of_LongProfile_objects[0].compute_equilibration_time()
             Teqs = [
-                n[case].list_of_LongProfile_objects[0].x.max()**2. /
-                    lp.diffusivity.mean()
-                for n in nets[N1]
+                lpi.list_of_LongProfile_objects[0].equilibration_time
+                for lpi in lps
                 ]
                 
             with open(basedir + N1 + "/" + case + "/gain_L.pg", "wb") as f:
                 arr = np.column_stack(( 
                     [p/Teqs[i] 
-                        for i,gs in enumerate(gains[N1])
+                        for i,gs in enumerate(gains)
                             for p in gs[case]['P']],
                     [g[0][-1]
-                        for gs in gains[N1]
+                        for gs in gains
                             for g in gs[case]['G_Qs']['Qs']]
                     ))
                 np.savetxt(f, arr)
@@ -249,19 +291,22 @@ if output_gmt:
                 arr = [Teq/3.154e10 for Teq in Teqs]
                 np.savetxt(f, arr)
             
-            Teqs = [gs[case]['Teq'] for gs in gains[N1]]
+            Teqs = [gs[case]['Teq'] for gs in gains]
 
             with open(basedir + N1 + "/" + case + "/gain_Le.pg", "wb") as f:
                 arr = np.column_stack(( 
                     [p/Teqs[i]
-                        for i,gs in enumerate(gains[N1])
+                        for i,gs in enumerate(gains)
                             for p in gs[case]['P']],
                     [g[0][-1]
-                        for gs in gains[N1]
+                        for gs in gains
                             for g in gs[case]['G_Qs']['Qs']]
                     ))
                 np.savetxt(f, arr)
                 
             with open(basedir + N1 + "/" + case + "/Teq.t", "wb") as f:
-                arr = [gs[case]['Teq']/3.154e10 for gs in gains[N1]]
+                arr = [gs[case]['Teq']/3.154e10 for gs in gains]
                 np.savetxt(f, arr)
+                
+            del nets
+            del gains

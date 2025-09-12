@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figures 7 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figures 8; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to illustrate the different network cases
 we analyse. We use uniform vs. non-uniform segment lengths, and upstream only
@@ -139,23 +139,33 @@ plt.show()
 
 # ---- Write output
 
+def Q_to_W(Q, minQ, maxQ, minW=0.8, maxW=2.2):
+    return minW + (Q - minQ)/(maxQ - minQ)*(maxW-minW)
+    
+
 if output_gmt:
 
-    basedir = "../../Output/Network/Figure_7_Network_Setup/"
+    basedir = "../../Output/Network/Figure_8_Network_Setup/"
 
     for i,case in enumerate(['UUU', 'NUU', 'UAU', 'NAU']):
         
         net = nets[n][case]
+        head = net.list_of_channel_head_segment_IDs[0]
+        minQ = net.list_of_LongProfile_objects[head].Q.min()
+        maxQ = net.list_of_LongProfile_objects[0].Q.max()
+        seg_Qs = [seg.Q.mean() for seg in net.list_of_LongProfile_objects]
+        seg_IDs_by_Q = np.array(seg_Qs).argsort()[::-1]
         
         # Planform
         planform = grlp.plot_network(net, show=False)
         with open(basedir + case + "/planform.d", "wb") as f:
             for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( planform[j]['x'], planform[j]['y'] ))
                 np.savetxt(f, arr)
-
+                
         # Discharge
         with open(basedir + case + "/discharge.dq", "wb") as f:
             for j,seg in enumerate(net.list_of_LongProfile_objects):
@@ -173,7 +183,9 @@ if output_gmt:
                 else:
                     x = seg.x/1.e3
                     Q = seg.Q
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
+                # hdr = b"> -Z%i\n" % (net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( x, Q ))
                 np.savetxt(f, arr)
@@ -195,8 +207,11 @@ if output_gmt:
 
         # Profile
         with open(basedir + case + "/profile.de", "wb") as f:
-            for j,seg in enumerate(net.list_of_LongProfile_objects):
-                hdr = b"> -Z%i\n" % (net.segment_orders[j])
+            for j in seg_IDs_by_Q:
+                seg = net.list_of_LongProfile_objects[j]
+                W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
+                # hdr = b"> -Z%i\n" % (net.segment_orders[j])
                 f.write(hdr)
                 arr = np.column_stack(( seg.x/1.e3, seg.z ))
                 np.savetxt(f, arr)

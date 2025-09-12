@@ -1,18 +1,17 @@
 """
-This script performs the analysis presented in Figures 8 and S4 of McNab et al.
-(2025, EGUsphere); produces rough versions of the Figures; and, optionally,
-generates output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 9; produces rough
+versions of the Figures; and, optionally, generates output files for plotting
+the final Figure in GMT.
 
-The purpose of the script/figure is to illustrate results of network
-equilibration time calibration. We show gain for sediment discharge at the
-network outlet for different sets of networks, and compare it to the results
-for single segment cases with or without along stream sediment and water supply.
-Results are shown first using the maximum (trunk) stream length to compute
-the equilibration time, and second using the empirically calibration
-equilibration time.
-
-The main figure shows results for networks with 40 inlet segments, the extra
-figure shows results for networks with between 2 and 150 segments.
+The purpose of the script/figure is to illustrate our procedure for calibrating
+network equilibration using a single network example. We show gain as a
+function of forcing period, normalised by equilibration time, for the network
+and compare with the predictions of the single-segment, upstream supply case.
+Gain computed for the network deviates from the single-segment case when
+its equilibration time is set using the maximum network length, but the two
+can agree closely when we determine empirically a best-fitting network
+equilibration time. We also show the misfit between the network and single-
+segment cases as a function of network equilibration time.
 """
 
 def gain_misfit(Teq_scale, net_gain, periods, single_seg_net):
@@ -135,7 +134,7 @@ plt.show()
 if output_gmt:
 
     # ---- Save
-    basedir = "../../Output/Network/Figure_8_Network_Teq_Calibration_Explainer/"
+    basedir = "../../Output/Network/Figure_9_Network_Teq_Calibration_Explainer/"
 
     with open(basedir + "linear_gain.pg", "wb") as f:
         arr = np.column_stack((lin_periods/lp.equilibration_time, lin_gain_Qs))

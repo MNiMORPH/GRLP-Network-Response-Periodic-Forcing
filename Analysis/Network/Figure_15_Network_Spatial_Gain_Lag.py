@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 14 of McNab et al. (2025,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 15; produces a rough
+version of the Figure; and, optionally, generates output files for plotting
+the final Figure in GMT.
 
 The purpose of the script/figure is to show how gain and lag vary spatially
 throughout a network. We show results for four network cases, in which segment
@@ -205,9 +205,12 @@ plt.show()
 
 # ---- Save
 
+def Q_to_W(Q, minQ, maxQ, minW=0.8, maxW=2.2):
+    return minW + (Q - minQ)/(maxQ - minQ)*(maxW-minW)
+
 if output_gmt:
 
-    basedir = "../../Output/Network/Figure_14_Network_Spatial_Gain_Lag/"
+    basedir = "../../Output/Network/Figure_15_Network_Spatial_Gain_Lag/"
 
     for case in ['UUU', 'NUU', 'UAU', 'NAU']:
         
@@ -218,6 +221,14 @@ if output_gmt:
         single_seg_U =  single_segs[case]['U'].list_of_LongProfile_objects[0]
         single_seg_A =  single_segs[case]['A'].list_of_LongProfile_objects[0]
         
+        # Network discharges
+        head = net.list_of_channel_head_segment_IDs[0]
+        minQ = net.list_of_LongProfile_objects[head].Q.min()
+        maxQ = net.list_of_LongProfile_objects[0].Q.max()
+        seg_Qs = [seg.Q.mean() for seg in net.list_of_LongProfile_objects]
+        seg_IDs_by_Q = np.array(seg_Qs).argsort()[::-1]
+
+        
         labels = ["fast", "medium", "slow"]
         
         for i,P_scl in enumerate([0.1, 1., 10.]):
@@ -225,7 +236,8 @@ if output_gmt:
             with open(basedir + case + "/" + labels[i] + "/gain.dg", "wb") as f:
 
                 for j,seg in enumerate(net.list_of_LongProfile_objects):
-                    hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                    W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                    hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
                     f.write(hdr)
                     arr = np.column_stack((
                         seg.x/1.e3,
@@ -235,7 +247,8 @@ if output_gmt:
                     
             with open(basedir + case + "/" + labels[i] + "/lag.dl", "wb") as f:
                 for j,seg in enumerate(net.list_of_LongProfile_objects):
-                    hdr = b"> -Z%i\n" % (net.segment_orders[j])
+                    W = Q_to_W(seg.Q.mean(), minQ, maxQ)
+                    hdr = b"> -W%f -Z%i\n" % (W, net.segment_orders[j])
                     f.write(hdr)
                     arr = np.column_stack((
                         seg.x/1.e3,

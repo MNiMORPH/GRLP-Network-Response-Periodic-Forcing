@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figures 10, S5 and S6 of McNab
-et al. (2025, EGUsphere); produces a rough version of the Figures; and,
-optionally, generates output files for plotting the final Figures in GMT.
+This script performs the analysis presented in Figures 11, S5 and S6; produces
+a rough version of the Figures; and, optionally, generates output files for
+plotting the final Figures in GMT.
 
 The purpose of the main script/figure is to explore controls on the empirically
 obtained effective lengths of our sets of networks. We compute correlation
@@ -31,6 +31,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import grlp
+import scipy.stats as sts
 
 # Local packages
 import grlp_extras as grlpx
@@ -76,28 +77,28 @@ for N1 in indirs.keys():
         regressions[N1][case]['coeffs'] = {}
         regressions[N1][case]['grads'] = {}
         
-        regressions[N1][case]['coeffs']['R_B'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['R_B'] = sts.spearmanr(
             [n[case].bifurcation_ratio for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['R_B'] = compute_origin_gradient(
             [n[case].bifurcation_ratio for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
 
-        regressions[N1][case]['coeffs']['R_L'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['R_L'] = sts.spearmanr(
             [n[case].length_ratio for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['R_L'] = compute_origin_gradient(
             [n[case].length_ratio for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
             
-        regressions[N1][case]['coeffs']['R_Q'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['R_Q'] = sts.spearmanr(
             [n[case].discharge_ratio for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['R_Q'] = compute_origin_gradient(
             [n[case].discharge_ratio for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
@@ -107,91 +108,91 @@ for N1 in indirs.keys():
         # which mess up the regression.
         Ks = np.array([n[case].tokunaga['K_mean'] for n in nets[N1]])
         non_nans = np.where(np.isfinite(Ks))
-        regressions[N1][case]['coeffs']['K'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['K'] = sts.spearmanr(
             Ks[non_nans],
             regressions[N1][case]['eff_lengths'][non_nans]
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['K'] = compute_origin_gradient(
             Ks[non_nans],
             regressions[N1][case]['eff_lengths'][non_nans]
             )
 
-        regressions[N1][case]['coeffs']['l'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['l'] = sts.spearmanr(
             [net[case].max_topological_length for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['l'] = compute_origin_gradient(
             [net[case].max_topological_length for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )        
 
-        regressions[N1][case]['coeffs']['<l>'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['<l>'] = sts.spearmanr(
             [net[case].mean_topological_length for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['<l>'] = compute_origin_gradient(
             [net[case].mean_topological_length for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
             
-        regressions[N1][case]['coeffs']['<l_I>'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['<l_I>'] = sts.spearmanr(
             [net[case].mean_head_topological_length for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['<l_I>'] = compute_origin_gradient(
             [net[case].mean_head_topological_length for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )     
 
-        regressions[N1][case]['coeffs']['L'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['L'] = sts.spearmanr(
             [n[case].list_of_LongProfile_objects[0].x.max() for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['L'] = compute_origin_gradient(
             [n[case].list_of_LongProfile_objects[0].x.max() for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
 
-        regressions[N1][case]['coeffs']['<L>'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['<L>'] = sts.spearmanr(
             [n[case].mean_length for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['<L>'] = compute_origin_gradient(
             [n[case].mean_length for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
 
-        regressions[N1][case]['coeffs']['<L_I>'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['<L_I>'] = sts.spearmanr(
             [n[case].mean_head_length for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['<L_I>'] = compute_origin_gradient(
             [n[case].mean_head_length for n in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
 
-        regressions[N1][case]['coeffs']['w'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['w'] = sts.spearmanr(
             [net[case].max_topological_width for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['w'] = compute_origin_gradient(
             [net[case].max_topological_width for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )
 
-        regressions[N1][case]['coeffs']['<w>'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['<w>'] = sts.spearmanr(
             [net[case].mean_topological_width for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['<w>'] = compute_origin_gradient(
             [net[case].mean_topological_width for net in nets[N1]],
             regressions[N1][case]['eff_lengths']
             )        
 
-        regressions[N1][case]['coeffs']['p'] = np.corrcoef(
+        regressions[N1][case]['coeffs']['p'] = sts.spearmanr(
             [h[case]['p'] for h in hacks[N1]],
             regressions[N1][case]['eff_lengths']
-            )[0,1]
+            ).statistic
         regressions[N1][case]['grads']['p'] = compute_origin_gradient(
             [h[case]['p'] for h in hacks[N1]],
             regressions[N1][case]['eff_lengths']
@@ -435,7 +436,7 @@ for N1 in indirs.keys():
 if output_gmt:
 
     basedir = (
-        "../../Output/Network/Figure_10_S5_S6_Network_Effective_Length_Controls/"
+        "../../Output/Network/Figure_11_S5_S6_Network_Effective_Length_Controls/"
         )
         
     for N1 in indirs.keys():

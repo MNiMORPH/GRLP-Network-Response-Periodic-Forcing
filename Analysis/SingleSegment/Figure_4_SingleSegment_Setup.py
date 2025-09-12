@@ -1,7 +1,7 @@
 """
-This script performs the analysis presented in Figure 3 of McNab et al. (2024,
-EGUsphere); produces a rough version of the Figure; and, optionally, generates
-output files for plotting the final Figure in GMT.
+This script performs the analysis presented in Figure 4; produces a rough
+version of the Figure; and, optionally, generates output files for plotting the
+final Figure in GMT.
 
 The purpose of the script/figure is to illustrate the 'single segment' setup
 used in the paper. Sediment discharge, water discharge and elevation are shown
@@ -103,7 +103,7 @@ plt.show()
 
 if output_gmt:
 
-    out_dir = "../../Output/SingleSegment/Figure_3_SingleSegment_Setup/"
+    out_dir = "../../Output/SingleSegment/Figure_4_SingleSegment_Setup/"
 
     with open(out_dir + "numerical_profile.de", "wb") as f:
         for p in [p for p in lps.keys() if p != 0][::-1]:
