@@ -4,11 +4,11 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "GRLP-Network-Response-Periodic-Forcing"
-version = "2"
+version = "2.1"
 authors = [
   {name = "Fergus McNab", email = "fergus.mcnab@gfz.de"}
 ]
-description = "Analyse response of GRLP networks to periodic variation in sediment and water supply, for the paper McNab et al. (2025, EGUSphere)."
+description = "Analyse response of GRLP networks to periodic variation in sediment and water supply, for the paper McNab et al. (2025, ESurf)."
 readme = "README.md"
 requires-python = ">3.9"
 dependencies = [

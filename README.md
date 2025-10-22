@@ -1,8 +1,8 @@
-# Software and data supplement to "Influence of network geometry on long-term morphodynamics of alluvial rivers" by M<sup>c</sup>Nab et al. (2025, EGUsphere)
+# Software and data supplement to "Influence of network geometry on long-term morphodynamics of alluvial rivers" by M<sup>c</sup>Nab et al. (2025, ESurf)
 
 This repository contains scripts and data to reproduce the analyses and figures presented in:
 
-- M<sup>c</sup>Nab, F., Schildgen, T.F., Turowski, J.M. and Wickert, A.D., 2025, Influence of network geometry on long-term morphodynamics of alluvial rivers, *EGUSphere [Preprint]*, [doi:10.5194/egusphere-2025-2468](https://doi.org/10.5194/egusphere-2025-2468).
+- M<sup>c</sup>Nab, F., Schildgen, T.F., Turowski, J.M. and Wickert, A.D., 2025, Influence of network geometry on long-term morphodynamics of alluvial rivers, *Earth Surface Dynamics*, **13**, p. 1,059-1,092 [doi:10.5194/esurf-13-1059-2025](https://doi.org/10.5194/esurf-13-1059-2025).
 
 The repository is structured as follows:
 
@@ -60,8 +60,8 @@ The majority of the analysis is self-contained and does not rely on any external
 
 If you use this code, please cite the original paper as well as this repository:
 
-- M<sup>c</sup>Nab, F., Schildgen, T.F., Turowski, J.M. and Wickert, A.D., 2025, Influence of network geometry on long-term morphodynamics of alluvial rivers, *EGUSphere [Preprint]*, [doi:10.5194/egusphere-2025-2468](https://doi.org/10.5194/egusphere-2025-2468).
-- M<sup>c</sup>Nab, F., 2025, Software and data supplement to "Influence of network geometry on long-term morphodynamics of alluvial rivers" by M<sup>c</sup>Nab et al. (2025, EGUsphere), Version 2, *Zenodo*, [doi:10.5281/zenodo.15524964](https://doi.org/10.5281/zenodo.15524964).
+- M<sup>c</sup>Nab, F., Schildgen, T.F., Turowski, J.M. and Wickert, A.D., 2025, Influence of network geometry on long-term morphodynamics of alluvial rivers, *Earth Surface Dynamics*, **13**, p. 1,059-1,092 [doi:10.5194/esurf-13-1059-2025](https://doi.org/10.5194/esurf-13-1059-2025).
+- M<sup>c</sup>Nab, F., 2025, Software and data supplement to "Influence of network geometry on long-term morphodynamics of alluvial rivers" by M<sup>c</sup>Nab et al. (2025, ESurf), Version 2.1, *Zenodo*, [doi:10.5281/zenodo.15524964](https://doi.org/10.5281/zenodo.15524964).
 
 In addition, please cite the version of `GRLP` you use. For results presented in M<sup>c</sup>Nab et al. (2025, EGUsphere), we used:
 
